@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="theme-dark">
+    <head>
+	    <meta charset="UTF-8">
+        <!-- SEO -->
+        <title>Manga Reader Native (Alpha)</title>
+        <meta name="description" content="Manga reader using Native File System API">
+        <meta name="keywords" content="Manga Reader Native">
+        <!-- Favicon -->
+        <!-- <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+        <link rel="icon preload" type="image/png" as="image" sizes="32x32" href="/favicon/favicon-32x32.png">
+        <link rel="icon preload" type="image/png" as="image" sizes="16x16" href="/favicon/favicon-16x16.png">
+        <link rel="manifest preload" as="manifest" href="/favicon/site.webmanifest">
+        <link rel="mask-icon preload" as="image" href="/favicon/safari-pinned-tab.svg" color="#5bbad5">
+        <meta name="msapplication-TileColor" content="#da532c">
+        <meta name="theme-color" content="#ffffff"> -->
+        <!-- Preload & Prefetch -->
+        <link rel="stylesheet preload" as="style" type="text/css" href="css/manga.css">
+        <link rel="stylesheet preload" as="style" type="text/css" href="css/reader.css">
+        <link rel="stylesheet preload" as="style" type="text/css" href="css/animation.css">
+        <link rel="stylesheet preload" as="style" type="text/css" href="css/shortcuts.css">
+        <link rel="stylesheet preload" as="style" type="text/css" href="css/horizontal.css">
+        <link rel="stylesheet preload" as="style" type="text/css" href="css/vertical.css">
+        <link rel="stylesheet preload" as="style" type="text/css" href="css/normalize.css">
+        <link rel="stylesheet preload" as="style" type="text/css" href="css/fonts.css">
+        <!-- <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap&text=%3E%3A_Fabcdeilprst" rel="stylesheet"> -->
+        <!-- <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap&text=abcdefghijklnoprstuvy'" rel="stylesheet"> -->
+        <link rel="preload" as="script" href="js/manga.js">
+        <link rel="preconnect" href="https://www.google-analytics.com">
+        <script src="js/manga.js"></script>
+        <!-- Google Analytics -->
+        <!-- <script>
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','/analytics.js','ga');
+            ga('create', 'UA-117976525-1', 'auto');
+            ga('send', 'pageview');
+        </script> -->
+        <!-- End Google Analytics -->
+    </head>
+    <body class="round-corner preserve-event-banner">
+        <div>
+            <div class="reader-layout w-100 h-100 p-absolute p-zero">
+                <div class="manga-reader p-relative w-100 h-100 p-absolute p-zero">
+                    <div class="reader-body w-100 h-100 p-absolute p-zero">
+                        <div id="reader-body" class="horizontal-mode p-relative over-hidden h-100 arrow-right with-transition">
+                            <div id="ps-container" class="ps-container p-relative over-hidden h-100 ts-dot-2 ps">
+                                <div id="images-container" class="images-container p-zero h-100 w-100 m-auto double-page">
+                                    <div class="view-container p-relative secondary-image" onclick="controller.page_down()">
+                                        <img id="image-secondary" class="unselectable">
+                                    </div>
+                                    <div class="view-container p-relative primary-image" onclick="controller.page_up()">
+                                        <img id="image-primary" class="unselectable">
+                                    </div>
+                                </div>
+                                <div id="image-list" class="image-list m-auto over-hidden hidden">
+                                    <div class="image-item p-relative image-loaded">
+                                        <div class="image-container">
+                                            <img src="#" class="hidden">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="load-next-btn-container" class="load-next-btn-container hidden">
+                                    <button class="manga-button load-next-btn primary" onclick="controller.episode_scrolldown()">下一话</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-hud none-select info-hud p-absolute info-layer">
+                        <div class="hinter-image-container double">
+                            <img id="hinter-image" src="img/ltr.png" height="32" class="hinter-image ts-dot-4 v-middle flip">
+                            <img src="img/scroll.png" height="32" class="hinter-image ts-dot-4 v-middle hidden rotate">
+                            <span id="current-page" class="current-page p-absolute ts-dot-4 a-fade-in right-position"></span>
+                            <span id="next-page" class="next-page p-absolute ts-dot-4 a-fade-in left-position"></span>
+                        </div>
+                        <div class="info-text dp-i-block v-middle" style="margin-left: 8px;">
+                            <div><span id="page-count" class="page-count"></span></div>
+                        </div>
+                        <div class="dp-i-block v-middle v-middle" title="当前有图片或章节正在载入 >ㅂ<ﾉ ☆" style="margin-left: 10px; display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="22.8 22.8 45.7 45.7" class="progress-svg v-middle" style="width: 14px;">
+                                <circle fill="transparent" cx="45.7" cy="45.7" r="20" stroke-width="5.7" stroke-dasharray="125.6" stroke-dashoffset="125.6" class="circular-overlay"
+                                    style="stroke: rgb(50, 170, 255);">
+                                </circle>
+                            </svg>
+                        </div>
+                    </div>
+                    <div id="message-box" class="message-box none-select a-fade-in p-absolute info-layer hidden">
+                        <div id="message-image-container" class="img-container flip">
+                            <img src="img/dir.png" class="arrow-image ts-dot-4">
+                        </div>
+                        <div class="direction-text">当前阅读器翻页方向</div>
+                        <div class="direction-content"></div>
+                    </div>
+                    <div id="episode-toast" class="episode-toast a-fade-in episode-toast p-absolute info-layer hidden">
+                        <div id="toast-content" class="toast-content"></div>
+                    </div>
+                    <div class="floating-buttons p-absolute info-layer">
+                        <div class="t-right">
+                            <button class="floating-button app-button none-select shortcuts-info circle" title="使用帮助" onclick="controller.toggle_help()">
+                                <span>?</span>
+                            </button>
+                        </div>
+                        <div class="hover-toast-container p-relative page-matching-button">
+                            <div class="animation-element w-100 h-100 p-absolute hidden">
+                                <div class="hover-toast p-absolute border-box left">
+                                    <div>
+                                        <span class="dp-i-block v-middle">如果跨页内容不匹配，可以尝试点击修正</span>
+                                        <button class="app-button dp-i-block v-middle" style="padding: 0px; margin: 0px 0px 0px 10px;">
+                                            <img src="img/close.svg" width="18" height="18" class="v-middle">
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-relative">
+                                <button class="floating-button app-button none-select" title="当您在并页模式阅读时，如果出现合并不正确的情况，请点击进行修正"
+                                    onclick="controller.toggle_offset()" style="width: 130px;">
+                                    <span>更改跨页匹配</span><span style="margin-left: 5px; opacity: 0.5;">(C)</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="floating-button app-button none-select ui-opener" onclick="controller.toggle_ui()">
+                                <img src="img/hamburger.svg" class="v-middle">
+                                <span class="v-middle" style="margin-left: 8px;">显示工具栏</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="reader-ui" class="manga-reader-ui a-forwards">
+                        <div id="navbar-container" class="navbar-container w-100 p-absolute p-zero a-move-in-bottom">
+                            <nav class="manga-navbar p-relative ts-dot-4 manga-navbar">
+                                <div class="size-ruler dp-flex align-center space-between h-100 m-auto t-no-wrap">
+                                    <div class="left-part h-100">
+                                        <div class="vertical-center dp-table h-100 m-auto">
+                                            <div class="dp-table-cell v-middle">
+                                                <a href="#" target="_blank" class="manga-logo dp-i-block v-middle">
+                                                    <div class="manga-navbar-manga-logo">
+                                                        <img src="#" class="logo-img dp-i-block v-middle">
+                                                        <span class="dp-i-block v-middle">Manga Reader Native (Alpha)</span>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="read-nav">
+                                        <a id="manga-title" href="#" title="" class="manga-title t-over-hidden"></a>
+                                        <span id="episode-title" class="episode t-over-hidden"></span>
+                                    </div>
+                                    <div class="right-part h-100"></div>
+                                </div>
+                            </nav>
+                        </div>
+                        <div id="action-bar-container" class="action-bar-container w-100 p-absolute a-move-in-top">
+                            <div class="action-bar-content">
+                                <div class="zoomer dp-i-block v-middle t-center">
+                                    <span class="v-middle zoom-btn btn-minus bg-center bg-no-repeat pointer" onclick="controller.scale_down()"></span><span id="scale-percentage" class="v-middle zoom-display t-center pointer" onclick="controller.scale_reset()">100%</span><span class="v-middle zoom-btn btn-plus bg-center bg-no-repeat pointer" onclick="controller.scale_up()"></span>
+                                </div>
+                                <div class="page-slider">
+                                    <div class="slider-component">
+                                        <div class="progress-indicator">1 / 1</div>
+                                        <div class="slider-body w-100">
+                                            <input id="progress-indicator" type="range" max="1" min="1" step="1" class="range-input" oninput="controller.page_drag(event)">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div data-navigator class="action-buttons navigate">
+                                    <button data-navigator id="previous-episode" class="app-button" disabled="disabled" onclick="controller.episode_up()">
+                                        <span class="v-middle pageup">上一话</span>
+                                        <img src="img/error.svg" width="16" title="上一话加载失败了，您可进入章节后重新载入 (°▽°)ﾉ" class="v-middle hidden">
+                                    </button>
+                                    <button data-navigator id="next-episode" class="app-button" disabled="disabled" onclick="controller.episode_down()">
+                                        <span class="v-middle pagedown">下一话</span>
+                                        <img src="img/error.svg" width="16" title="下一话加载失败了，您可进入章节后重新载入 (⁄ ⁄•⁄ω⁄•⁄ ⁄)" class="v-middle hidden">
+                                    </button>
+                                    <div data-navigator class="episode-list-button">
+                                        <button data-navigator id="content-button" class="app-button w-100" disabled="disabled" onclick="controller.toggle_contents()">
+                                            <span class="v-middle toc">目录</span>
+                                        </button>
+                                        <div data-contents data-navigator id="manga-contents" class="episode-list border-box episode-list p-absolute a-scale-in-ease hidden" onclick="controller.episode_switch(event)">
+                                            <div data-contents class="panel-title">
+                                                <div data-contents class="text">全部章节（<span id="episode-count"></span>）</div>
+                                            </div>
+                                            <div data-contents id="data-contents" class="data-list p-relative ps ps--active-y">
+                                                <button data-contents class="list-item app-button selected read">
+                                                    <div data-contents class="label">01 </div>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="divider"></div>
+                                <div class="action-buttons settings">
+                                    <button class="action-button app-button t-center comment-button" onclick="controller.open_manga()">
+                                        <img src="img/folder-open-duotone.svg" width="24" style="width: 24px; height: 24px;"><br>
+                                        <span>打开漫画</span>
+                                    </button>
+                                    <button class="action-button app-button t-center setting-button" onclick="controller.open_episode()">
+                                        <img src="img/folder-open-light.svg"width="24" style="width: 24px; height: 24px;"><br>
+                                        <span>打开章节</span>
+                                    </button>
+                                    <div class="setting-button-container">
+                                        <button class="action-button app-button t-center setting-button w-100 p-relative v-middle" onclick="controller.toggle_settings()">
+                                            <img src="img/sliders-h-duotone.svg"width="24" style="width: 24px; height: 24px;"><br>
+                                            <span>阅读设置</span>
+                                        </button>
+                                        <div data-setting id="reader-setting" class="reader-setting ts-dot-4 a-scale-in-ease hidden" style="height: auto;">
+                                            <div data-setting class="size-ruler border-box">
+                                                <div data-setting class="section a-scale-in-ease">
+                                                    <div data-setting class="section-title">页面模式</div>
+                                                    <div data-setting class="section-content">
+                                                        <button data-setting="0" class="app-button selected">双页</button><button data-setting="1" disabled="disabled" class="app-button" title="单页就直接用文件管理器看呗－_－b">单页</button>
+                                                    </div>
+                                                </div>
+                                                <div data-setting class="section a-scale-in-ease">
+                                                    <div data-setting class="section-title">阅读模式</div>
+                                                    <div data-setting class="section-content">
+                                                        <button data-setting="2" class="app-button selected">左右翻页</button><button data-setting="3" class="app-button">上下滚动</button>
+                                                    </div>
+                                                </div>
+                                                <div data-setting class="section a-scale-in-ease">
+                                                    <div data-setting class="section-title">翻页方向</div>
+                                                    <div data-setting class="section-content">
+                                                        <button data-setting="4" class="app-button">普通模式</button><button data-setting="5" class="app-button selected">日漫模式</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div data-dialog id="dialog-layout" class="dialog-layout hidden" background-enter-class="a-fade-in">
+                        <div data-dialog class="layout-background hidden" style="background-color: rgba(0, 0, 0, 0.5);"></div>
+                        <div data-dialog class="vertical-center dp-table h-100 m-auto hidden">
+                            <div data-dialog class="dp-table-cell v-middle">
+                                <div data-dialog class="shortcuts-info p-relative border-box">
+                                    <button data-dialog id="dialog-close" class="close-button app-button p-absolute">
+                                        <img src="img/close.svg" width="20">
+                                    </button>
+                                    <div data-dialog class="panel-title">使用帮助</div>
+                                    <div data-dialog class="content-container">
+                                        <p>打开漫画或章节以继续，暂不支援打开电子书文件</p>
+                                        <p>取消选择后失去了文件读取权限，因而已经加载的章节也无法查看</p>
+                                        <p><img class="helpdesc-image" src="img/folder-open-duotone.svg">打开整本漫画，可以进行翻页等操作</p>
+                                        <p><img class="helpdesc-image" src="img/folder-open-light.svg">打开章节，只能阅读本话</p>
+                                        <img src="img/help.png" class="w-100">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <noscript>
+                <div class="no-script-container">
+                    <div class="text-container m-auto">
+                        <p class="title">> Fetal: script disabled<span class="splash">_</span></p>
+                        <p class="content"><strong>enable javascript</strong><span> you fucking autist neckbeard</span><br><strong>it</strong>'<strong>s not</strong><span> gonna hurt you</span></p>
+                        <div class="copyright">
+                            <p>Copyright 2020 © Cother / Manga Reader Native (Alpha)</p>
+                            <p>Blur the lines between browser and desktop</p>
+                        </div>
+                    </div>
+                </div>
+            </noscript>
+        </div>
+    </body>
+</html>

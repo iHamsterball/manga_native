@@ -1,0 +1,23 @@
+.shortcuts-info[data-dialog] {
+    width: 70vw;
+    min-width: 600px;
+    max-width: 900px;
+    padding: 24px;
+    background-color: rgba(48, 48, 48, .96);
+    color: hsla(0, 0%, 100%, .7);
+    border-radius: 4px;
+    box-shadow: 0 6px 16px -2px rgba(0, 0, 0, .16)
+}
+
+.shortcuts-info .close-button[data-dialog] {
+    top: 24px;
+    right: 24px
+}
+
+.shortcuts-info .panel-title[data-dialog] {
+    font-size: 18px
+}
+
+.shortcuts-info .content-container[data-dialog] {
+    margin-top: 20px
+}

@@ -1,0 +1,15 @@
+@font-face {
+    font-family: 'Major Mono Display';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local('Major Mono Display Regular'), local('MajorMonoDisplay-Regular'), url(../font/MajorMonoDisplay-Regular.min.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'VT323';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local('VT323 Regular'), local('VT323-Regular'), url(../font/VT323-Regular.min.woff2) format('woff2');
+}

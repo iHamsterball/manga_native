@@ -1,0 +1,52 @@
+.loading-failure .hint-img {
+    width: 50%;
+    max-width: 400px;
+    margin: 20px 0
+}
+
+.loading-hinter .text-content {
+    line-height: 1.5
+}
+
+.vertical-mode .load-next-btn-container {
+    margin: 30px auto 70px;
+    text-align: center;
+    width: 50%
+}
+
+.vertical-mode .load-next-btn-container .manga-button {
+    width: 240px;
+    height: 48px;
+    padding: 0px
+}
+
+.vertical-mode .load-next-btn[disabled], .vertical-mode .load-prev-btn[disabled] {
+    background-color: hsla(0, 0%, 100%, .1)!important;
+    color: hsla(0, 0%, 100%, .2)!important
+}
+
+.vertical-mode .ps-container {
+    overflow: auto
+}
+
+.image-list {
+    display: table;
+    height: 100%;
+    width: 50%;
+    transform-origin: top center
+}
+
+.image-list .image-item {
+    display: table;
+    width: 100%
+}
+
+.image-list .image-item.image-loaded {
+    min-width: auto!important;
+    min-height: auto!important
+}
+
+.image-list .image-item.image-loaded img {
+    display: table-cell;
+    width: 100%
+}

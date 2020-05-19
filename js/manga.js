@@ -1,5 +1,16 @@
 class Base {
-    constructor() {
+    constructor(module) {
+        // Wasm api
+        this.api = {
+            // Image processing Section
+            analyse: module.cwrap('analyse', 'number', ['array']),
+            version: module.cwrap('version', '', []),
+
+            // ePub processing Section
+            epub_open: module.cwrap('epub_open', 'number', ['string']),
+            epub_count: module.cwrap('epub_count', '', []),
+            // epub_image: module.cwrap('epub_image', 'number', ['number'])
+        };
         // Current page & offset
         this.cur = this.offset = 0;
         // File list
@@ -11,6 +22,8 @@ class Base {
         });
         // Right-to-Left Order (Left-to-Right -1)
         this.ltr = -1;
+        // Wasm module
+        this.module = module;
         // Scale ratio
         this.ratio = 1;
         // Page step
@@ -19,6 +32,7 @@ class Base {
         this.title = { 'episode': '', 'manga': '' }
         // Enum type
         this.type = Object.freeze({
+            epub: false,
             episode: false,
             manga: true
         });
@@ -41,12 +55,17 @@ class Base {
     }
 
     async open_manga() {
-        controller = new Manga();
+        controller = new Manga(this.module);
         await controller.open();
     }
 
     async open_episode() {
-        controller = new Eposide();
+        controller = new Eposide(this.module);
+        await controller.open();
+    }
+
+    async open_epub() {
+        controller = new Epub(this.module);
         await controller.open();
     }
 
@@ -198,11 +217,26 @@ class Base {
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 
+    _flush() {
+        document.getElementById('image-primary').src = '';
+        document.getElementById('image-secondary').src = '';
+    }
+
+    _loaded() {
+        document.getElementById('loading-hinter').classList.add('hidden');
+    }
+
+    _loading() {
+        document.getElementById('loading-hinter').classList.remove('hidden');
+    }
+
     _ltr(pos = this.pos.primary) {
         return (((pos === this.pos.secondary) ? 1 : -1) * this.ltr + 1) / 2;
     }
 
     _page_check(after) {
+        if (after < 0) Notifier.error(preset.ERR_ALREADY_FIRST_PAGE)
+        else if (after >= this.files.length + this.offset) Notifier.error(preset.ERR_ALREADY_LAST_PAGE);
         return after >= 0 && after < this.files.length + this.offset;
     }
 
@@ -303,14 +337,14 @@ class Base {
 }
 
 class Eposide extends Base {
-    constructor() {
-        super();
+    constructor(module) {
+        super(module);
     }
 
     async open() {
         const opts = { type: 'open-directory' };
         const handle = await window.chooseFileSystemEntries(opts).catch(err => {
-            this._update();
+            this._flush();
             Notifier.info(preset.INFO_CANCELLED);
             return;
         });
@@ -326,8 +360,8 @@ class Eposide extends Base {
 }
 
 class Manga extends Base {
-    constructor() {
-        super();
+    constructor(module) {
+        super(module);
         // Eposide list
         this.episodes = new Array();
         // Eposide index
@@ -340,7 +374,7 @@ class Manga extends Base {
         let tmp = new Array();
         const opts = { type: 'open-directory' };
         const handle = await window.chooseFileSystemEntries(opts).catch(err => {
-            this._update();
+            this._flush();
             Notifier.info(preset.INFO_CANCELLED);
             return;
         });
@@ -485,6 +519,57 @@ class Manga extends Base {
     }
 }
 
+class Epub extends Eposide {
+    constructor(module) {
+        super(module)
+    }
+
+    async open() {
+        const opts = {
+            type: 'open-file',
+            accepts: [{ extensions: ['epub'] }]
+        };
+        const handle = await window.chooseFileSystemEntries(opts);
+        const file = await handle.getFile().catch(err => {
+            this._update();
+            Notifier.info(preset.INFO_CANCELLED);
+            return;
+        });
+        this._flush();
+        this._loading();
+        let buffer = await file.arrayBuffer();
+        this.module.FS.writeFile('tmp.epub', new Uint8Array(buffer)); // Unicode filename not supported
+        this.api.epub_open('tmp.epub');
+        if (handle === undefined) return;
+        this.title['episode'] = handle.name;
+        this._load_files();
+        this.toggle_nav(this.type.epub);
+        Notifier.info(preset.INFO_EPISODE_LODED);
+        this._update();
+        // this._init_vertical();
+        if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
+    }
+
+    _load_files() {
+        this.files = Array(this.api.epub_count()).fill().map((_, i) => new EpubFileHandle(this.module.epub_image, i));
+    }
+
+    _page_move(offset) {
+        if (this._page_check(this.cur + offset)) this.cur += offset;
+    }
+}
+
+class EpubFileHandle {
+    constructor(func, index) {
+        this.func = func;
+        this.index = index;
+    }
+
+    async getFile () {
+        return new Blob([await this.func(this.index)]);
+    }
+}
+
 class Notifier {
     static debug(debug, alt) {
         this._toast(debug || alt);
@@ -512,6 +597,8 @@ const preset = Object.freeze({
     INFO_PREVIOUS_EPISODE: '已切换到上一话',
     INFO_NEXT_EPISODE: '已切换至下一话',
 
+    ERR_ALREADY_FIRST_PAGE: '已经是第一页了',
+    ERR_ALREADY_LAST_PAGE: '已经是最后一页了',
     ERR_ALREADY_FIRST_EPISODE: '没有上一话了',
     ERR_ALREADY_LAST_EPISODE: '没有下一话了',
     ERR_NO_FILES: '没有可显示的图片',
@@ -525,8 +612,6 @@ let controller = null;
 window.addEventListener('DOMContentLoaded', () => init());
 
 let init = () => {
-    controller = new Base();
-    controller._show_direction();
     let ui = document.getElementById('reader-ui');
     ui.addEventListener('animationend', event => {
         if (event.animationName == 'fade-out') {
@@ -587,5 +672,9 @@ let init = () => {
             "Enter": () => (toggle_ui())
         };
         (ops[event.code] || (() => void 0))();
+    };
+    Module().onRuntimeInitialized = async _ => {
+        controller = new Base(Module());
+        controller._show_direction();
     };
 };

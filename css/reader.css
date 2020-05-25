@@ -462,6 +462,14 @@ body {
     display: none
 }
 
+.info-hud .hinter-image-container.single .hinter-image {
+    content: url(../img/scroll.png)
+}
+
+.info-hud .hinter-image-container.double .hinter-image {
+    content: url(../img/ltr.png)
+}
+
 .info-hud .hinter-image-container.single .hinter-image.flip {
     -webkit-transform: rotate(180deg);
     -ms-transform: rotate(180deg);
@@ -1450,7 +1458,7 @@ body {
 .manga-reader-ui {
     -webkit-animation-duration: .2s;
     animation-duration: .2s;
-    z-index: 3
+    z-index: 9
 }
 
 .manga-reader-ui .action-bar-container, .manga-reader-ui .navbar-container {
@@ -1726,12 +1734,8 @@ body {
     z-index: 10
 }
 
-.manga-reader .purchase-panel, .manga-reader .volume-purchase-panel {
-    z-index: 11
-}
-
 .info-layer {
-    z-index: 2
+    z-index: 8
 }
 
 .incorrect-url {

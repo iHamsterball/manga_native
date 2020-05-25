@@ -3,7 +3,8 @@ class Base {
         // Wasm api
         this.api = {
             // Image processing Section
-            analyse: module.cwrap('analyse', 'number', ['array']),
+            analyse: module.cwrap('analyse', 'number', ['string']),
+            rotate: module.cwrap('rotate', 'number', ['array', 'number']),
             version: module.cwrap('version', '', []),
 
             // ePub processing Section
@@ -26,6 +27,14 @@ class Base {
         this.module = module;
         // Scale ratio
         this.ratio = 1;
+        // Rotate switch
+        this.rotate_flags = Object.freeze({
+            default: -1,
+            rotate_90_clockwise: 0,
+            rotate_180: 1,
+            rotate_90_counterclockwise: 2
+        });
+        this.rotate = this.rotate_flags.default;
         // Page step
         this.step = 2;
         // Title
@@ -84,6 +93,16 @@ class Base {
         this._update();
     }
 
+    page_arrowleft() {
+        this._page_move(-this.ltr * this.step);
+        this._update();
+    }
+
+    page_arrowright() {
+        this._page_move(this.ltr * this.step);
+        this._update();
+    }
+
     scale_up() {
         if (this._to_fixed(this.ratio, 1) == 2) return;
         this.ratio += 0.1;
@@ -125,8 +144,29 @@ class Base {
         }
     }
 
+    toggle_rotate(event) {
+        if (this.rotate == this.rotate_flags.default) {
+            this.rotate = this.rotate_flags.rotate_90_clockwise;
+            this.toggle_single(true);
+        } else {
+            this.rotate = this.rotate_flags.default;
+            this.toggle_single(false);
+        }
+    }
+
     toggle_settings() {
         document.getElementById('reader-setting').classList.toggle('hidden');
+    }
+
+    toggle_single(value) {
+        if (this.step != (value ? 1 : 2)) {
+            document.getElementById('images-container').classList.toggle('double-page');
+            document.getElementById('images-container').classList.toggle('single-page');
+            this.step = (this.step % 2) + 1;
+            this.offset = 0;
+            this._reset_hinter();
+            this._update();
+        }
     }
 
     toggle_ui() {
@@ -148,7 +188,6 @@ class Base {
     toggle_rtl(value) {
         if (this.ltr != (value ? -1 : 1)) {
             document.getElementById('images-container').classList.toggle('use-rtl');
-            document.getElementById('hinter-image').classList.toggle('flip');
             document.getElementById('current-page').classList.toggle('left-position');
             document.getElementById('current-page').classList.toggle('right-position');
             document.getElementById('next-page').classList.toggle('left-position');
@@ -157,24 +196,22 @@ class Base {
             this._show_direction();
         }
         this.ltr = value ? -1 : 1;
-        controller._update();
+        this._reset_hinter();
+        this._update();
     }
 
     toggle_vertical(value, event) {
-        Array.from(document.querySelectorAll('.hinter-image')).concat(
-            Array.from(document.getElementById('ps-container').children)).forEach(element => (
+        if (this.vertical != value) {
+            let siblings = n => [...n.parentElement.children].filter(c => c.nodeType == 1 && c != n);
+            let node = event.target?.parentNode?.parentNode;
+            siblings(node).forEach(element => (
                 element.classList.toggle('hidden')
             ));
-        let siblings = n => [...n.parentElement.children].filter(c => c.nodeType == 1 && c != n);
-        let node = event.target?.parentNode?.parentNode;
-        siblings(node).forEach(element => (
-            element.classList.toggle('hidden')
-        ));
-        document.getElementById('hinter-image').parentNode.classList.toggle('double');
-        document.getElementById('hinter-image').parentNode.classList.toggle('single');
-        document.getElementById('reader-body').classList.toggle('horizontal-mode');
-        document.getElementById('reader-body').classList.toggle('vertical-mode');
-        this.vertical = value;
+            document.getElementById('reader-body').classList.toggle('horizontal-mode');
+            document.getElementById('reader-body').classList.toggle('vertical-mode');
+            this.vertical = value;
+            this._reset_hinter();
+        }
     }
 
     async _load_files(handle) {
@@ -186,7 +223,7 @@ class Base {
     }
 
     async _file(index) {
-        return await this.files[index].getFile();
+        return this._rotate_wrapper(await this.files[index].getFile());
     }
 
     async _init_vertical() {
@@ -211,9 +248,18 @@ class Base {
         }
     }
 
+    async _rotate_wrapper(blob) {
+        if (this.rotate >= 0) {
+            let buffer = await blob.arrayBuffer();
+            this.module.FS.writeFile('image', new Uint8Array(buffer));
+            blob = new Blob([await this.module.rotate_image('image', this.rotate)]);
+        }
+        return blob;
+    }
+
     async _update_images(e) {
         document.getElementById('image-primary').src = this._validate(this.pos.primary) ? this.URL.createObjectURL(await this._file(this.primary)) : '';
-        document.getElementById('image-secondary').src = this._validate(this.pos.secondary) ? this.URL.createObjectURL(await this._file(this.secondary)) : '';
+        if (this.step == 2) document.getElementById('image-secondary').src = this._validate(this.pos.secondary) ? this.URL.createObjectURL(await this._file(this.secondary)) : '';
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 
@@ -249,6 +295,16 @@ class Base {
             if (element.dataset.setting < 4) this.vertical = element.dataset.setting == 3;
             if (element.dataset.setting > 3) this.ltr = element.dataset.setting == 5 ? -1 : 1;
         });
+    }
+
+    _reset_hinter() {
+        let hinter = document.getElementById('hinter-image');
+        hinter.classList.remove('flip', 'rotate');
+        hinter.parentNode.classList.remove('double', 'single');
+        if (this.ltr == -1) hinter.classList.add('flip');
+        if (this.step == 1 || this.vertical) hinter.parentNode.classList.add('single')
+        else hinter.parentNode.classList.add('double');
+        if (this.vertical) hinter.classList.add('rotate');
     }
 
     _show_direction() {
@@ -344,7 +400,7 @@ class Eposide extends Base {
     async open() {
         const opts = { type: 'open-directory' };
         const handle = await window.chooseFileSystemEntries(opts).catch(err => {
-            this._flush();
+            this._update();
             Notifier.info(preset.INFO_CANCELLED);
             return;
         });
@@ -374,7 +430,7 @@ class Manga extends Base {
         let tmp = new Array();
         const opts = { type: 'open-directory' };
         const handle = await window.chooseFileSystemEntries(opts).catch(err => {
-            this._flush();
+            this._update();
             Notifier.info(preset.INFO_CANCELLED);
             return;
         });
@@ -529,14 +585,15 @@ class Epub extends Eposide {
             type: 'open-file',
             accepts: [{ extensions: ['epub'] }]
         };
-        const handle = await window.chooseFileSystemEntries(opts);
-        const file = await handle.getFile().catch(err => {
+        const handle = await window.chooseFileSystemEntries(opts).catch(err => {
             this._update();
             Notifier.info(preset.INFO_CANCELLED);
             return;
         });
+        if (handle === undefined) return;
         this._flush();
         this._loading();
+        const file = await handle.getFile();
         let buffer = await file.arrayBuffer();
         this.module.FS.writeFile('tmp.epub', new Uint8Array(buffer)); // Unicode filename not supported
         this.api.epub_open('tmp.epub');
@@ -637,8 +694,8 @@ let init = () => {
     Array.from(document.querySelectorAll('button[data-setting]')).forEach(element => (
         element.addEventListener('click', event => {
             let callbacks = {
-                '0': null,
-                '1': null,
+                '0': () => (controller.toggle_single(false)),
+                '1': () => (controller.toggle_single(true)),
                 '2': () => (controller.toggle_vertical(false, event)),
                 '3': () => (controller.toggle_vertical(true, event)),
                 '4': () => (controller.toggle_rtl(false)),
@@ -669,7 +726,7 @@ let init = () => {
             "PageDown": () => (controller.page_down()),
             "Backspace": () => (controller.page_up()),
             "Space": () => (controller.page_down()),
-            "Enter": () => (toggle_ui())
+            "Enter": () => (controller.toggle_ui())
         };
         (ops[event.code] || (() => void 0))();
     };

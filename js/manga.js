@@ -202,11 +202,6 @@ class Base {
 
     toggle_vertical(value, event) {
         if (this.vertical != value) {
-            let siblings = n => [...n.parentElement.children].filter(c => c.nodeType == 1 && c != n);
-            let node = event.target?.parentNode?.parentNode;
-            siblings(node).forEach(element => (
-                element.classList.toggle('hidden')
-            ));
             document.getElementById('reader-body').classList.toggle('horizontal-mode');
             document.getElementById('reader-body').classList.toggle('vertical-mode');
             this.vertical = value;
@@ -232,7 +227,7 @@ class Base {
             list.removeChild(element)
         ));
         list.id = "image-list";
-        list.classList.add('image-list', 'm-auto', 'over-hidden', this.vertical ? 'draft' : 'hidden');
+        list.classList.add('image-list', 'm-auto', 'over-hidden');
         for (const [index, handle] of this.files.entries()) {
             let image = document.createElement('img');
             image.src = this.URL.createObjectURL(await handle.getFile());

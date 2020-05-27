@@ -29,6 +29,10 @@
     overflow: auto
 }
 
+.vertical-mode .images-container {
+    display: none
+}
+
 .image-list {
     display: table;
     height: 100%;

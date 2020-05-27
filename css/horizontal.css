@@ -111,6 +111,10 @@
     box-sizing: border-box
 }
 
+.horizontal-mode .image-list, .horizontal-mode .load-next-btn-container {
+    display: none
+}
+
 .images-container .view-container canvas {
     position: absolute;
     width: 100%;

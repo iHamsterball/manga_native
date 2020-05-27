@@ -572,7 +572,9 @@ class Manga extends Base {
 
 class Epub extends Eposide {
     constructor(module) {
-        super(module)
+        super(module);
+        // Vertical initialization status
+        this.initialized = false;
     }
 
     async open() {
@@ -600,6 +602,11 @@ class Epub extends Eposide {
         this._update();
         // this._init_vertical();
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
+    }
+
+    toggle_vertical(value, event) {
+        if (!this.initialized) this._init_vertical();
+        super.toggle_vertical(value, event);
     }
 
     _load_files() {

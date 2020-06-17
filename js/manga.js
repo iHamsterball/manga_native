@@ -302,6 +302,10 @@ class Base {
         if (this.vertical) hinter.classList.add('rotate');
     }
 
+    _reset_content() {
+        document.getElementById('manga-contents').classList.add('hidden');
+    }
+
     _show_direction() {
         document.getElementById('message-box').classList.remove('hidden');
         setTimeout(() => (document.getElementById('message-box').classList.add('hidden')), 3000);
@@ -405,6 +409,7 @@ class Eposide extends Base {
         this.toggle_nav(this.type.episode);
         Notifier.info(preset.INFO_EPISODE_LODED);
         this._update();
+        this._reset_content();
         this._init_vertical();
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
@@ -600,6 +605,7 @@ class Epub extends Eposide {
         this.toggle_nav(this.type.epub);
         Notifier.info(preset.INFO_EPISODE_LODED);
         this._update();
+        this._reset_content();
         // this._init_vertical();
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }

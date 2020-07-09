@@ -10,6 +10,7 @@ class Base {
             // ePub processing Section
             epub_open: module.cwrap('epub_open', 'number', ['string']),
             epub_count: module.cwrap('epub_count', '', []),
+            // epub_bundle: module.cwrap('epub_bundle', '', []),
             // epub_image: module.cwrap('epub_image', 'number', ['number'])
         };
         // Current page & offset
@@ -538,7 +539,7 @@ class Manga extends Base {
     }
 
     _init_contents() {
-        document.getElementById('episode-count').innerHTML = this.episodes.length + 1;
+        document.getElementById('episode-count').innerHTML = this.episodes.length;
         let old = document.getElementById('data-contents');
         let contents = document.createElement('div');
         contents.classList.add('data-list'/*, 'p-relative', 'ps' , 'ps--active-y', 'ps--scrolling-y' */);

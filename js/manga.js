@@ -60,6 +60,10 @@ class Base {
         return this.cur - this.offset + 1;
     }
 
+    get rtl() {
+        return -this.ltr;
+    }
+
     get URL() {
         return window.URL || window.webkitURL;
     }
@@ -681,6 +685,7 @@ window.addEventListener('DOMContentLoaded', () => init());
 
 let init = () => {
     let ui = document.getElementById('reader-ui');
+    let container = document.getElementById('ps-container');
     ui.addEventListener('animationend', event => {
         if (event.animationName == 'fade-out') {
             event.target.classList.add('v-hidden');
@@ -720,9 +725,16 @@ let init = () => {
             }
         })
     ));
-    document.getElementById('ps-container').addEventListener('scroll', event => (
+    container.addEventListener('scroll', event => (
         controller._update_hinter()
     ));
+    container.addEventListener('mouseup', event => {
+        if ((event.pageX < (window.innerWidth / 2)) == (controller.rtl == 1) ) {
+            controller.page_down();
+        } else {
+            controller.page_up();
+        }
+    });
     document.querySelectorAll("button").forEach(button => (
         button.addEventListener('keydown', event => (event.preventDefault()))
     ));

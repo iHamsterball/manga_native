@@ -21,14 +21,6 @@
     cursor: url(../cursor/arrow_right.cur), auto
 }
 
-.horizontal-mode.arrow-left .use-rtl {
-    cursor: url(../cursor/arrow_right.cur), auto
-}
-
-.horizontal-mode.arrow-right .use-rtl {
-    cursor: url(../cursor/arrow_left.cur), auto
-}
-
 .horizontal-mode.moving {
     cursor: -webkit-grabbing;
     cursor: grabbing
@@ -55,6 +47,10 @@
     height: 100vh;
 }
 
+.horizontal-mode .images-container.double-page .view-container {
+    width: 50%
+}
+
 .horizontal-mode .images-container .view-container.primary-image {
     -ms-flex-pack: start;
     justify-content: flex-start;
@@ -65,10 +61,6 @@
     -ms-flex-pack: end;
     justify-content: flex-end;
     z-index: 7
-}
-
-.horizontal-mode .images-container .view-container>img {
-    height: 100%
 }
 
 .horizontal-mode .images-container.double-page .view-container.primary-image>img {
@@ -85,6 +77,14 @@
 
 .horizontal-mode .images-container.double-page.use-rtl .view-container.secondary-image>img {
     transform-origin: left top
+}
+
+.horizontal-mode .images-container.single-page .view-container.primary-image {
+    justify-content: center
+}
+
+.horizontal-mode .images-container.single-page .view-container.secondary-image {
+    flex: 0
 }
 
 .horizontal-mode .images-container.single-page .view-container.secondary-image>img {

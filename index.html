@@ -49,10 +49,10 @@
                             <div id="ps-container" class="ps-container p-relative over-hidden h-100 ts-dot-2 ps">
                                 <div id="images-container" class="images-container p-zero h-100 w-100 m-auto double-page">
                                     <div class="view-container p-relative secondary-image unselectable" onclick="controller.page_down()">
-                                        <img id="image-secondary" onload="controller._loaded()">
+                                        <img id="image-secondary" class="h-100" onload="controller._loaded()">
                                     </div>
                                     <div class="view-container p-relative primary-image unselectable" onclick="controller.page_up()">
-                                        <img id="image-primary" onload="controller._loaded()">
+                                        <img id="image-primary" class="h-100" onload="controller._loaded()">
                                     </div>
                                 </div>
                                 <div id="image-list" class="image-list m-auto over-hidden">
@@ -141,6 +141,24 @@
                             <button class="floating-button app-button none-select ui-opener" onclick="controller.toggle_rotate(event)">
                                 <img src="img/rotate-right-duotone.svg" class="v-middle">
                                 <span class="v-middle" style="margin-left: 8px;">向右旋转</span>
+                            </button>
+                        </div>
+                        <div>
+                            <button id="download" class="floating-button app-button none-select ui-opener hidden" onclick="window.dispatchEvent(new Event('download'));">
+                                <img src="img/download-duotone.svg" class="v-middle">
+                                <span class="v-middle" style="margin-left: 8px;">打包下载</span>
+                            </button>
+                        </div>
+                        <div>
+                            <button id="alt-previous-episode" class="floating-button app-button none-select ui-opener" disabled="disabled" onclick="controller.episode_up()">
+                                <img src="img/angle-up-duotone.svg" class="v-middle">
+                                <span class="v-middle" style="margin-left: 8px; margin-right: 12px;">上一话</span>
+                            </button>
+                        </div>
+                        <div>
+                            <button id="alt-next-episode" class="floating-button app-button none-select ui-opener" disabled="disabled" onclick="controller.episode_down()">
+                                <img src="img/angle-down-duotone.svg" class="v-middle">
+                                <span class="v-middle" style="margin-left: 8px; margin-right: 12px;">下一话</span>
                             </button>
                         </div>
                         <div>

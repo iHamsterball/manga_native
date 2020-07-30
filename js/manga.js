@@ -573,6 +573,8 @@ class Manga extends Base {
     _update_nav() {
         document.getElementById('previous-episode').disabled = this.index - 1 < 0;
         document.getElementById('next-episode').disabled = this.index + 1 >= this.episodes.length;
+        document.getElementById('alt-previous-episode').disabled = this.index - 1 < 0;
+        document.getElementById('alt-next-episode').disabled = this.index + 1 >= this.episodes.length;
     }
 }
 
@@ -691,15 +693,15 @@ let init = () => {
     ui.addEventListener('mouseleave', event => (
         event.target.classList.add('autohide')
     ));
-    document.getElementById('image-secondary').parentNode.addEventListener('mouseover', () => (
-        document.getElementById('reader-body').classList.add('arrow-left')
-    ));
-    document.getElementById('image-primary').parentNode.addEventListener('mouseover', () => (
-        document.getElementById('reader-body').classList.add('arrow-right')
-    ));
-    document.getElementById('reader-body').parentNode.addEventListener('mouseout', () => (
-        document.getElementById('reader-body').classList.remove('arrow-left', 'arrow-right')
-    ));
+    document.addEventListener('mousemove', event => {
+        if (event.pageX < (window.innerWidth / 2)) {
+            document.getElementById('reader-body').classList.add('arrow-left');
+            document.getElementById('reader-body').classList.remove('arrow-right');
+        } else {
+            document.getElementById('reader-body').classList.remove('arrow-left');
+            document.getElementById('reader-body').classList.add('arrow-right');
+        }
+    }, false);
     Array.from(document.querySelectorAll('button[data-setting]')).forEach(element => (
         element.addEventListener('click', event => {
             let callbacks = {

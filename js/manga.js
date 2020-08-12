@@ -387,8 +387,12 @@ class Base {
     }
 
     _update_info() {
-        document.getElementById('manga-title').innerHTML = this.title['manga'];
-        document.getElementById('episode-title').innerHTML = this.title['episode'];
+        let manga = document.getElementById('manga-title');
+        manga.innerHTML = this.title['manga'];
+        manga.title = this.title['manga'];
+        let episode = document.getElementById('episode-title');
+        episode.innerHTML = this.title['episode'];
+        episode.title = this.title['episode'];
         document.getElementById('page-count').innerHTML = this.files.length || '';
         this._update_progress(Math.floor((this.cur + this.offset) / 2) + 1, Math.round((this.files.length + this.offset) / 2));
         // TODO: Change to logged location [Low priority]
@@ -539,6 +543,7 @@ class Manga extends Base {
         button.classList.add('list-item', 'app-button');
         button.dataset.contents = null;
         button.dataset.index = index;
+        button.title = title;
         button.appendChild(label);
         return button;
     }

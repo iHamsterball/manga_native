@@ -132,6 +132,16 @@ class Base {
         document.getElementById('manga-contents').classList.toggle('hidden');
     }
 
+    toggle_fullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+
     toggle_help() {
         let dialog = document.getElementById('dialog-layout');
         let elements = Array.from(dialog.getElementsByClassName('hidden')).concat(dialog);
@@ -729,7 +739,9 @@ let init = () => {
         controller._update_hinter()
     ));
     container.addEventListener('mouseup', event => {
-        if ((event.pageX < (window.innerWidth / 2)) == (controller.rtl == 1) ) {
+        if (event.button != 0) return;
+        if (controller.vertical) return;
+        if ((event.pageX < (window.innerWidth / 2)) == (controller.rtl == 1)) {
             controller.page_down();
         } else {
             controller.page_up();

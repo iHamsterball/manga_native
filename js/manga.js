@@ -486,7 +486,7 @@ class Manga extends Base {
 
     async episode_scrolldown() {
         await this._episode_move(1);
-        this._scale();
+        if (this._episode_check(this.index + 1)) this._scale();
         this._update();
     }
 
@@ -517,12 +517,12 @@ class Manga extends Base {
             this.index += offset;
             this._reset();
             await this._load_files(this.episodes[this.index]);
+            this._init_vertical();
         } else if (this.index + offset < 0) {
             Notifier.error(preset.ERR_ALREADY_FIRST_EPISODE);
         } else if (this.index + offset >= this.episodes.length) {
             Notifier.error(preset.ERR_ALREADY_LAST_EPISODE);
         }
-        this._init_vertical();
     }
 
     async _page_move(r, s) {

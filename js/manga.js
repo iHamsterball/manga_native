@@ -307,6 +307,11 @@ class Base {
         });
     }
 
+    _reset(full = false) {
+        this.files = new Array();
+        if (full) this.cur = 0;
+    }
+
     _reset_hinter() {
         let hinter = document.getElementById('hinter-image');
         hinter.classList.remove('flip', 'rotate');
@@ -413,6 +418,8 @@ class Base {
 class Eposide extends Base {
     constructor(module) {
         super(module);
+        // File handle
+        this.handle = null;
     }
 
     async open() {
@@ -423,14 +430,26 @@ class Eposide extends Base {
             return;
         });
         if (handle === undefined) return;
-        await this._load_files(handle);
-        this.title['episode'] = handle.name;
-        this.toggle_nav(this.type.episode);
+        await this.load(handle);
         Notifier.info(preset.INFO_EPISODE_LODED);
+        if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
+    }
+
+    async sync() {
+        await this.load();
+        Notifier.info(preset.INFO_SYNCD);
+        if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
+    }
+
+    async load(handle) {
+        if (handle) this.handle = handle;
+        this._reset();
+        await this._load_files(this.handle);
+        this.title['episode'] = this.handle.name;
+        this.toggle_nav(this.type.episode);
         this._update();
         this._reset_content();
         this._init_vertical();
-        if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 }
 
@@ -454,19 +473,30 @@ class Manga extends Base {
             return;
         });
         if (handle === undefined) return;
-        const entries = await handle.getEntries();
+        await this.load(handle);
+        Notifier.info(preset.INFO_MANGA_LOADED);
+        if (this.episodes.length == 0) Notifier.error(preset.ERR_NO_EPISODES);
+    }
+
+    async sync() {
+        await this.load();
+        Notifier.info(preset.INFO_SYNCD);
+        if (this.episodes.length == 0) Notifier.error(preset.ERR_NO_EPISODES);
+    }
+
+    async load(handle = null) {
+        if (handle) this.root = handle;
+        let tmp = new Array();
+        const entries = await this.root.getEntries();
         for await (const entry of entries) {
             if (entry.isDirectory) tmp.push(entry);
         };
         tmp.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
         if (tmp.length != 0) this.episodes = tmp;
-        this.root = handle;
         await this._episode_move(0);
         this.toggle_nav(this.type.manga);
         this._init_contents();
         this._update();
-        Notifier.info(preset.INFO_MANGA_LOADED);
-        if (tmp.length == 0) Notifier.error(preset.ERR_NO_EPISODES);
     }
 
     async episode_up() {
@@ -515,7 +545,7 @@ class Manga extends Base {
         if (offset == 1) Notifier.info(preset.INFO_NEXT_EPISODE);
         if (this._episode_check(this.index + offset)) {
             this.index += offset;
-            this._reset();
+            this._reset(offset);
             await this._load_files(this.episodes[this.index]);
             this._init_vertical();
         } else if (this.index + offset < 0) {
@@ -550,11 +580,6 @@ class Manga extends Base {
 
     _episode_check(after) {
         return after >= 0 && after < this.episodes.length;
-    }
-
-    _reset() {
-        this.files = new Array();
-        this.cur = 0;
     }
 
     _init_contents() {
@@ -658,6 +683,10 @@ class EpubFileHandle {
 }
 
 class Notifier {
+    constructor() {
+        this.timer = null;
+    }
+
     static debug(debug, alt) {
         this._toast(debug || alt);
     }
@@ -671,9 +700,15 @@ class Notifier {
     }
 
     static _toast(msg) {
+        this._clear();
         document.getElementById('toast-content').innerHTML = msg;
         document.getElementById('episode-toast').classList.remove('hidden');
-        setTimeout(() => (document.getElementById('episode-toast').classList.add('hidden')), 3000);
+        this.timer = setTimeout(() => (document.getElementById('episode-toast').classList.add('hidden')), 3000);
+    }
+
+    static _clear() {
+        window.clearTimeout(this.timer);
+        document.getElementById('episode-toast').classList.add('hidden');
     }
 }
 
@@ -683,6 +718,7 @@ const preset = Object.freeze({
     INFO_MANGA_LOADED: '加载漫画成功',
     INFO_PREVIOUS_EPISODE: '已切换到上一话',
     INFO_NEXT_EPISODE: '已切换至下一话',
+    INFO_SYNCD: '已同步文件内容',
 
     ERR_ALREADY_FIRST_PAGE: '已经是第一页了',
     ERR_ALREADY_LAST_PAGE: '已经是最后一页了',

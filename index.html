@@ -144,7 +144,7 @@
                             </button>
                         </div>
                         <div>
-                            <button class="floating-button app-button none-select ui-opener" onclick="controller.sync()">
+                            <button class="floating-button app-button none-select ui-opener" onclick="controller.sync()" title="当打开的漫画所在文件夹内容或结构变更时，无需重新打开，同步内容即可">
                                 <img src="img/sync-duotone.svg" class="v-middle">
                                 <span class="v-middle" style="margin-left: 8px; margin-right: 2px;">同步内容</span>
                             </button>
@@ -298,10 +298,10 @@
                                     </button>
                                     <div data-dialog class="panel-title">使用帮助</div>
                                     <div data-dialog class="content-container">
-                                        <p>打开漫画或章节以继续，暂不支援打开电子书文件</p>
-                                        <p>取消选择后失去了文件读取权限，因而已经加载的章节也无法查看</p>
-                                        <p><img class="helpdesc-image" src="img/folder-open-duotone.svg">打开整本漫画，可以进行翻页等操作</p>
-                                        <p><img class="helpdesc-image" src="img/folder-open-light.svg">打开章节，只能阅读本话</p>
+                                        <p>打开文件夹或电子书以继续，取消选择后失去了文件读取权限，因而已经加载的章节也将无法查看</p>
+                                        <p><img class="helpdesc-image" src="img/folder-open-duotone.svg">打开整本漫画，每个次级目录为一话</p>
+                                        <p><img class="helpdesc-image" src="img/folder-open-light.svg">打开章节，打开的目录为一话</p>
+                                        <p><img class="helpdesc-image" src="img/books-duotone.svg">打开 Epub 电子书（实验性），只能阅读电子书本身，不是标准实现</p>
                                         <img src="img/help.png" class="w-100">
                                     </div>
                                 </div>

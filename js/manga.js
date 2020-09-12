@@ -14,7 +14,7 @@ class Base {
             // epub_image: module.cwrap('epub_image', 'number', ['number'])
         };
         // Current page & offset
-        this.cur = this.offset = 0;
+        this.cur = this._offset = 0;
         // File list
         this.files = new Array();
         // Enum image container
@@ -50,6 +50,15 @@ class Base {
         this.vertical = false;
 
         this._read_setting();
+    }
+
+    get offset() {
+        if (this.rotate == this.rotate_flags.default) return this._offset
+        else return 0;
+    }
+
+    set offset(value) {
+        this._offset = value;
     }
 
     get primary() {
@@ -178,7 +187,6 @@ class Base {
             document.getElementById('images-container').classList.toggle('double-page');
             document.getElementById('images-container').classList.toggle('single-page');
             this.step = (this.step % 2) + 1;
-            this.offset = 0;
             this._reset_hinter();
             this._update();
         }

@@ -233,9 +233,8 @@ class Base {
     }
 
     async _load_files(handle) {
-        const entries = await handle.getEntries();
-        for await (const entry of entries) {
-            if (entry.isFile) this.files.push(entry);
+        for await (const [_, entry] of handle.entries()) {
+            if (entry.kind === 'file') this.files.push(entry);
         };
         this.files.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
     }
@@ -431,8 +430,7 @@ class Eposide extends Base {
     }
 
     async open() {
-        const opts = { type: 'open-directory' };
-        const handle = await window.chooseFileSystemEntries(opts).catch(err => {
+        const handle = await window.showDirectoryPicker().catch(err => {
             this._update();
             Notifier.info(preset.INFO_CANCELLED);
             return;
@@ -473,9 +471,7 @@ class Manga extends Base {
     }
 
     async open() {
-        let tmp = new Array();
-        const opts = { type: 'open-directory' };
-        const handle = await window.chooseFileSystemEntries(opts).catch(err => {
+        const handle = await window.showDirectoryPicker().catch(err => {
             this._update();
             Notifier.info(preset.INFO_CANCELLED);
             return;
@@ -495,9 +491,8 @@ class Manga extends Base {
     async load(handle = null) {
         if (handle) this.root = handle;
         let tmp = new Array();
-        const entries = await this.root.getEntries();
-        for await (const entry of entries) {
-            if (entry.isDirectory) tmp.push(entry);
+        for await (const [_, entry] of this.root.entries()) {
+            if (entry.kind === 'directory') tmp.push(entry);
         };
         tmp.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
         if (tmp.length != 0) this.episodes = tmp;
@@ -639,10 +634,16 @@ class Epub extends Eposide {
 
     async open() {
         const opts = {
-            type: 'open-file',
-            accepts: [{ extensions: ['epub'] }]
+            types: [
+                {
+                    // description: '',
+                    accept: {
+                        'application/epub+zip': ['.epub']
+                    }
+                }
+            ]
         };
-        const handle = await window.chooseFileSystemEntries(opts).catch(err => {
+        const handle = await window.showOpenFilePicker(opts).catch(err => {
             this._update();
             Notifier.info(preset.INFO_CANCELLED);
             return;

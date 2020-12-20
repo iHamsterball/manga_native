@@ -643,7 +643,7 @@ class Epub extends Eposide {
                 }
             ]
         };
-        const handle = await window.showOpenFilePicker(opts).catch(err => {
+        const [handle] = await window.showOpenFilePicker(opts).catch(err => {
             this._update();
             Notifier.info(preset.INFO_CANCELLED);
             return;

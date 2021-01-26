@@ -1,6 +1,5 @@
 .shortcuts-info[data-dialog] {
     width: 70vw;
-    min-width: 600px;
     max-width: 900px;
     padding: 24px;
     background-color: rgba(48, 48, 48, .96);

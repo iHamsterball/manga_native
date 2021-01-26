@@ -1,5 +1,5 @@
 class Base {
-    constructor(module) {
+    constructor(module, webrtc) {
         // Wasm api
         this.api = {
             // Image processing Section
@@ -13,6 +13,8 @@ class Base {
             // epub_bundle: module.cwrap('epub_bundle', '', []),
             // epub_image: module.cwrap('epub_image', 'number', ['number'])
         };
+        // WebRTC Host
+        this.client = false;
         // Current page & offset
         this.cur = this._offset = 0;
         // File list
@@ -24,8 +26,12 @@ class Base {
         });
         // Right-to-Left Order (Left-to-Right -1)
         this.ltr = -1;
+        // Meta data
+        this.meta = null;
         // Wasm module
         this.module = module;
+        // Observer
+        this.observer = this._init_observer();
         // Scale ratio
         this.ratio = 1;
         // Rotate switch
@@ -41,13 +47,14 @@ class Base {
         // Title
         this.title = { 'episode': '', 'manga': '' }
         // Enum type
-        this.type = Object.freeze({
-            epub: false,
-            episode: false,
-            manga: true
-        });
+        this.type = false;
         // Vertical mode
         this.vertical = false;
+        // WebRTC submodule
+        this.webrtc = webrtc;
+        this.webrtc.pc.onconnectionstatechange = this._webrtc_connect_callback.bind(this);
+        this.webrtc.pc.ondatachannel = this._webrtc_dc_callback.bind(this);
+        this.webrtc.ctrl.onmessage = this._webrtc_control_callback.bind(this);
 
         this._read_setting();
     }
@@ -78,18 +85,22 @@ class Base {
     }
 
     async open_manga() {
-        controller = new Manga(this.module);
+        controller = new Manga(this.module, this.webrtc);
         await controller.open();
     }
 
     async open_episode() {
-        controller = new Eposide(this.module);
+        controller = new Eposide(this.module, this.webrtc);
         await controller.open();
     }
 
     async open_epub() {
-        controller = new Epub(this.module);
+        controller = new Epub(this.module, this.webrtc);
         await controller.open();
+    }
+
+    open_webrtc() {
+        controller = new WebRTCClient(this.module, this.webrtc);
     }
 
     page_up() {
@@ -137,6 +148,29 @@ class Base {
         this._update_scale();
     }
 
+    copy_text(span) {
+        let input = span.children[0];
+        input.select();
+        // Clipboard API requires SECURE context, aka HTTPS connection or localhost
+        // Fallback to deprecated method document.execCommand
+        if (navigator.clipboard) {
+            document.execCommand("copy");
+        } else {
+            navigator.clipboard?.writeText(input.value);
+        }
+        if (input.id == 'answer-responsed') this._webrtc_connecting();
+    }
+
+    async paste_text(span) {
+        let input = span.children[0];
+        input.select();
+        // Clipboard API requires SECURE context, aka HTTPS connection or localhost
+        // There is no way to fallback
+        input.value = await navigator.clipboard?.readText();
+        if (input.id == 'offer-provided') this.receive_offer();
+        if (input.id == 'answer-replied') this.receive_answer();
+    }
+
     toggle_contents() {
         document.getElementById('manga-contents').classList.toggle('hidden');
     }
@@ -151,17 +185,26 @@ class Base {
         }
     }
 
-    toggle_help() {
-        let dialog = document.getElementById('dialog-layout');
+    toggle_webrtc() {
+        let dialog = document.getElementById('dialog-webrtc');
         let elements = Array.from(dialog.getElementsByClassName('hidden')).concat(dialog);
         elements.forEach(element => (element.classList.toggle('hidden')));
-        document.getElementById('dialog-close').addEventListener('click', event => (
+        document.getElementById('dialog-close-webrtc').addEventListener('click', event => (
             elements.forEach(element => (element.classList.toggle('hidden')))
         ), { once: true });
     }
 
-    toggle_nav(mask) {
-        if (mask == document.getElementById('content-button').disabled) {
+    toggle_help() {
+        let dialog = document.getElementById('dialog-help');
+        let elements = Array.from(dialog.getElementsByClassName('hidden')).concat(dialog);
+        elements.forEach(element => (element.classList.toggle('hidden')));
+        document.getElementById('dialog-close-help').addEventListener('click', event => (
+            elements.forEach(element => (element.classList.toggle('hidden')))
+        ), { once: true });
+    }
+
+    toggle_nav() {
+        if (this.type == document.getElementById('content-button').disabled) {
             Array.from(document.querySelectorAll('[data-navigator] button')).forEach(element => (
                 element.disabled = !element.disabled
             ));
@@ -232,6 +275,42 @@ class Base {
         }
     }
 
+    // WebRTC Signaling
+    async create_offer() {
+        let offer = document.getElementById('offer-generated');
+        await this.webrtc.pc.setLocalDescription(await this.webrtc.pc.createOffer());
+        this.webrtc.pc.onicecandidate = ({ candidate }) => {
+            if (candidate) return;
+            offer.value = this.webrtc.pc.localDescription.sdp;
+            offer.select();
+        };
+    }
+
+    async receive_offer() {
+        let offer = document.getElementById('offer-provided');
+        let answer = document.getElementById('answer-responsed');
+        // if (this.webrtc.pc.signalingState != "stable") return;
+        if (!offer.value.endsWith('\n')) offer.value += '\n';
+        await this.webrtc.pc.setRemoteDescription({ type: "offer", sdp: offer.value });
+        await this.webrtc.pc.setLocalDescription(await this.webrtc.pc.createAnswer());
+        this.webrtc.pc.onicecandidate = ({ candidate }) => {
+            if (candidate) return;
+            answer.focus();
+            answer.value = this.webrtc.pc.localDescription.sdp;
+            answer.select();
+            // TODO: Move this elsewhere
+            this.open_webrtc();
+        };
+    };
+
+    receive_answer() {
+        let answer = document.getElementById('answer-replied');
+        if (this.webrtc.pc.signalingState != "have-local-offer") return;
+        if (!answer.value.endsWith('\n')) answer.value += '\n';
+        this.webrtc.pc.setRemoteDescription({ type: "answer", sdp: answer.value });
+        this._webrtc_connecting();
+    };
+
     async _load_files(handle) {
         for await (const [_, entry] of handle.entries()) {
             if (entry.kind === 'file') this.files.push(entry);
@@ -252,17 +331,33 @@ class Base {
         list.classList.add('image-list', 'm-auto', 'over-hidden');
         for (const [index, handle] of this.files.entries()) {
             let image = document.createElement('img');
-            image.src = this.URL.createObjectURL(await handle.getFile());
-            image.addEventListener('load', () => (this._scale()));
+            image.dataset.index = index;
+            this.observer.observe(image);
+            // image.src = this.URL.createObjectURL(await handle.getFile());
+            // image.addEventListener('load', () => (this._scale()));
             let container = document.createElement('div');
             container.classList.add('img-container', 'w-100', 'h-100');
             let item = document.createElement('div');
             item.dataset.index = index;
-            item.classList.add('image-item', 'p-relative', 'image-loaded', 'unselectable');
+            item.classList.add('image-item', 'p-relative', 'unselectable');
             container.appendChild(image);
             item.appendChild(container);
             list.appendChild(item);
         }
+    }
+
+    _init_observer() {
+        return new IntersectionObserver((entries, self) => (
+            entries.forEach(async entry => {
+                if (entry.isIntersecting) {
+                    const image = entry.target;
+                    const index = parseInt(image.dataset.index, 10);
+                    image.src = this.URL.createObjectURL(await this.files[index].getFile());
+                    image.parentNode.parentNode.classList.add('image-loaded');
+                    self.unobserve(entry.target);
+                }
+            })
+        ));
     }
 
     async _rotate_wrapper(blob) {
@@ -420,13 +515,130 @@ class Base {
     _update_scale() {
         document.getElementById('scale-percentage').innerHTML = `${Math.round(this.ratio * 100)}%`;
     }
+
+    _webrtc_connecting() {
+        document.querySelectorAll('[id^="answer"]').forEach(element => (
+            element.parentNode.classList.add('loading')
+        ));
+    }
+
+    _webrtc_connected() {
+        document.querySelectorAll('[id^="answer"]').forEach(element => {
+            element.parentNode.classList.remove('loading');
+            element.parentNode.classList.add('accomplished');
+        });
+        setTimeout(() => (document.getElementById('dialog-webrtc').classList.add('hidden')), 3000);
+    }
+
+    _webrtc_connect_callback(event) {
+        switch (event.target.connectionState) {
+            case "connected":
+                // The connection has become fully connected
+                this._webrtc_connected();
+                if (!this.client) this._webrtc_transmit_meta();
+                Notifier.info(preset.INFO_WEBRTC_CONNECTED);
+                break;
+            case "disconnected":
+            case "failed":
+                // One or more transports has terminated unexpectedly or in an error
+                break;
+            case "closed":
+                // The connection has been closed
+                break;
+        }
+    }
+
+    _webrtc_dc_callback(event) {
+        const channel = event.channel;
+        if (channel.label == 'file') this.webrtc.channels.set(channel.id, channel);
+    }
+
+    async _webrtc_control_callback(event) {
+        let msg = JSON.parse(event.data);
+        if (msg.target == this.webrtc.target.client) return;
+        switch(msg.cmd) {
+            case 'episode':
+                this._webrtc_reply_episode(msg.args);
+                break;
+            case 'fetch':
+                await this._webrtc_reply_file(msg.args);
+                break;
+            default:
+                console.error('Unexpected command.')
+        }
+    }
+
+    async _webrtc_store_meta(rx) {
+        return new Promise((resolve) => (
+            rx.onmessage = (event) => {
+                const payload = JSON.parse(event.data);
+                this.meta = payload;
+                resolve();
+            }
+        ))
+    }
+
+    async _webrtc_reply_episode(args) {
+        let episode = {
+            name: '',
+            length: 0,
+        };
+        if (this.type) {
+            let files = new Array();
+            for await (const [_, entry] of this.episodes[args.index].entries()) {
+                if (entry.kind === 'file') files.push(entry);
+            };
+            episode.name = this.episodes[args.index].name;
+            episode.length = files.length;
+        } else {
+            episode.name = this.title['episode'];
+            episode.length = this.files.length;
+        }
+        this.webrtc.scope = args.index;
+        this.webrtc.cmd('episode', this.webrtc.target.client, episode);
+    }
+
+    async _webrtc_reply_file(args) {
+        let file = null;
+        let data = null;
+        switch (this.type) {
+            case type.manga:
+                let files = new Array();
+                for await (const [_, entry] of this.episodes[args.scope].entries()) {
+                    if (entry.kind === 'file') files.push(entry);
+                };
+                files.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
+                file = await files[args.index].getFile();
+                data = await file.arrayBuffer();
+                break;
+            case type.episode:
+            case type.epub:
+                file = await this.files[args.index].getFile();
+                data = await file.arrayBuffer();
+                break;
+        }
+        this.webrtc._transmit_file(data, args.channel);
+    }
+
+    _webrtc_transmit_meta() {
+        if (this.webrtc.pc.connectionState != 'connected') return;
+        let meta = {
+            manga: this.title.manga,
+            episode: this.title.episode,
+            type: this.type,
+            episodes: this.episodes ? this.episodes.map(episode => ({name: episode.name})) : null,
+        };
+        this.webrtc._transmit_meta(meta);
+    }
 }
 
 class Eposide extends Base {
-    constructor(module) {
-        super(module);
+    constructor(module, webrtc) {
+        super(module, webrtc);
         // File handle
         this.handle = null;
+        // Type definition
+        this.type = type.episode;
     }
 
     async open() {
@@ -452,22 +664,25 @@ class Eposide extends Base {
         this._reset();
         await this._load_files(this.handle);
         this.title['episode'] = this.handle.name;
-        this.toggle_nav(this.type.episode);
+        this.toggle_nav();
         this._update();
+        this._webrtc_transmit_meta();
         this._reset_content();
         this._init_vertical();
     }
 }
 
 class Manga extends Base {
-    constructor(module) {
-        super(module);
+    constructor(module, webrtc) {
+        super(module, webrtc);
         // Eposide list
         this.episodes = new Array();
         // Eposide index
         this.index = 0;
         // Root directory file handle
         this.root = null;
+        // Type definition
+        this.type = type.manga;
     }
 
     async open() {
@@ -497,9 +712,10 @@ class Manga extends Base {
         tmp.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
         if (tmp.length != 0) this.episodes = tmp;
         await this._episode_move(0);
-        this.toggle_nav(this.type.manga);
+        this.toggle_nav();
         this._init_contents();
         this._update();
+        this._webrtc_transmit_meta();
     }
 
     async episode_up() {
@@ -519,7 +735,6 @@ class Manga extends Base {
 
     async episode_scrolldown() {
         await this._episode_move(1);
-        if (this._episode_check(this.index + 1)) this._scale();
         this._update();
     }
 
@@ -551,6 +766,7 @@ class Manga extends Base {
             this._reset(offset);
             await this._load_files(this.episodes[this.index]);
             this._init_vertical();
+            if (this.vertical) this._scale();
         } else if (this.index + offset < 0) {
             Notifier.error(preset.ERR_ALREADY_FIRST_EPISODE);
         } else if (this.index + offset >= this.episodes.length) {
@@ -626,10 +842,12 @@ class Manga extends Base {
 }
 
 class Epub extends Eposide {
-    constructor(module) {
-        super(module);
+    constructor(module, webrtc) {
+        super(module, webrtc);
         // Vertical initialization status
         this.initialized = false;
+        // Type definition
+        this.type = type.epub;
     }
 
     async open() {
@@ -658,10 +876,11 @@ class Epub extends Eposide {
         if (handle === undefined) return;
         this.title['episode'] = handle.name;
         this._load_files();
-        this.toggle_nav(this.type.epub);
+        this.toggle_nav();
         Notifier.info(preset.INFO_EPISODE_LODED);
         this._update();
         this._reset_content();
+        this._webrtc_transmit_meta();
         // this._init_vertical();
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
@@ -672,7 +891,7 @@ class Epub extends Eposide {
     }
 
     _load_files() {
-        this.files = Array(this.api.epub_count()).fill().map((_, i) => new EpubFileHandle(this.module.epub_image, i));
+        this.files = Array(this.api.epub_count()).fill().map((_, i) => ({ getFile: async _ => (new Blob([await this.module.epub_image(i)])) }));
     }
 
     _page_move(offset) {
@@ -680,14 +899,275 @@ class Epub extends Eposide {
     }
 }
 
-class EpubFileHandle {
-    constructor(func, index) {
-        this.func = func;
-        this.index = index;
+class WebRTC {
+    constructor() {
+        const config = { iceServers: [] };
+        this.pc = new RTCPeerConnection(config);
+        this.ctrl = this.pc.createDataChannel("ctrl", { negotiated: true, id: 0 });
+        this.channels = new Map();
+        this.scope = 0;
+        this.target = Object.freeze({
+            host: 0,
+            client: 1,
+            unspecified: 2,
+        })
     }
 
-    async getFile () {
-        return new Blob([await this.func(this.index)]);
+    cmd(cmd, target, args=null) {
+        if (this.ctrl.readyState != 'open') return;
+        this.ctrl.send(JSON.stringify({ cmd: cmd, target: target, args: args }));
+    }
+
+    async file(index) {
+        if (this.client) return;
+        let rx = this.pc.createDataChannel('file');
+        let buffer = new Array();
+        let meta = null;
+        let size = 0;
+        rx.onopen = (event) => {
+            this.channels.set(rx.id, rx);
+            rx.binaryType = 'arraybuffer';
+            let args = {
+                scope: this.scope,
+                index: index,
+                channel: rx.id,
+            };
+            this.cmd('fetch', this.target.host, args);
+        };
+        rx.onmessage = (event) => {
+            const data = event.data;
+            if (data instanceof ArrayBuffer) {
+                buffer.push(event.data);
+                size += event.data.byteLength;
+                if (size == meta.size) rx.close();
+                return;
+            }
+            const payload = JSON.parse(data);
+            if (payload.type === 'meta') meta = { size: payload.size };
+        };
+        rx.onerror = (event) => (console.error(event.data));
+        rx.onclosing = (event) => (this.channels.delete(rx.id));
+        return new Promise((resolve) => (
+            rx.onclose = (event) => {
+                resolve(buffer);
+            }
+        ));
+    }
+
+    _transmit_file(data, channel) {
+        let offset = 0;
+        let tx = this.channels.get(channel);
+        if (tx.readyState != 'open') console.error('Datachannel not ready.');
+        tx.send(JSON.stringify({ type: 'meta', size: data.byteLength }))
+
+        let chunk_size = this.pc.sctp.maxMessageSize;
+        let low_watermark = chunk_size; // A single chunk
+        let high_watermark = Math.max(chunk_size * 8, 1048576); // 8 chunks or at least 1 MiB
+        tx.binaryType = 'arraybuffer';
+        tx.bufferedAmountLowThreshold = low_watermark;
+        tx.onbufferedamountlow = (event) => {
+            // this._transmit();
+        };
+        while (offset < data.byteLength) {
+            let buffered_amount = tx.bufferedAmount;
+            tx.send(data.slice(offset, offset + chunk_size));
+            offset += chunk_size;
+            if (buffered_amount >= high_watermark) {
+                // Nevermind
+            }
+        }
+        // tx.close();
+        tx.onclose = (event) => {
+            this.channels.delete(tx.id);
+        }
+    }
+
+    _transmit_meta(meta) {
+        let tx = this.pc.createDataChannel('meta');
+        tx.onopen = (event) => (tx.send(JSON.stringify(meta)));
+    }
+}
+
+class WebRTCClient extends Base {
+    constructor(module, webrtc) {
+        super(module, webrtc);
+        // WebRTC Client
+        this.client = true;
+        // Eposide list
+        this.episodes = new Array();
+        // Eposide index
+        this.index = 0;
+        // Eposide promise resolve
+        this.resolve;
+
+        this.webrtc.ctrl.onmessage = this._webrtc_control_callback.bind(this);
+    }
+
+    get sync() {
+        // return this.type ? Manga.prototype.sync : Eposide.prototype.sync;
+    }
+
+    get episode_up() {
+        return Manga.prototype.episode_up;
+    }
+
+    get episode_down() {
+        return Manga.prototype.episode_down;
+    }
+
+    get episode_switch() {
+        return Manga.prototype.episode_switch;
+    }
+
+    get episode_scrolldown() {
+        return Manga.prototype.episode_scrolldown;
+    }
+
+    get page_up() {
+        return this.type ? Manga.prototype.page_up : Eposide.prototype.page_up;
+    }
+
+    get page_down() {
+        return this.type ? Manga.prototype.page_down : Eposide.prototype.page_down;
+    }
+
+    get page_arrowleft() {
+        return this.type ? Manga.prototype.page_arrowleft : Eposide.prototype.page_arrowleft;
+    }
+
+    get page_arrowright() {
+        return this.type ? Manga.prototype.page_arrowright : Eposide.prototype.page_arrowright;
+    }
+
+    get _page_move() {
+        return this.type ? Manga.prototype._page_move : Eposide.prototype._page_move;
+    }
+
+    get _content() {
+        return Manga.prototype._content;
+    }
+
+    get _episode_check() {
+        return Manga.prototype._episode_check;
+    }
+
+    get _init_contents() {
+        return Manga.prototype._init_contents;
+    }
+
+    get _update() {
+        return this.type ? Manga.prototype._update : super._update;
+    }
+
+    get _update_contents() {
+        return Manga.prototype._update_contents;
+    }
+
+    get _update_nav() {
+        return Manga.prototype._update_nav;
+    }
+
+    async load() {
+        this._webrtc_parse_meta();
+        this.toggle_nav();
+        this._reset(true);
+        switch (this.type) {
+            case true:
+                await this._episode_move(0);
+                if (this.type) this._init_contents();
+                this._update();
+                break;
+            case false:
+                await this._load_files(this.index);
+                this.title['episode'] = this.meta.episode;
+                this._update();
+                this._reset_content();
+                break;
+        }
+    }
+
+    async _episode_move(offset) {
+        if (offset == -1) Notifier.info(preset.INFO_PREVIOUS_EPISODE);
+        if (offset == 1) Notifier.info(preset.INFO_NEXT_EPISODE);
+        if (this._episode_check(this.index + offset)) {
+            this.index += offset;
+            this._reset(offset);
+            await this._load_files(this.index);
+            this._init_vertical();
+            if (this.vertical) this._scale();
+        } else if (this.index + offset < 0) {
+            Notifier.error(preset.ERR_ALREADY_FIRST_EPISODE);
+        } else if (this.index + offset >= this.episodes.length) {
+            Notifier.error(preset.ERR_ALREADY_LAST_EPISODE);
+        }
+    }
+
+    async _webrtc_dc_callback(event) {
+        const channel = event.channel;
+        switch (channel.label) {
+            case 'file':
+                this.webrtc.channels.set(channel.id, channel);
+                break;
+            case 'meta':
+                await this._webrtc_store_meta(channel);
+                this.load();
+                break;
+        }
+    }
+
+    async _webrtc_control_callback(event) {
+        let msg = JSON.parse(event.data);
+        if (msg.target == this.webrtc.target.host) return;
+        switch (msg.cmd) {
+            case 'episode':
+                this._webrtc_load_files(msg.args);
+                break;
+            default:
+                console.error('Unexpected command.')
+        }
+    }
+
+    async _webrtc_request_episode(index) {
+        let args = {
+            index: index,
+        };
+        this.webrtc.scope = index;
+        this.webrtc.cmd('episode', this.webrtc.target.host, args);
+        return new Promise((resolve) => this.resolve = resolve);
+    }
+
+    _webrtc_request_meta() {
+        this.webrtc.cmd('meta', this.webrtc.target.host);
+    }
+
+    _webrtc_parse_meta() {
+        if (this.meta == null) return;
+        this.type = this.meta.type;
+        this.episodes = this.meta.episodes;
+        this.index = 0;
+    }
+
+    _webrtc_load_files(args) {
+        this.files = Array(args.length).fill().map((_, i) => ({ getFile: async _ => (new Blob(await this.webrtc.file(i))) }));
+        this.resolve();
+    }
+
+    async _load_files(index) {
+        await this._webrtc_request_episode(index);
+    }
+
+    _update_info() {
+        if (this.meta == null) return;
+        switch (this.type) {
+            case true:
+                this.title['manga'] = this.meta.manga || '';
+                this.title['episode'] = this.episodes[this.index]?.name || '';
+                break;
+            case false:
+                this.title['episode'] = this.meta.episode || '';
+                break;
+        }
+        super._update_info();
     }
 }
 
@@ -728,6 +1208,7 @@ const preset = Object.freeze({
     INFO_PREVIOUS_EPISODE: '已切换到上一话',
     INFO_NEXT_EPISODE: '已切换至下一话',
     INFO_SYNCD: '已同步文件内容',
+    INFO_WEBRTC_CONNECTED: '已建立连接',
 
     ERR_ALREADY_FIRST_PAGE: '已经是第一页了',
     ERR_ALREADY_LAST_PAGE: '已经是最后一页了',
@@ -737,6 +1218,12 @@ const preset = Object.freeze({
     ERR_NO_EPISODES: '没有可显示的章节',
 
     CUSTOM: null
+});
+
+const type = Object.freeze({
+    epub: false,
+    episode: false,
+    manga: true
 });
 
 let controller = null;
@@ -816,7 +1303,8 @@ let init = () => {
         (ops[event.code] || (() => void 0))();
     };
     Module().onRuntimeInitialized = async _ => {
-        controller = new Base(Module());
+        controller = new Base(Module(), new WebRTC());
         controller._show_direction();
+        controller.create_offer();
     };
 };

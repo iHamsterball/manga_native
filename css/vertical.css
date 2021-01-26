@@ -42,7 +42,8 @@
 
 .image-list .image-item {
     display: table;
-    width: 100%
+    width: 100%;
+    min-height: 100%
 }
 
 .image-list .image-item.image-loaded {

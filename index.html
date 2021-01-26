@@ -6,6 +6,7 @@
         <title>Manga Reader Native (Alpha)</title>
         <meta name="description" content="Manga reader using Native File System API">
         <meta name="keywords" content="Manga Reader Native">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <!-- Favicon -->
         <!-- <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
         <link rel="icon preload" type="image/png" as="image" sizes="32x32" href="/favicon/favicon-32x32.png">
@@ -136,6 +137,13 @@
                                     <span>更改跨页匹配</span><span style="margin-left: 5px; opacity: 0.5;">(C)</span>
                                 </button>
                             </div>
+                        </div>
+                        <div>
+                            <button class="floating-button app-button none-select ui-opener" title="可手动与局域网下其他设备连接，从而在其他设备阅读此设备上打开的漫画"
+                                onclick="controller.toggle_webrtc()">
+                                <img src="img/chart-network-duotone.svg" class="v-middle">
+                                <span class="v-middle" style="margin-left: 8px;">建立连接</span>
+                            </button>
                         </div>
                         <div>
                             <button class="floating-button app-button none-select ui-opener" onclick="controller.toggle_rotate(event)">
@@ -288,12 +296,12 @@
                             </div>
                         </div>
                     </div>
-                    <div data-dialog id="dialog-layout" class="dialog-layout hidden" background-enter-class="a-fade-in">
+                    <div data-dialog id="dialog-help" class="dialog-layout hidden" background-enter-class="a-fade-in">
                         <div data-dialog class="layout-background hidden" style="background-color: rgba(0, 0, 0, 0.5);"></div>
                         <div data-dialog class="vertical-center dp-table h-100 m-auto hidden">
                             <div data-dialog class="dp-table-cell v-middle">
                                 <div data-dialog class="shortcuts-info p-relative border-box">
-                                    <button data-dialog id="dialog-close" class="close-button app-button p-absolute">
+                                    <button data-dialog id="dialog-close-help" class="close-button app-button p-absolute">
                                         <img src="img/close.svg" width="20">
                                     </button>
                                     <div data-dialog class="panel-title">使用帮助</div>
@@ -303,6 +311,56 @@
                                         <p><img class="helpdesc-image" src="img/folder-open-light.svg">打开章节，打开的目录为一话</p>
                                         <p><img class="helpdesc-image" src="img/books-duotone.svg">打开 Epub 电子书（实验性），只能阅读电子书本身，不是标准实现</p>
                                         <img src="img/help.png" class="w-100">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div data-dialog id="dialog-webrtc" class="dialog-layout hidden" background-enter-class="a-fade-in">
+                        <div data-dialog class="layout-background hidden" style="background-color: rgba(0, 0, 0, 0.5);"></div>
+                        <div data-dialog class="vertical-center dp-table h-100 m-auto hidden">
+                            <div data-dialog class="dp-table-cell v-middle">
+                                <div data-dialog class="shortcuts-info p-relative border-box">
+                                    <button data-dialog id="dialog-close-webrtc" class="close-button app-button p-absolute">
+                                        <img src="img/close.svg" width="20">
+                                    </button>
+                                    <div data-dialog class="panel-title">建立连接</div>
+                                    <div data-dialog class="content-container">
+                                        <p>选择发起连接或接受连接以继续</p>
+                                        <div data-dialog class="collapse-content">
+                                            <div data-dialog class="collapse" id="webrtc-create">
+                                                <a data-dialog href="#webrtc-create">发起连接</a>
+                                                <div data-dialog class="content">
+                                                    <div data-dialog class="inner-content">
+                                                        <p>将下列请求内容复制到希望建立连接的另一设备上</p>
+                                                        <p>将获得的答复内容原样粘贴进空白的文本框中</p>
+                                                        <p>有时将答复内容粘贴后依旧无效果，可以尝试再次将请求粘贴一遍</p>
+                                                        <span class="copy" onclick="controller.copy_text(this)">
+                                                            <textarea id="offer-generated" placeholder="Offer" readonly></textarea>
+                                                        </span>
+                                                        <span class="paste" onclick="controller.paste_text(this)">
+                                                            <textarea id="answer-replied" placeholder="Answer"></textarea>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div data-dialog class="collapse" id="webrtc-receive">
+                                                <a data-dialog href="#webrtc-receive">接受连接</a>
+                                                <div data-dialog class="content">
+                                                    <div data-dialog class="inner-content">
+                                                        <p>将复制的连接请求原样粘贴进空白的文本框中</p>
+                                                        <p>将生成的答复内容复制到先前设备上</p>
+                                                        <p>有时将答复内容粘贴后依旧无效果，可以尝试再次将请求粘贴一遍</p>
+                                                        <span class="paste" onclick="controller.paste_text(this)">
+                                                            <textarea id="offer-provided" placeholder="Offer"></textarea>
+                                                        </span>
+                                                        <span class="copy" onclick="controller.copy_text(this)">
+                                                            <textarea id="answer-responsed" placeholder="Answer" readonly></textarea>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

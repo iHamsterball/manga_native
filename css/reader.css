@@ -724,6 +724,13 @@ body {
 }
 
 .manga-navbar {
+    /**
+     * This is a hack to show logo if title is empty,
+     * while there isn't enough space for both of them.
+     * Where are you CSS4? */
+    display: flex;
+    align-items: center;
+    flex-direction: row-reverse;
     height: 50px;
     background-color: #fff;
     box-shadow: 0 0 5px 1px rgba(158, 179, 193, .5)
@@ -741,6 +748,41 @@ body {
 
 .manga-navbar .size-ruler .manga-logo {
     margin-right: 40px
+}
+
+.manga-navbar {
+    color: #fff;
+    font-size: 14px;
+    line-height: 20px;
+    padding: 0 5vw
+}
+
+.manga-navbar .manga-title {
+    text-align: end;
+    opacity: .9;
+    overflow: visible
+}
+
+.manga-navbar .episode-title {
+    opacity: .5
+}
+
+.manga-navbar .manga-title:not(:empty)::after {
+    content: '>';
+    opacity: .5;
+    padding: 0 4px
+}
+
+.manga-navbar .manga-title, .manga-navbar .episode-title {
+    flex: 1
+}
+
+.manga-navbar .left-padding {
+    flex: 0
+}
+
+.manga-navbar .right-padding {
+    flex: 1
 }
 
 .theme-dark .manga-navbar {
@@ -941,46 +983,6 @@ body {
     margin: 40px 0;
     font-size: 13px;
     color: #777
-}
-
-.read-nav {
-    -ms-flex: 1;
-    flex: 1;
-    width: 0;
-    font-size: 14px;
-    line-height: 20px;
-    display: -ms-flexbox;
-    display: flex;
-    -ms-flex-flow: row nowrap;
-    flex-flow: row nowrap;
-    -ms-flex-align: start;
-    align-items: flex-start;
-    -ms-flex-pack: center;
-    justify-content: center;
-    color: #fff
-}
-
-.read-nav a {
-    opacity: .9;
-    color: #fff
-}
-
-.read-nav .manga-title {
-    max-width: 50%
-}
-
-.left-part, .read-nav, .right-part {
-    flex: 1
-}
-
-.read-nav .episode {
-    max-width: 300px;
-    opacity: .5
-}
-
-.read-nav .next-icon {
-    opacity: .5;
-    padding: 0 4px
 }
 
 .reader-setting {
@@ -1383,11 +1385,17 @@ body {
     .info-hud .hinter-image-container .current-page:empty::after {
         display: none
     }
+    .manga-navbar .episode-title {
+        flex: 2
+    }
 }
 
 @media screen and (max-width: 1080px) {
-    .left-part, .right-part {
+    .manga-navbar .episode-title:not(:empty)~a.manga-logo {
         display: none
+    }
+    .manga-navbar .left-padding, .manga-navbar .right-padding {
+        flex: 0
     }
     .touch-control {
         display: block

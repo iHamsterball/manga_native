@@ -43,7 +43,9 @@
     display: flex;
     -ms-flex-item-align: stretch;
     align-self: stretch;
-    height: 100vh;
+    max-height: 100vh;
+    max-width: 100vw;
+    object-fit: contain
 }
 
 .horizontal-mode .images-container .view-container.primary-image {
@@ -59,7 +61,8 @@
 }
 
 .horizontal-mode .images-container.double-page .view-container>img {
-    height: 100vh;
+    max-height: 100%;
+    max-width: 100%;
     object-fit: contain
 }
 
@@ -121,4 +124,19 @@
     height: 100%;
     left: 0;
     top: 0
+}
+
+@media screen and (max-width: 1080px) {
+    .horizontal-mode .images-container .view-container.primary-image {
+        justify-content: center
+    }
+    .horizontal-mode .images-container .view-container.primary-image>img {
+        transform-origin: center
+    }
+    .horizontal-mode .images-container .view-container.secondary-image {
+        flex: 0
+    }
+    .horizontal-mode .images-container .view-container.secondary-image>img {
+        display: none
+    }
 }

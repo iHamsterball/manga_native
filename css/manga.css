@@ -10,6 +10,10 @@
     user-select: none
 }
 
+.page-count {
+    margin-left: 8px
+}
+
 .page-count::before {
     content: 'N/A'
 }
@@ -112,7 +116,7 @@
 }
 
 .collapse:target .content {
-    max-height: 15em;
+    max-height: none
 }
 
 .collapse:target a:before {
@@ -146,6 +150,7 @@
 ::-webkit-scrollbar {
     width: 5px;
     height: 5px;
+    padding-right: 5px;
     z-index: 10
 }
 
@@ -169,19 +174,31 @@
 }
 
 ::-webkit-scrollbar-track {
-    background: #303030;
-    border: 0px none #ffffff;
-    border-radius: 50px;
+    background: transparent;
 }
 
-::-webkit-scrollbar-track:hover {
-    background: #454545;
-}
-
-::-webkit-scrollbar-track:active {
-    background: #565656;
+::-webkit-scrollbar-track-piece {
+    background: transparent;
 }
 
 ::-webkit-scrollbar-corner {
     background: transparent;
+}
+
+@media screen and (max-width: 768px) {
+    .page-count {
+        margin: 0
+    }
+    .page-count::after {
+        display: none
+    }
+}
+
+@media screen and (max-width: 1080px) {
+    .collapse a {
+        padding: 0.9rem 0
+    }
+    .inner-content {
+        padding: 0 1.2rem;
+    }
 }

@@ -11,7 +11,7 @@
 .vertical-mode .load-next-btn-container {
     margin: 30px auto 70px;
     text-align: center;
-    width: 50%
+    width: auto
 }
 
 .vertical-mode .load-next-btn-container .manga-button {
@@ -26,7 +26,15 @@
 }
 
 .vertical-mode .ps-container {
-    overflow: auto
+    /**
+     * Attribute overflow: overlay is deprecated,
+     * but unfortunately there isn't any alternative,
+     * which can achieve same effect with stylesheets only.
+     * So, well, whatever. */
+    overflow: overlay;
+    scroll-behavior: smooth;
+    -webkit-transform: translatez(0);
+    transform: translatez(0)
 }
 
 .vertical-mode .images-container {
@@ -54,4 +62,10 @@
 .image-list .image-item.image-loaded img {
     display: table-cell;
     width: 100%
+}
+
+@media screen and (max-width: 1080px) {
+    .image-list {
+        width: 100vw
+    }
 }

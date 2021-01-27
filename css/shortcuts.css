@@ -20,3 +20,9 @@
 .shortcuts-info .content-container[data-dialog] {
     margin-top: 20px
 }
+
+@media screen and (max-width: 1080px) {
+    .shortcuts-info[data-dialog] {
+        width: 90vw
+    }
+}

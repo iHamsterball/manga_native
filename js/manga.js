@@ -19,19 +19,21 @@ class Base {
         this.cur = this._offset = 0;
         // File list
         this.files = new Array();
-        // Enum image container
-        this.pos = Object.freeze({
-            primary: Symbol('primary'),
-            secondary: Symbol('secondary')
-        });
         // Right-to-Left Order (Left-to-Right -1)
         this.ltr = -1;
+        // Messagebox timer
+        this.message = null;
         // Meta data
         this.meta = null;
         // Wasm module
         this.module = module;
         // Observer
-        this.observer = this._init_observer();
+        this.observer = { 'image': null, 'step': null };
+        // Enum image container
+        this.pos = Object.freeze({
+            primary: Symbol('primary'),
+            secondary: Symbol('secondary')
+        });
         // Scale ratio
         this.ratio = 1;
         // Rotate switch
@@ -47,7 +49,7 @@ class Base {
         // Title
         this.title = { 'episode': '', 'manga': '' }
         // Enum type
-        this.type = false;
+        this.type = type.undefined;
         // Vertical mode
         this.vertical = false;
         // WebRTC submodule
@@ -56,6 +58,8 @@ class Base {
         this.webrtc.pc.ondatachannel = this._webrtc_dc_callback.bind(this);
         this.webrtc.ctrl.onmessage = this._webrtc_control_callback.bind(this);
 
+        this._init_observer();
+        this._observe_step();
         this._read_setting();
     }
 
@@ -99,8 +103,9 @@ class Base {
         await controller.open();
     }
 
-    open_webrtc() {
-        controller = new WebRTCClient(this.module, this.webrtc);
+    async open_webrtc() {
+        // TODO: Working flow should be reconsidered
+        if (!this.webrtc.connected) this.toggle_webrtc();
     }
 
     page_up() {
@@ -204,7 +209,7 @@ class Base {
     }
 
     toggle_nav() {
-        if (this.type == document.getElementById('content-button').disabled) {
+        if (this.type == type.manga == document.getElementById('content-button').disabled) {
             Array.from(document.querySelectorAll('[data-navigator] button')).forEach(element => (
                 element.disabled = !element.disabled
             ));
@@ -225,14 +230,11 @@ class Base {
         document.getElementById('reader-setting').classList.toggle('hidden');
     }
 
-    toggle_single(value) {
-        if (this.step != (value ? 1 : 2)) {
-            document.getElementById('images-container').classList.toggle('double-page');
-            document.getElementById('images-container').classList.toggle('single-page');
-            this.step = (this.step % 2) + 1;
-            this._reset_hinter();
-            this._update();
-        }
+    toggle_single() {
+        const container = document.getElementById('images-container');
+        container.classList.toggle('single-page');
+        container.classList.toggle('double-page');
+        this._update();
     }
 
     toggle_ui() {
@@ -263,7 +265,7 @@ class Base {
         }
         this.ltr = value ? -1 : 1;
         this._reset_hinter();
-        this._update();
+        if (this.type != type.undefined) this._update();
     }
 
     toggle_vertical(value, event) {
@@ -298,9 +300,9 @@ class Base {
             answer.focus();
             answer.value = this.webrtc.pc.localDescription.sdp;
             answer.select();
-            // TODO: Move this elsewhere
-            this.open_webrtc();
         };
+        // TODO: Action needed if working redesigned
+        this.client = true;
     };
 
     receive_answer() {
@@ -332,9 +334,7 @@ class Base {
         for (const [index, handle] of this.files.entries()) {
             let image = document.createElement('img');
             image.dataset.index = index;
-            this.observer.observe(image);
-            // image.src = this.URL.createObjectURL(await handle.getFile());
-            // image.addEventListener('load', () => (this._scale()));
+            this.observer['image'].observe(image);
             let container = document.createElement('div');
             container.classList.add('img-container', 'w-100', 'h-100');
             let item = document.createElement('div');
@@ -347,17 +347,40 @@ class Base {
     }
 
     _init_observer() {
-        return new IntersectionObserver((entries, self) => (
+        this.observer['image'] = new IntersectionObserver((entries, observer) => (
             entries.forEach(async entry => {
                 if (entry.isIntersecting) {
                     const image = entry.target;
                     const index = parseInt(image.dataset.index, 10);
                     image.src = this.URL.createObjectURL(await this.files[index].getFile());
                     image.parentNode.parentNode.classList.add('image-loaded');
-                    self.unobserve(entry.target);
+                    observer.unobserve(entry.target);
                 }
             })
         ));
+        this.observer['step'] = new IntersectionObserver((entries, observer) => (
+            entries.forEach(entry => {
+                controller.step = entry.intersectionRatio == 0 ? 1 : 2;
+                // When step changes from 1 to 2, whatever this.offset is, this.cur should NOT BE odd
+                // Or the first page becomes unreachable
+                if (controller.step == 2 && controller.cur % 2) {
+                    controller.cur += -2 * controller.offset + 1;
+                    controller.toggle_offset();
+                }
+                // When step changes from 2 to 1, if this.offset is 1, this.cur should NOT BE 0
+                // Or the first page becomes blank
+                if (controller.step == 1 && controller.offset == 1 && controller.cur == 0) {
+                    controller.cur = 1;
+                }
+                if (controller.type != type.undefined) controller._update();
+                controller._reset_hinter();
+            })
+        ));
+    }
+
+    _observe_step() {
+        const secondary = document.getElementById('image-secondary');
+        this.observer['step'].observe(secondary);
     }
 
     async _rotate_wrapper(blob) {
@@ -393,12 +416,13 @@ class Base {
     }
 
     _page_check(after) {
-        if (after < 0) Notifier.error(preset.ERR_ALREADY_FIRST_PAGE)
+        if (after - this.step % 2 * this.offset < 0) Notifier.error(preset.ERR_ALREADY_FIRST_PAGE)
         else if (after >= this.files.length + this.offset) Notifier.error(preset.ERR_ALREADY_LAST_PAGE);
-        return after >= 0 && after < this.files.length + this.offset;
+        return after - this.step % 2 * this.offset >= 0 && after < this.files.length + this.offset;
     }
 
     _page_move(offset) {
+        if (this.vertical) return;
         if (this._page_check(this.cur + offset)) this.cur += offset;
     }
 
@@ -430,7 +454,8 @@ class Base {
 
     _show_direction() {
         document.getElementById('message-box').classList.remove('hidden');
-        setTimeout(() => (document.getElementById('message-box').classList.add('hidden')), 3000);
+        clearTimeout(this.message);
+        this.message = setTimeout(() => (document.getElementById('message-box').classList.add('hidden')), 3000);
     }
 
     _scale() {
@@ -536,6 +561,7 @@ class Base {
                 // The connection has become fully connected
                 this._webrtc_connected();
                 if (!this.client) this._webrtc_transmit_meta();
+                if (this.client) controller = new WebRTCClient(this.module, this.webrtc);
                 Notifier.info(preset.INFO_WEBRTC_CONNECTED);
                 break;
             case "disconnected":
@@ -583,16 +609,20 @@ class Base {
             name: '',
             length: 0,
         };
-        if (this.type) {
-            let files = new Array();
-            for await (const [_, entry] of this.episodes[args.index].entries()) {
-                if (entry.kind === 'file') files.push(entry);
-            };
-            episode.name = this.episodes[args.index].name;
-            episode.length = files.length;
-        } else {
-            episode.name = this.title['episode'];
-            episode.length = this.files.length;
+        switch (this.type) {
+            case type.manga:
+                let files = new Array();
+                for await (const [_, entry] of this.episodes[args.index].entries()) {
+                    if (entry.kind === 'file') files.push(entry);
+                };
+                episode.name = this.episodes[args.index].name;
+                episode.length = files.length;
+                break;
+            case type.episode:
+            case type.epub:
+                episode.name = this.title['episode'];
+                episode.length = this.files.length;
+                break;
         }
         this.webrtc.scope = args.index;
         this.webrtc.cmd('episode', this.webrtc.target.client, episode);
@@ -729,7 +759,7 @@ class Manga extends Base {
     }
 
     async episode_switch(event) {
-        await this._page_move(parseInt(event.target.dataset.index, 10) - this.index);
+        await this._episode_move(parseInt(event.target.dataset.index, 10) - this.index);
         this._update();
     }
 
@@ -739,22 +769,22 @@ class Manga extends Base {
     }
 
     async page_up() {
-        await this._page_move(-1, this.step);
+        await this._page_move(-1);
         this._update();
     }
 
     async page_down() {
-        await this._page_move(1, this.step);
+        await this._page_move(1);
         this._update();
     }
 
     async page_arrowleft() {
-        await this._page_move(-this.ltr, this.step);
+        await this._page_move(-this.ltr);
         this._update();
     }
 
     async page_arrowright() {
-        await this._page_move(this.ltr, this.step);
+        await this._page_move(this.ltr);
         this._update();
     }
 
@@ -774,11 +804,12 @@ class Manga extends Base {
         }
     }
 
-    async _page_move(r, s) {
-        if (this._page_check(this.cur + r * s)) {
-            this.cur += r * s;
+    async _page_move(offset) {
+        if (this.vertical) return;
+        if (this._page_check(this.cur + offset * this.step)) {
+            this.cur += offset * this.step;
         } else {
-            await this._episode_move(r);
+            await this._episode_move(offset);
         }
     }
 
@@ -895,6 +926,7 @@ class Epub extends Eposide {
     }
 
     _page_move(offset) {
+        if (this.vertical) return;
         if (this._page_check(this.cur + offset)) this.cur += offset;
     }
 }
@@ -911,6 +943,10 @@ class WebRTC {
             client: 1,
             unspecified: 2,
         })
+    }
+
+    get connected() {
+        return this.pc.connectionState == 'connected' && this.ctrl.readyState == 'open';
     }
 
     cmd(cmd, target, args=null) {
@@ -984,7 +1020,10 @@ class WebRTC {
 
     _transmit_meta(meta) {
         let tx = this.pc.createDataChannel('meta');
-        tx.onopen = (event) => (tx.send(JSON.stringify(meta)));
+        tx.onopen = (event) => {
+            tx.send(JSON.stringify(meta));
+        }
+        // tx.onopen = (event) => (tx.send(JSON.stringify(meta)));
     }
 }
 
@@ -999,12 +1038,10 @@ class WebRTCClient extends Base {
         this.index = 0;
         // Eposide promise resolve
         this.resolve;
-
-        this.webrtc.ctrl.onmessage = this._webrtc_control_callback.bind(this);
     }
 
     get sync() {
-        // return this.type ? Manga.prototype.sync : Eposide.prototype.sync;
+        // return this.type == type.manga ? Manga.prototype.sync : Eposide.prototype.sync;
     }
 
     get episode_up() {
@@ -1024,23 +1061,23 @@ class WebRTCClient extends Base {
     }
 
     get page_up() {
-        return this.type ? Manga.prototype.page_up : Eposide.prototype.page_up;
+        return this.type == type.manga ? Manga.prototype.page_up : Eposide.prototype.page_up;
     }
 
     get page_down() {
-        return this.type ? Manga.prototype.page_down : Eposide.prototype.page_down;
+        return this.type == type.manga ? Manga.prototype.page_down : Eposide.prototype.page_down;
     }
 
     get page_arrowleft() {
-        return this.type ? Manga.prototype.page_arrowleft : Eposide.prototype.page_arrowleft;
+        return this.type == type.manga ? Manga.prototype.page_arrowleft : Eposide.prototype.page_arrowleft;
     }
 
     get page_arrowright() {
-        return this.type ? Manga.prototype.page_arrowright : Eposide.prototype.page_arrowright;
+        return this.type == type.manga ? Manga.prototype.page_arrowright : Eposide.prototype.page_arrowright;
     }
 
     get _page_move() {
-        return this.type ? Manga.prototype._page_move : Eposide.prototype._page_move;
+        return this.type == type.manga ? Manga.prototype._page_move : Eposide.prototype._page_move;
     }
 
     get _content() {
@@ -1056,7 +1093,7 @@ class WebRTCClient extends Base {
     }
 
     get _update() {
-        return this.type ? Manga.prototype._update : super._update;
+        return this.type == type.manga ? Manga.prototype._update : super._update;
     }
 
     get _update_contents() {
@@ -1072,12 +1109,13 @@ class WebRTCClient extends Base {
         this.toggle_nav();
         this._reset(true);
         switch (this.type) {
-            case true:
+            case type.manga:
                 await this._episode_move(0);
-                if (this.type) this._init_contents();
+                this._init_contents();
                 this._update();
                 break;
-            case false:
+            case type.episode:
+            case type.epub:
                 await this._load_files(this.index);
                 this.title['episode'] = this.meta.episode;
                 this._update();
@@ -1159,11 +1197,12 @@ class WebRTCClient extends Base {
     _update_info() {
         if (this.meta == null) return;
         switch (this.type) {
-            case true:
+            case type.manga:
                 this.title['manga'] = this.meta.manga || '';
                 this.title['episode'] = this.episodes[this.index]?.name || '';
                 break;
-            case false:
+            case type.episode:
+            case type.epub:
                 this.title['episode'] = this.meta.episode || '';
                 break;
         }
@@ -1221,9 +1260,10 @@ const preset = Object.freeze({
 });
 
 const type = Object.freeze({
-    epub: false,
-    episode: false,
-    manga: true
+    undefined: 0,
+    epub: 1,
+    episode: 1,
+    manga: 2
 });
 
 let controller = null;
@@ -1278,6 +1318,7 @@ let init = () => {
     container.addEventListener('mouseup', event => {
         if (event.button != 0) return;
         if (controller.vertical) return;
+        if (window.innerWidth < window.innerHeight) return;
         if ((event.pageX < (window.innerWidth / 2)) == (controller.rtl == 1)) {
             controller.page_down();
         } else {

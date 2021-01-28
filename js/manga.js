@@ -1272,6 +1272,7 @@ window.addEventListener('DOMContentLoaded', () => init());
 
 let init = () => {
     let ui = document.getElementById('reader-ui');
+    let body = document.getElementById('reader-body');
     let container = document.getElementById('ps-container');
     ui.addEventListener('animationend', event => {
         if (event.animationName == 'fade-out') {
@@ -1287,11 +1288,11 @@ let init = () => {
     ));
     document.addEventListener('mousemove', event => {
         if (event.pageX < (window.innerWidth / 2)) {
-            document.getElementById('reader-body').classList.add('arrow-left');
-            document.getElementById('reader-body').classList.remove('arrow-right');
+            body.classList.add('arrow-left');
+            body.classList.remove('arrow-right');
         } else {
-            document.getElementById('reader-body').classList.remove('arrow-left');
-            document.getElementById('reader-body').classList.add('arrow-right');
+            body.classList.remove('arrow-left');
+            body.classList.add('arrow-right');
         }
     }, false);
     Array.from(document.querySelectorAll('button[data-setting]')).forEach(element => (
@@ -1325,6 +1326,11 @@ let init = () => {
             controller.page_up();
         }
     });
+    container.addEventListener('click', event => {
+        document.elementsFromPoint(event.clientX, event.clientY).forEach(element => {
+            if (element.classList.contains('touch-button')) element.click();
+        });
+    })
     document.querySelectorAll("button").forEach(button => (
         button.addEventListener('keydown', event => (event.preventDefault()))
     ));

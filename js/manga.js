@@ -89,18 +89,46 @@ class Base {
     }
 
     async open_manga() {
-        controller = new Manga(this.module, this.webrtc);
-        await controller.open();
+        const handle = await window.showDirectoryPicker().catch(err => {
+            this._update();
+            Notifier.info(preset.INFO_CANCELLED);
+            return;
+        });
+        if (handle === undefined) return;
+        controller = new Manga(handle, this.module, this.webrtc);
+        await controller.init();
     }
 
     async open_episode() {
-        controller = new Eposide(this.module, this.webrtc);
-        await controller.open();
+        const handle = await window.showDirectoryPicker().catch(err => {
+            this._update();
+            Notifier.info(preset.INFO_CANCELLED);
+            return;
+        });
+        if (handle === undefined) return;
+        controller = new Episode(handle, this.module, this.webrtc);
+        await controller.init();
     }
 
     async open_epub() {
-        controller = new Epub(this.module, this.webrtc);
-        await controller.open();
+        const opts = {
+            types: [
+                {
+                    // description: '',
+                    accept: {
+                        'application/epub+zip': ['.epub']
+                    }
+                }
+            ]
+        };
+        const [handle] = await window.showOpenFilePicker(opts).catch(err => {
+            this._update();
+            Notifier.info(preset.INFO_CANCELLED);
+            return;
+        });
+        if (handle === undefined) return;
+        controller = new Epub(handle, this.module, this.webrtc);
+        await controller.init();
     }
 
     async open_webrtc() {
@@ -213,6 +241,8 @@ class Base {
             Array.from(document.querySelectorAll('[data-navigator] button')).forEach(element => (
                 element.disabled = !element.disabled
             ));
+            document.getElementById('alt-previous-episode').disabled = this.type != type.manga;
+            document.getElementById('alt-next-episode').disabled = this.type != type.manga;
         }
     }
 
@@ -662,24 +692,18 @@ class Base {
     }
 }
 
-class Eposide extends Base {
-    constructor(module, webrtc) {
+class Episode extends Base {
+    constructor(handle, module, webrtc) {
         super(module, webrtc);
         // File handle
-        this.handle = null;
+        this.handle = handle;
         // Type definition
         this.type = type.episode;
     }
 
-    async open() {
-        const handle = await window.showDirectoryPicker().catch(err => {
-            this._update();
-            Notifier.info(preset.INFO_CANCELLED);
-            return;
-        });
-        if (handle === undefined) return;
-        await this.load(handle);
-        Notifier.info(preset.INFO_EPISODE_LODED);
+    async init() {
+        await this.load();
+        Notifier.info(preset.INFO_EPISODE_LOADED);
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 
@@ -689,40 +713,33 @@ class Eposide extends Base {
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 
-    async load(handle) {
-        if (handle) this.handle = handle;
+    async load() {
         this._reset();
-        await this._load_files(this.handle);
         this.title['episode'] = this.handle.name;
+        await this._load_files(this.handle);
         this.toggle_nav();
         this._update();
-        this._webrtc_transmit_meta();
         this._reset_content();
         this._init_vertical();
+        this._webrtc_transmit_meta();
     }
 }
 
 class Manga extends Base {
-    constructor(module, webrtc) {
+    constructor(handle, module, webrtc) {
         super(module, webrtc);
-        // Eposide list
+        // Episode list
         this.episodes = new Array();
-        // Eposide index
+        // Episode index
         this.index = 0;
         // Root directory file handle
-        this.root = null;
+        this.root = handle;
         // Type definition
         this.type = type.manga;
     }
 
-    async open() {
-        const handle = await window.showDirectoryPicker().catch(err => {
-            this._update();
-            Notifier.info(preset.INFO_CANCELLED);
-            return;
-        });
-        if (handle === undefined) return;
-        await this.load(handle);
+    async init() {
+        await this.load();
         Notifier.info(preset.INFO_MANGA_LOADED);
         if (this.episodes.length == 0) Notifier.error(preset.ERR_NO_EPISODES);
     }
@@ -733,8 +750,7 @@ class Manga extends Base {
         if (this.episodes.length == 0) Notifier.error(preset.ERR_NO_EPISODES);
     }
 
-    async load(handle = null) {
-        if (handle) this.root = handle;
+    async load() {
         let tmp = new Array();
         for await (const [_, entry] of this.root.entries()) {
             if (entry.kind === 'directory') tmp.push(entry);
@@ -743,8 +759,8 @@ class Manga extends Base {
         if (tmp.length != 0) this.episodes = tmp;
         await this._episode_move(0);
         this.toggle_nav();
-        this._init_contents();
         this._update();
+        this._init_contents();
         this._webrtc_transmit_meta();
     }
 
@@ -872,62 +888,37 @@ class Manga extends Base {
     }
 }
 
-class Epub extends Eposide {
-    constructor(module, webrtc) {
-        super(module, webrtc);
-        // Vertical initialization status
-        this.initialized = false;
+class Epub extends Episode {
+    constructor(handle, module, webrtc) {
+        super(handle, module, webrtc);
         // Type definition
         this.type = type.epub;
     }
 
-    async open() {
-        const opts = {
-            types: [
-                {
-                    // description: '',
-                    accept: {
-                        'application/epub+zip': ['.epub']
-                    }
-                }
-            ]
-        };
-        const [handle] = await window.showOpenFilePicker(opts).catch(err => {
-            this._update();
-            Notifier.info(preset.INFO_CANCELLED);
-            return;
-        });
-        if (handle === undefined) return;
-        this._flush();
-        this._loading();
-        const file = await handle.getFile();
-        let buffer = await file.arrayBuffer();
-        this.module.FS.writeFile('tmp.epub', new Uint8Array(buffer)); // Unicode filename not supported
-        this.api.epub_open('tmp.epub');
-        if (handle === undefined) return;
-        this.title['episode'] = handle.name;
-        this._load_files();
-        this.toggle_nav();
-        Notifier.info(preset.INFO_EPISODE_LODED);
-        this._update();
-        this._reset_content();
-        this._webrtc_transmit_meta();
-        // this._init_vertical();
+    async init() {
+        await this.load();
+        Notifier.info(preset.INFO_EPUB_LOADED);
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 
-    toggle_vertical(value, event) {
-        if (!this.initialized) this._init_vertical();
-        super.toggle_vertical(value, event);
+    async load() {
+        this._flush();
+        this._loading();
+        const file = await this.handle.getFile();
+        let buffer = await file.arrayBuffer();
+        this.module.FS.writeFile('tmp.epub', new Uint8Array(buffer)); // Unicode filename not supported
+        this.api.epub_open('tmp.epub');
+        this.title['episode'] = this.handle.name;
+        this._load_files();
+        this.toggle_nav();
+        this._update();
+        this._reset_content();
+        this._init_vertical();
+        this._webrtc_transmit_meta();
     }
 
     _load_files() {
         this.files = Array(this.api.epub_count()).fill().map((_, i) => ({ getFile: async _ => (new Blob([await this.module.epub_image(i)])) }));
-    }
-
-    _page_move(offset) {
-        if (this.vertical) return;
-        if (this._page_check(this.cur + offset)) this.cur += offset;
     }
 }
 
@@ -1032,16 +1023,16 @@ class WebRTCClient extends Base {
         super(module, webrtc);
         // WebRTC Client
         this.client = true;
-        // Eposide list
+        // Episode list
         this.episodes = new Array();
-        // Eposide index
+        // Episode index
         this.index = 0;
-        // Eposide promise resolve
+        // Episode promise resolve
         this.resolve;
     }
 
     get sync() {
-        // return this.type == type.manga ? Manga.prototype.sync : Eposide.prototype.sync;
+        // return this.type == type.manga ? Manga.prototype.sync : Episode.prototype.sync;
     }
 
     get episode_up() {
@@ -1061,23 +1052,23 @@ class WebRTCClient extends Base {
     }
 
     get page_up() {
-        return this.type == type.manga ? Manga.prototype.page_up : Eposide.prototype.page_up;
+        return this.type == type.manga ? Manga.prototype.page_up : Episode.prototype.page_up;
     }
 
     get page_down() {
-        return this.type == type.manga ? Manga.prototype.page_down : Eposide.prototype.page_down;
+        return this.type == type.manga ? Manga.prototype.page_down : Episode.prototype.page_down;
     }
 
     get page_arrowleft() {
-        return this.type == type.manga ? Manga.prototype.page_arrowleft : Eposide.prototype.page_arrowleft;
+        return this.type == type.manga ? Manga.prototype.page_arrowleft : Episode.prototype.page_arrowleft;
     }
 
     get page_arrowright() {
-        return this.type == type.manga ? Manga.prototype.page_arrowright : Eposide.prototype.page_arrowright;
+        return this.type == type.manga ? Manga.prototype.page_arrowright : Episode.prototype.page_arrowright;
     }
 
     get _page_move() {
-        return this.type == type.manga ? Manga.prototype._page_move : Eposide.prototype._page_move;
+        return this.type == type.manga ? Manga.prototype._page_move : Episode.prototype._page_move;
     }
 
     get _content() {
@@ -1242,7 +1233,8 @@ class Notifier {
 
 const preset = Object.freeze({
     INFO_CANCELLED: '已取消选择',
-    INFO_EPISODE_LODED: '加载章节成功',
+    INFO_EPUB_LOADED: '加载文件成功',
+    INFO_EPISODE_LOADED: '加载章节成功',
     INFO_MANGA_LOADED: '加载漫画成功',
     INFO_PREVIOUS_EPISODE: '已切换到上一话',
     INFO_NEXT_EPISODE: '已切换至下一话',

@@ -746,15 +746,15 @@ body {
     max-width: 95%
 }
 
-.manga-navbar .size-ruler .manga-logo {
-    margin-right: 40px
-}
-
 .manga-navbar {
     color: #fff;
     font-size: 14px;
     line-height: 20px;
     padding: 0 5vw
+}
+
+.manga-navbar .manga-logo {
+    flex: 1
 }
 
 .manga-navbar .manga-title {

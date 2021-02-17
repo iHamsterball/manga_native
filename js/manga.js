@@ -260,11 +260,13 @@ class Base {
         document.getElementById('reader-setting').classList.toggle('hidden');
     }
 
-    toggle_single() {
-        const container = document.getElementById('images-container');
-        container.classList.toggle('single-page');
-        container.classList.toggle('double-page');
-        this._update();
+    toggle_single(value) {
+        if (this.step == 1 != value) {
+            const container = document.getElementById('images-container');
+            container.classList.toggle('single-page');
+            container.classList.toggle('double-page');
+            this._update();
+        }
     }
 
     toggle_ui() {
@@ -299,9 +301,13 @@ class Base {
     }
 
     toggle_vertical(value, event) {
+        console.log(this.vertical, value)
         if (this.vertical != value) {
             document.getElementById('reader-body').classList.toggle('horizontal-mode');
             document.getElementById('reader-body').classList.toggle('vertical-mode');
+            [...event.target.parentNode.parentNode.parentNode.children]
+                .filter(child => child != event.target.parentNode.parentNode && child.nodeType == 1)
+                .forEach(element => element.classList.toggle('hidden'));
             this.vertical = value;
             this._reset_hinter();
         }
@@ -458,8 +464,8 @@ class Base {
 
     _read_setting() {
         Array.from(document.getElementById('reader-setting').querySelectorAll('button.selected')).forEach(element => {
-            if (element.dataset.setting < 4) this.vertical = element.dataset.setting == 3;
-            if (element.dataset.setting > 3) this.ltr = element.dataset.setting == 5 ? -1 : 1;
+            if (element.dataset.setting > 4) this.vertical = element.dataset.setting == 5;
+            if (element.dataset.setting < 2) this.ltr = element.dataset.setting == 1 ? -1 : 1;
         });
     }
 
@@ -1290,12 +1296,12 @@ let init = () => {
     Array.from(document.querySelectorAll('button[data-setting]')).forEach(element => (
         element.addEventListener('click', event => {
             let callbacks = {
-                '0': () => (controller.toggle_single(false)),
-                '1': () => (controller.toggle_single(true)),
-                '2': () => (controller.toggle_vertical(false, event)),
-                '3': () => (controller.toggle_vertical(true, event)),
-                '4': () => (controller.toggle_rtl(false)),
-                '5': () => (controller.toggle_rtl(true)),
+                '0': () => (controller.toggle_rtl(false)),
+                '1': () => (controller.toggle_rtl(true)),
+                '2': () => (controller.toggle_single(false)),
+                '3': () => (controller.toggle_single(true)),
+                '4': () => (controller.toggle_vertical(false, event)),
+                '5': () => (controller.toggle_vertical(true, event)),
             }
             callbacks[event.target.dataset.setting]();
             if (!(event.target.disabled || event.target.classList.contains('selected'))) {

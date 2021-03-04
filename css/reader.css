@@ -1292,6 +1292,20 @@ body {
     color: hsla(0, 0%, 100%, .7)
 }
 
+.manga-reader .floating-button.default>span::after {
+    content: '向右旋转';
+}
+
+.manga-reader .floating-button.rotate_90_clockwise>img {
+    -webkit-transform: rotateY(180deg);
+    -ms-transform: rotateY(180deg);
+    transform: rotateY(180deg)
+}
+
+.manga-reader .floating-button.rotate_90_clockwise>span::after {
+    content: '还原默认';
+}
+
 .manga-reader .message-box {
     left: calc(50% - 140px - 12px);
     bottom: 120px;

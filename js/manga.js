@@ -247,10 +247,18 @@ class Base {
     }
 
     toggle_rotate(event) {
+        Notifier.loading();
+        this._flush();
+        let button = event.target;
+        if (button.tagName.toLowerCase() != 'button') button = button.parentNode;
         if (this.rotate == this.rotate_flags.default) {
+            button.classList.remove('default');
+            button.classList.add('rotate_90_clockwise');
             this.rotate = this.rotate_flags.rotate_90_clockwise;
             this.toggle_single(true);
         } else {
+            button.classList.remove('rotate_90_clockwise');
+            button.classList.add('default');
             this.rotate = this.rotate_flags.default;
             this.toggle_single(false);
         }
@@ -293,7 +301,7 @@ class Base {
             document.getElementById('next-page').classList.toggle('left-position');
             document.getElementById('next-page').classList.toggle('right-position');
             document.getElementById('message-image-container').classList.toggle('flip');
-            this._show_direction();
+            Notifier.show_dir();
         }
         this.ltr = value ? -1 : 1;
         this._reset_hinter();
@@ -301,7 +309,6 @@ class Base {
     }
 
     toggle_vertical(value, event) {
-        console.log(this.vertical, value)
         if (this.vertical != value) {
             document.getElementById('reader-body').classList.toggle('horizontal-mode');
             document.getElementById('reader-body').classList.toggle('vertical-mode');
@@ -439,14 +446,6 @@ class Base {
         document.getElementById('image-secondary').src = '';
     }
 
-    _loaded() {
-        document.getElementById('loading-hinter').classList.add('hidden');
-    }
-
-    _loading() {
-        document.getElementById('loading-hinter').classList.remove('hidden');
-    }
-
     _ltr(pos = this.pos.primary) {
         return (((pos === this.pos.secondary) ? 1 : -1) * this.ltr + 1) / 2;
     }
@@ -486,12 +485,6 @@ class Base {
 
     _reset_content() {
         document.getElementById('manga-contents').classList.add('hidden');
-    }
-
-    _show_direction() {
-        document.getElementById('message-box').classList.remove('hidden');
-        clearTimeout(this.message);
-        this.message = setTimeout(() => (document.getElementById('message-box').classList.add('hidden')), 3000);
     }
 
     _scale() {
@@ -908,8 +901,8 @@ class Epub extends Episode {
     }
 
     async load() {
+        Notifier.loading();
         this._flush();
-        this._loading();
         const file = await this.handle.getFile();
         let buffer = await file.arrayBuffer();
         this.module.FS.writeFile('tmp.epub', new Uint8Array(buffer)); // Unicode filename not supported
@@ -1209,7 +1202,6 @@ class WebRTCClient extends Base {
 
 class Notifier {
     constructor() {
-        this.timer = null;
     }
 
     static debug(debug, alt) {
@@ -1224,16 +1216,35 @@ class Notifier {
         this._toast(error || alt);
     }
 
-    static _toast(msg) {
-        this._clear();
-        document.getElementById('toast-content').innerHTML = msg;
-        document.getElementById('episode-toast').classList.remove('hidden');
-        this.timer = setTimeout(() => (document.getElementById('episode-toast').classList.add('hidden')), 3000);
+    static show_dir() {
+        this._dir();
     }
 
-    static _clear() {
-        window.clearTimeout(this.timer);
-        document.getElementById('episode-toast').classList.add('hidden');
+    static loaded() {
+        document.getElementById('loading-hinter').classList.add('hidden');
+    }
+
+    static loading() {
+        document.getElementById('loading-hinter').classList.remove('hidden');
+    }
+
+    static _toast(msg) {
+        this._clear(this.toast, 'episode-toast');
+        document.getElementById('toast-content').innerHTML = msg;
+        document.getElementById('episode-toast').classList.remove('hidden');
+        this.toast = setTimeout(() => (document.getElementById('episode-toast').classList.add('hidden')), 3000);
+    }
+
+    static _dir() {
+        this._clear(this.dir, 'message-box');
+        document.getElementById('message-box').classList.add('hidden');
+        document.getElementById('message-box').classList.remove('hidden');
+        this.dir = setTimeout(() => (document.getElementById('message-box').classList.add('hidden')), 3000);
+    }
+
+    static _clear(timer, id) {
+        window.clearTimeout(timer);
+        document.getElementById(id).classList.add('hidden');
     }
 }
 
@@ -1349,7 +1360,7 @@ let init = () => {
     };
     Module().onRuntimeInitialized = async _ => {
         controller = new Base(Module(), new WebRTC());
-        controller._show_direction();
         controller.create_offer();
+        Notifier.show_dir();
     };
 };

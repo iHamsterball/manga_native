@@ -51,10 +51,10 @@
                             <div id="ps-container" class="ps-container p-relative over-hidden h-100 ts-dot-2 ps">
                                 <div id="images-container" class="images-container p-zero h-100 w-100 m-auto double-page">
                                     <div class="view-container p-relative secondary-image unselectable">
-                                        <img id="image-secondary" class="h-100" onload="controller._loaded()">
+                                        <img id="image-secondary" class="h-100" onload="Notifier.loaded()">
                                     </div>
                                     <div class="view-container p-relative primary-image unselectable">
-                                        <img id="image-primary" class="h-100" onload="controller._loaded()">
+                                        <img id="image-primary" class="h-100" onload="Notifier.loaded()">
                                     </div>
                                 </div>
                                 <div id="image-list" class="image-list m-auto over-hidden">
@@ -145,9 +145,9 @@
                             </div>
                         </div>
                         <div>
-                            <button class="floating-button app-button none-select ui-opener" onclick="controller.toggle_rotate(event)">
+                            <button class="floating-button app-button none-select ui-opener default" onclick="controller.toggle_rotate(event)">
                                 <img src="img/rotate-right-duotone.svg" class="v-middle">
-                                <span class="v-middle" style="margin-left: 8px;">向右旋转</span>
+                                <span class="v-middle" style="margin-left: 8px;"></span>
                             </button>
                         </div>
                         <div>

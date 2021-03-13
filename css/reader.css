@@ -1,8 +1,7 @@
 html {
     font-size: 12px;
     font-family: Arial, Microsoft YaHei, Microsoft Sans Serif, Microsoft SanSerf, 微软雅黑;
-    overflow-x: auto;
-    overflow-y: auto
+    overflow: hidden
 }
 
 body {
@@ -17,6 +16,360 @@ button, input, textarea {
 a {
     color: #32aaff;
     text-decoration: none
+}
+
+.theme-dark body {
+    background-color: #212121;
+}
+
+.theme-dark .message-box {
+    background-color: rgba(0, 0, 0, .96);
+}
+
+.theme-dark .message-box .direction-text {
+    color: hsla(0, 0%, 88%, .5);
+}
+
+.theme-dark .message-box .direction-content::before {
+    color: hsla(0, 0%, 100%, .9);
+}
+
+.theme-dark .episode-toast {
+    background: rgba(0, 0, 0, .9);
+}
+
+.theme-dark .episode-list[data-contents] {
+    background-color: #303030;
+}
+
+.theme-dark .episode-list[data-contents]:before {
+    border: 8px solid #303030;
+    border-left-color: transparent;
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+}
+
+.theme-dark .episode-list .panel-title[data-contents] {
+    color: hsla(0, 0%, 100%, .7);
+}
+
+.theme-dark .episode-list .data-list .list-item[data-contents] {
+    color: hsla(0, 0%, 100%, .9);
+}
+
+.theme-dark .episode-list .data-list .list-item.read[data-contents] {
+    color: hsla(0, 0%, 100%, .5);
+}
+
+.theme-dark .episode-list .data-list .list-item.selected[data-contents] {
+    color: #32aaff
+}
+
+.theme-dark .episode-list .data-list .list-item[data-contents]:hover {
+    background-color: rgba(0, 0, 0, .1)
+}
+
+.theme-dark .episode-list .data-list .empty-hint[data-contents] {
+    color: #777;
+}
+
+.theme-dark .floating-button {
+    color: hsla(0, 0%, 100%, .7);
+    background-color: rgba(48, 48, 48, .7);
+}
+
+.theme-dark .floating-buttons .shortcuts-info {
+    color: hsla(0, 0%, 100%, .7);
+}
+
+.theme-dark .shortcuts-info[data-dialog] {
+    background-color: rgba(48, 48, 48, .96);
+    color: hsla(0, 0%, 100%, .7);
+    box-shadow: 0 6px 16px -2px rgba(0, 0, 0, .16);
+}
+
+.theme-dark .manga-reader {
+    color: #777;
+}
+
+.theme-dark .manga-navbar {
+    color: #fff;
+    background-color: rgba(0, 0, 0, .9);
+    box-shadow: none;
+}
+
+.theme-dark .action-bar-container {
+    background-color: rgba(0, 0, 0, .9);
+}
+
+.theme-dark .manga-reader-ui .action-bar-container .action-buttons .app-button {
+    color: hsla(0, 0%, 100%, .9);
+}
+
+.theme-dark .manga-reader-ui .action-bar-container .divider {
+    background-color: hsla(0, 0%, 100%, .2);
+}
+
+.theme-dark .reader-setting[data-setting] {
+    background-color: #303030;
+}
+
+.theme-dark .reader-setting .section .section-title[data-setting] {
+    color: hsla(0, 0%, 100%, .5);
+}
+
+.theme-dark .reader-setting .section .app-button[data-setting] {
+    border: 1px solid hsla(0, 0%, 100%, .9);
+    color: hsla(0, 0%, 100%, .9);
+}
+
+.theme-dark .reader-setting .section .app-button[data-setting].selected {
+    color: #32aaff;
+    border-color: #32aaff
+}
+
+.theme-dark .info-hud {
+    color: hsla(0, 0%, 100%, .7);
+    background-color: rgba(48, 48, 48, .7);
+}
+
+.theme-dark .info-hud .hinter-image-container .current-page, .theme-dark .info-hud .hinter-image-container .next-page {
+    color: hsla(0, 0%, 100%, .3);
+}
+
+.theme-dark .zoomer {
+    border: 1px solid hsla(0, 0%, 100%, .4);
+}
+
+.theme-dark .zoomer .zoom-display {
+    color: hsla(0, 0%, 100%, .5);
+}
+
+.theme-dark .slider-component .slider-body .range-input::-webkit-slider-thumb {
+    background-color: #32aaff;
+}
+
+.theme-dark .slider-component .slider-body .range-input::-moz-range-thumb {
+    background-color: #32aaff;
+}
+
+.theme-dark .slider-component .slider-body .range-input::-ms-fill-lower {
+    background-color: #32aaff;
+}
+
+.theme-dark .slider-component .slider-body .range-input:focus::-ms-fill-lower {
+    background-color: #32aaff;
+}
+
+.theme-dark .slider-component .slider-body .range-input::-ms-thumb {
+    background-color: #32aaff;
+}
+
+.theme-dark .nav-list .nav-item:hover {
+    color: #32aaff
+}
+
+.theme-dark .dialog-layout .app-button[data-dialog] {
+    color: hsla(0, 0%, 100%, .9);
+}
+
+.theme-dark .collapse a {
+    color: #fff;
+}
+
+.theme-light body {
+    background-color: #edecea;
+}
+
+.theme-light .message-box {
+    background-color: rgba(127, 127, 127, .96);
+}
+
+.theme-light .message-box .direction-text {
+    color: hsla(0, 0%, 88%, .9);
+}
+
+.theme-light .message-box .direction-content::before {
+    color: hsla(0, 0%, 100%, 1);
+}
+
+.theme-light .message-box .img-container .arrow-image {
+    filter: invert(100%);
+}
+
+.theme-light .episode-toast {
+    background: rgba(127, 127, 127, .9);
+}
+
+.theme-light .episode-list[data-contents] {
+    background-color: #f0f0f0;
+}
+
+.theme-light .episode-list[data-contents]:before {
+    border: 8px solid #f0f0f0;
+    border-left-color: transparent;
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+}
+
+.theme-light .episode-list .panel-title[data-contents] {
+    color: hsla(0, 0%, 0%, .8);
+}
+
+.theme-light .episode-list .data-list .list-item[data-contents] {
+    color: hsla(0, 0%, 0%, .8);
+}
+
+.theme-light .episode-list .data-list .list-item.read[data-contents] {
+    color: hsla(0, 0%, 0%, .3);
+}
+
+.theme-light .episode-list .data-list .list-item.selected[data-contents] {
+    color: #cd5500;
+}
+
+.theme-light .episode-list .data-list .list-item[data-contents]:hover {
+    background-color: rgba(255, 255, 255, .3)
+}
+
+.theme-light .episode-list .data-list .empty-hint[data-contents] {
+    color: #777;
+}
+
+.theme-light .floating-button {
+    color: hsla(0, 0%, 0%, .7);
+    background-color: rgba(207, 207, 207, 0.7);
+}
+
+.theme-light .floating-button img {
+    filter: invert(100%) opacity(80%);
+}
+
+.theme-light .floating-buttons .shortcuts-info {
+    color: hsla(0, 0%, 0%, .7);
+}
+
+.theme-light .shortcuts-info[data-dialog] {
+    background-color: rgba(207, 207, 207, .96);
+    color: hsla(0, 0%, 0%, .9);
+    box-shadow: 0 6px 16px -2px rgba(255, 255, 255, .16);
+}
+
+.theme-light .manga-reader {
+    color: #333;
+}
+
+.theme-light .manga-navbar .episode-title, .theme-light .manga-navbar .manga-title:not(:empty)::after {
+    opacity: .7;
+}
+
+.theme-light .manga-navbar {
+    color: #333;
+    background-color: rgba(253, 253, 253, .9);
+    box-shadow: 0 0 5px 1px rgba(158, 179, 193, .5);
+}
+
+.theme-light .action-bar-container {
+    background-color: rgba(253, 253, 253, .9);
+}
+
+.theme-light .manga-reader-ui .action-bar-container .action-buttons .app-button {
+    color: hsla(0, 0%, 0%, .9);
+}
+
+.theme-light .manga-reader-ui .action-bar-container .action-buttons .app-button img {
+    filter: invert(100%) opacity(80%);
+}
+
+.theme-light .manga-reader-ui .action-bar-container .divider {
+    background-color: hsla(0, 0%, 0%, .2);
+}
+
+.theme-light .reader-setting[data-setting] {
+    background-color: #f0f0f0;
+}
+
+.theme-light .reader-setting .section .section-title[data-setting] {
+    color: hsla(0, 0%, 0%, .9);
+}
+
+.theme-light .reader-setting .section .app-button[data-setting] {
+    border: 1px solid hsla(0, 0%, 0%, .5);
+    color: hsla(0, 0%, 0%, .5);
+}
+
+.theme-light .reader-setting .section .app-button[data-setting].selected {
+    color: #cd5500;
+    border-color: #cd5500;
+}
+
+.theme-light .info-hud {
+    color: hsla(0, 0%, 0%, .7);
+    background-color: rgba(207, 207, 207, .7);
+}
+
+.theme-light .info-hud .hinter-image {
+    filter: invert(100%);
+}
+
+.theme-light .helpdesc-image {
+    filter: invert(100%) opacity(60%)!important;
+}
+
+.theme-light #dialog-help[data-dialog] .content-container img {
+    filter: invert(100%) opacity(80%);
+}
+
+.theme-light .info-hud .hinter-image-container .current-page, .theme-light .info-hud .hinter-image-container .next-page {
+    color: hsla(0, 0%, 0%, .5);
+}
+
+.theme-light .zoomer {
+    border: 1px solid hsla(0, 0%, 0%, .4);
+}
+
+.theme-light .zoomer .zoom-btn {
+    filter: invert(100%);
+}
+
+.theme-light .zoomer .zoom-display {
+    color: hsla(0, 0%, 0%, .5);
+}
+
+.theme-light .slider-component .slider-body .range-input::-webkit-slider-thumb {
+    background-color: #cd5500;
+}
+
+.theme-light .slider-component .slider-body .range-input::-moz-range-thumb {
+    background-color: #cd5500;
+}
+
+.theme-light .slider-component .slider-body .range-input::-ms-fill-lower {
+    background-color: #cd5500;
+}
+
+.theme-light .slider-component .slider-body .range-input:focus::-ms-fill-lower {
+    background-color: #cd5500;
+}
+
+.theme-light .slider-component .slider-body .range-input::-ms-thumb {
+    background-color: #cd5500;
+}
+
+.theme-light .nav-list .nav-item:hover {
+    color: #cd5500;
+}
+
+.theme-light .dialog-layout .app-button[data-dialog] {
+    color: hsla(0, 0%, 0%, .9);
+}
+
+.theme-light .collapse a {
+    color: rgba(0, 0, 0, .9);
+}
+
+.theme-light .inner-content span::after {
+    filter: invert(100%) opacity(60%);
 }
 
 .dp-inline {
@@ -41,10 +394,6 @@ a {
 .app-button:disabled {
     cursor: not-allowed;
     opacity: .5
-}
-
-.theme-dark body {
-    background-color: #333
 }
 
 .no-script-container {
@@ -113,14 +462,6 @@ a {
     to {
         opacity: 1
     }
-}
-
-html {
-    overflow: hidden
-}
-
-body {
-    background-color: #212121!important
 }
 
 .ps__rail-x, .ps__rail-y {
@@ -258,7 +599,6 @@ body {
 .episode-toast {
     width: 176px;
     height: 64px;
-    background: rgba(0, 0, 0, .9);
     border-radius: 3px;
     -webkit-animation-duration: .2s;
     animation-duration: .2s
@@ -277,8 +617,6 @@ body {
     padding: 14px 18px;
     margin: 5px 0;
     font-size: 12px;
-    color: hsla(0, 0%, 100%, .7);
-    background-color: rgba(48, 48, 48, .7);
     border-radius: 3px
 }
 
@@ -401,8 +739,6 @@ body {
 .info-hud {
     padding: 8px 12px;
     font-size: 12px;
-    color: hsla(0, 0%, 100%, .7);
-    background-color: rgba(48, 48, 48, .7);
     border-radius: 3px
 }
 
@@ -413,7 +749,6 @@ body {
 }
 
 .info-hud .hinter-image-container .current-page, .info-hud .hinter-image-container .next-page {
-    color: hsla(0, 0%, 100%, .3);
     -webkit-animation-duration: .4s;
     animation-duration: .4s
 }
@@ -476,7 +811,6 @@ body {
 .message-box {
     min-width: 280px;
     padding: 12px 12px 24px;
-    background-color: rgba(0, 0, 0, .96);
     border-radius: 3px;
     -webkit-animation-duration: .4s;
     animation-duration: .4s
@@ -500,7 +834,6 @@ body {
 
 .message-box .direction-text {
     font-size: 16px;
-    color: hsla(0, 0%, 88%, .5);
     text-align: center;
     letter-spacing: 0;
     margin: 0 auto;
@@ -510,7 +843,6 @@ body {
 .message-box .direction-content::before {
     display: block;
     margin-top: 6px;
-    color: hsla(0, 0%, 100%, .9);
     font-size: 24px;
     text-align: center;
     line-height: 24px
@@ -563,7 +895,6 @@ body {
     width: 6px;
     height: 12px;
     margin-top: -5px;
-    background-color: #32aaff
 }
 
 .slider-component .slider-body .range-input:disabled::-webkit-slider-thumb {
@@ -588,7 +919,6 @@ body {
 .slider-component .slider-body .range-input::-moz-range-thumb {
     width: 6px;
     height: 12px;
-    background-color: #32aaff;
     border-radius: 0;
     border: 0
 }
@@ -614,16 +944,8 @@ body {
     color: transparent
 }
 
-.slider-component .slider-body .range-input::-ms-fill-lower {
-    background-color: #32aaff
-}
-
 .slider-component .slider-body .range-input::-ms-fill-upper, .slider-component .slider-body .range-input:disabled::-ms-fill-lower {
     background-color: #bbb
-}
-
-.slider-component .slider-body .range-input:focus::-ms-fill-lower {
-    background-color: #32aaff
 }
 
 .slider-component .slider-body .range-input:focus::-ms-fill-upper {
@@ -633,7 +955,6 @@ body {
 .slider-component .slider-body .range-input::-ms-thumb {
     width: 6px;
     height: 12px;
-    background-color: #32aaff;
     box-sizing: border-box
 }
 
@@ -694,10 +1015,6 @@ body {
     margin-right: 7px
 }
 
-.nav-list .nav-item:hover {
-    color: #32aaff
-}
-
 .nav-list .nav-item:active {
     transition: none
 }
@@ -732,8 +1049,6 @@ body {
     align-items: center;
     flex-direction: row-reverse;
     height: 50px;
-    background-color: #fff;
-    box-shadow: 0 0 5px 1px rgba(158, 179, 193, .5)
 }
 
 .manga-navbar.hide-mode {
@@ -747,7 +1062,6 @@ body {
 }
 
 .manga-navbar {
-    color: #fff;
     font-size: 14px;
     line-height: 20px;
     padding: 0 5vw
@@ -783,11 +1097,6 @@ body {
 
 .manga-navbar .right-padding {
     flex: 1
-}
-
-.theme-dark .manga-navbar {
-    background-color: #030303;
-    box-shadow: none
 }
 
 .manga-navbar .no-button-style {
@@ -889,7 +1198,6 @@ body {
 .episode-list[data-contents] {
     width: 90vw;
     max-width: 280px;
-    background-color: #303030;
     border-radius: 3px
 }
 
@@ -898,10 +1206,6 @@ body {
     position: absolute;
     top: 100%;
     left: 50%;
-    border: 8px solid #303030;
-    border-left-color: transparent;
-    border-right-color: transparent;
-    border-bottom-color: transparent;
     -webkit-transform: translate(-50%);
     -ms-transform: translate(-50%);
     transform: translate(-50%)
@@ -911,7 +1215,6 @@ body {
     font-size: 18px;
     text-align: left;
     line-height: 24px;
-    color: hsla(0, 0%, 100%, .7);
     display: -ms-flexbox;
     display: flex;
     -ms-flex-align: center;
@@ -942,7 +1245,6 @@ body {
     flex-flow: row nowrap;
     -ms-flex-align: center;
     align-items: center;
-    color: hsla(0, 0%, 100%, .9);
     text-align: left;
     line-height: 1;
     padding: 0 30px
@@ -958,18 +1260,6 @@ body {
     transform: scale(.99)
 }
 
-.episode-list .data-list .list-item.read[data-contents] {
-    color: hsla(0, 0%, 100%, .5)
-}
-
-.episode-list .data-list .list-item.selected[data-contents] {
-    color: #32aaff
-}
-
-.episode-list .data-list .list-item[data-contents]:hover {
-    background-color: rgba(0, 0, 0, .1)
-}
-
 .episode-list .data-list .list-item .label[data-contents] {
     -ms-flex: 1;
     flex: 1;
@@ -982,7 +1272,6 @@ body {
 .episode-list .data-list .empty-hint[data-contents] {
     margin: 40px 0;
     font-size: 13px;
-    color: #777
 }
 
 .reader-setting {
@@ -998,7 +1287,6 @@ body {
     padding: 24px;
     width: 232px;
     border-radius: 3px;
-    background-color: #303030
 }
 
 .reader-setting .section[data-setting]:not(:last-child) {
@@ -1011,7 +1299,6 @@ body {
 
 .reader-setting .section .section-title[data-setting] {
     font-size: 14px;
-    color: hsla(0, 0%, 100%, .5)
 }
 
 .reader-setting .section .section-content[data-setting] {
@@ -1021,18 +1308,11 @@ body {
 .reader-setting .section .app-button[data-setting] {
     width: 108px;
     height: 40px;
-    border: 1px solid hsla(0, 0%, 100%, .9);
     border-radius: 5px;
-    color: hsla(0, 0%, 100%, .9)
 }
 
 .reader-setting .section .app-button[data-setting]:not(:last-child) {
     margin-right: 16px
-}
-
-.reader-setting .section .app-button[data-setting].selected {
-    color: #32aaff;
-    border-color: #32aaff
 }
 
 .reader-setting .lens-transition {
@@ -1080,15 +1360,9 @@ body {
     animation-play-state: paused
 }
 
-.manga-reader-ui .manga-navbar {
-    background-color: rgba(0, 0, 0, .9);
-    box-shadow: none
-}
-
 .manga-reader-ui .action-bar-container {
     left: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, .9)
+    bottom: 0
 }
 
 .manga-reader-ui .action-bar-container .action-bar-content {
@@ -1124,7 +1398,6 @@ body {
 .manga-reader-ui .action-bar-container .action-buttons .app-button {
     -ms-flex-positive: 1;
     flex-grow: 1;
-    color: hsla(0, 0%, 100%, .9);
     margin: 0
 }
 
@@ -1215,8 +1488,7 @@ body {
 .manga-reader-ui .action-bar-container .divider {
     width: 1px;
     height: 32px;
-    margin: 0 8px;
-    background-color: hsla(0, 0%, 100%, .2)
+    margin: 0 8px
 }
 
 .action-bar-container, .navbar-container {
@@ -1229,7 +1501,6 @@ body {
     width: 120px;
     height: 36px;
     border-radius: 18px;
-    border: 1px solid hsla(0, 0%, 100%, .4);
     margin-left: 10px;
     margin-right: 30px;
     -webkit-user-select: none;
@@ -1258,11 +1529,6 @@ body {
     width: 48px;
     line-height: 36px;
     font-size: 12px;
-    color: hsla(0, 0%, 100%, .5)
-}
-
-.manga-reader {
-    color: #777
 }
 
 .manga-reader .info-hud {
@@ -1288,8 +1554,7 @@ body {
 .manga-reader .floating-buttons .shortcuts-info {
     width: 40px;
     height: 40px;
-    font-size: 14px;
-    color: hsla(0, 0%, 100%, .7)
+    font-size: 14px
 }
 
 .manga-reader .floating-button.default>span::after {
@@ -1330,6 +1595,26 @@ body {
     color: #777
 }
 
+.shortcuts-info[data-dialog] {
+    width: 70vw;
+    max-width: 900px;
+    padding: 24px;
+    border-radius: 4px;
+}
+
+.shortcuts-info .close-button[data-dialog] {
+    top: 24px;
+    right: 24px
+}
+
+.shortcuts-info .panel-title[data-dialog] {
+    font-size: 18px
+}
+
+.shortcuts-info .content-container[data-dialog] {
+    margin-top: 20px
+}
+
 .touch-control {
     display: none;
     pointer-events: none;
@@ -1359,6 +1644,187 @@ body {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%)
+}
+
+.hidden {
+    display: none!important
+}
+
+.unselectable {
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    user-select: none
+}
+
+.page-count {
+    margin-left: 8px
+}
+
+.page-count::before {
+    content: 'N/A'
+}
+
+.page-count::after {
+    content: 'P'
+}
+
+.page-count:not(:empty)::before, .page-count:empty::after {
+    display: none
+}
+
+.helpdesc-image {
+    padding-right: 1rem;
+    width: 24px
+}
+
+.collapse-content {
+    width: 100%;
+    margin: auto;
+}
+
+.collapse a {
+    display: flex;
+    font-size: 1rem;
+    padding: 0.9rem 1.8rem;
+    color: #fff;
+    position: relative;
+}
+
+.collapse a:before {
+    content: ">";
+    font-family: 'VT323', monospace;
+    padding: 0 8px;
+    transform: rotate(90deg);
+}
+
+.inner-content {
+    padding: 0 3.6rem;
+}
+
+.inner-content span {
+    display: flex;
+    padding-bottom: 1rem;
+    height: 32px;
+}
+
+.inner-content textarea {
+    height: auto;
+    width: 90%;
+    resize: none;
+}
+
+.inner-content span::after {
+    content: "";
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    margin: 6px;
+}
+
+.inner-content span:hover::after {
+    opacity: 0.8;
+}
+
+.inner-content span:active::after {
+    opacity: 0.6;
+}
+
+.inner-content span.copy::after {
+    background: url("../img/copy-duotone.svg") no-repeat;
+}
+
+.inner-content span.paste::after {
+    background: url("../img/paste-duotone.svg") no-repeat;
+}
+
+.inner-content span.loading::after {
+    background: url("../img/spinner-third-duotone.svg") no-repeat;
+    transition: all .2s ease-in-out;
+    -webkit-animation: progress-circular-rotate 1.4s linear infinite;
+    animation: progress-circular-rotate 1.4s linear infinite
+}
+
+.inner-content span.accomplished::after {
+    background: url("../img/check-duotone.svg") no-repeat;
+}
+
+.content {
+    max-height: 0em;
+    transition: 0.3s linear 0s;
+    overflow: hidden;
+}
+
+.collapse:target .content {
+    max-height: none
+}
+
+.collapse:target a:before {
+    transform: rotate(0deg);
+}
+
+.dialog-layout[data-dialog] {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 20
+}
+
+.dialog-layout .layout-background[data-dialog] {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0
+}
+
+.dialog-layout .app-button[data-dialog] {
+    -ms-flex-positive: 1;
+    flex-grow: 1;
+    color: hsla(0, 0%, 100%, .9);
+    margin: 0
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+    padding-right: 5px;
+    z-index: 10
+}
+
+::-webkit-scrollbar-button {
+    width: 0px;
+    height: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #868686;
+    border: 0px none #ffffff;
+    border-radius: 50px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #b4b4b4;
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: #e4e4e4;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-track-piece {
+    background: transparent;
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
 }
 
 @media screen and (max-width: 768px) {
@@ -1406,9 +1872,21 @@ body {
     .manga-navbar .episode-title {
         flex: 2
     }
+    .page-count {
+        margin: 0
+    }
+    .page-count::after {
+        display: none
+    }
 }
 
 @media screen and (max-width: 1080px) {
+    .collapse a {
+        padding: 0.9rem 0
+    }
+    .inner-content {
+        padding: 0 1.2rem;
+    }
     .manga-navbar .episode-title:not(:empty)~a.manga-logo {
         display: none
     }
@@ -1423,6 +1901,9 @@ body {
     }
     .manga-reader-ui .action-bar-container .page-slider {
         display: none
+    }
+    .shortcuts-info[data-dialog] {
+        width: 90vw
     }
     .zoomer {
         display: none!important

@@ -52,6 +52,8 @@ class Base {
         this.type = type.undefined;
         // Vertical mode
         this.vertical = false;
+        // Viewport
+        this.viewport = new Map();
         // WebRTC submodule
         this.webrtc = webrtc;
         this.webrtc.pc.onconnectionstatechange = this._webrtc_connect_callback.bind(this);
@@ -82,6 +84,10 @@ class Base {
 
     get rtl() {
         return -this.ltr;
+    }
+
+    get viewtop() {
+        return [...this.viewport.keys()].sort((a, b) => b - a)[0];
     }
 
     get URL() {
@@ -380,6 +386,7 @@ class Base {
             let image = document.createElement('img');
             image.dataset.index = index;
             this.observer['image'].observe(image);
+            this.observer['progress'].observe(image);
             let container = document.createElement('div');
             container.classList.add('img-container', 'w-100', 'h-100');
             let item = document.createElement('div');
@@ -419,6 +426,16 @@ class Base {
                 }
                 if (controller.type != type.undefined) controller._update();
                 controller._reset_hinter();
+            })
+        ));
+        this.observer['progress'] = new IntersectionObserver((entries, observer) => (
+            entries.forEach(entry => {
+                const image = entry.target;
+                const index = parseInt(image.dataset.index, 10);
+                if (entry.intersectionRatio > 0) this.viewport.set(index, entry.intersectionRatio);
+                if (entry.intersectionRatio == 0) this.viewport.delete(index);
+                controller._update_hinter();
+                controller._update_progress();
             })
         ));
     }
@@ -472,6 +489,7 @@ class Base {
 
     _reset(full = false) {
         this.files = new Array();
+        this.viewport.clear();
         if (full) this.cur = 0;
     }
 
@@ -534,19 +552,17 @@ class Base {
     _update() {
         this._update_images();
         this._update_info();
+        this._update_progress();
         this._update_hinter();
         this._update_scale();
     }
 
     _update_hinter() {
-        document.getElementById('current-page').innerHTML = !this._validate(this.pos.primary) ? '' : this.primary + 1;
-        document.getElementById('next-page').innerHTML = !this._validate(this.pos.secondary) ? '' : this.secondary + 1;
-        Array.from(document.getElementById('image-list').children).forEach(element => {
-            if (this._scroll_vertical_visibile(element)) {
-                document.getElementById('current-page').innerHTML = parseInt(element.dataset.index, 10) + 1;
-                return;
-            }
-        })
+        let current_page = document.getElementById('current-page');
+        let next_page = document.getElementById('next-page');
+        current_page.innerHTML = !this._validate(this.pos.primary) ? '' : this.primary + 1;
+        next_page.innerHTML = !this._validate(this.pos.secondary) ? '' : this.secondary + 1;
+        if (this.vertical) current_page.innerHTML = isNaN(this.viewtop) ? '' : this.viewtop + 1;
     }
 
     _update_info() {
@@ -557,11 +573,12 @@ class Base {
         episode.innerHTML = this.title['episode'];
         episode.title = this.title['episode'];
         document.getElementById('page-count').innerHTML = this.files.length || '';
-        this._update_progress(Math.floor((this.cur + this.offset) / 2) + 1, Math.round((this.files.length + this.offset) / 2));
         // TODO: Change to logged location [Low priority]
     }
 
-    _update_progress(value, max) {
+    _update_progress() {
+        let value = this.vertical ? (isNaN(this.viewtop) ? 1 : this.viewtop + 1) : (Math.floor((this.cur + this.offset) / this.step) + 1);
+        let max = Math.round((this.files.length + this.offset) / this.step);
         document.getElementsByClassName('progress-indicator')[0].innerHTML = `${value} / ${max}`;
         let progress = document.getElementById('progress-indicator');
         progress.value = value;
@@ -1323,9 +1340,6 @@ let init = () => {
                 });
             }
         })
-    ));
-    container.addEventListener('scroll', event => (
-        controller._update_hinter()
     ));
     container.addEventListener('mouseup', event => {
         if (event.button != 0) return;

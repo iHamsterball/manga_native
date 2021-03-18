@@ -541,6 +541,10 @@ a {
     z-index: 20
 }
 
+.reader-layout {
+    overflow: hidden
+}
+
 .manga-button {
     padding: 10px 20px;
     font-size: 14px;

@@ -20,11 +20,6 @@
     padding: 0px
 }
 
-.vertical-mode .load-next-btn[disabled], .vertical-mode .load-prev-btn[disabled] {
-    background-color: hsla(0, 0%, 100%, .1)!important;
-    color: hsla(0, 0%, 100%, .2)!important
-}
-
 .vertical-mode .ps-container {
     /**
      * Attribute overflow: overlay is deprecated,

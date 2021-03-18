@@ -377,11 +377,13 @@ class Base {
 
     async _init_vertical() {
         let list = document.getElementById('image-list');
+        let next = document.getElementById('load-next-btn');
         Array.from(list.children).forEach(element => (
             list.removeChild(element)
         ));
         list.id = "image-list";
         list.classList.add('image-list', 'm-auto', 'over-hidden');
+        next.disabled = true;
         for (const [index, handle] of this.files.entries()) {
             let image = document.createElement('img');
             image.dataset.index = index;
@@ -836,6 +838,12 @@ class Manga extends Base {
         } else if (this.index + offset >= this.episodes.length) {
             Notifier.error(preset.ERR_ALREADY_LAST_EPISODE);
         }
+    }
+
+    async _init_vertical() {
+        super._init_vertical();
+        let next = document.getElementById('load-next-btn');
+        next.disabled = this.index >= this.episodes.length - 1;
     }
 
     async _page_move(offset) {

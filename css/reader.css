@@ -194,6 +194,11 @@ a {
     background-color: hsl(205, 100%, 48%);
 }
 
+.theme-dark .vertical-mode .load-next-btn[disabled], .theme-dark .vertical-mode .load-prev-btn[disabled] {
+    background-color: hsla(0, 0%, 100%, .1)!important;
+    color: hsla(0, 0%, 100%, .2)!important
+}
+
 .theme-light body {
     background-color: #edecea;
 }
@@ -406,6 +411,11 @@ a {
     background-color: hsl(25, 100%, 48%);
 }
 
+.theme-light .vertical-mode .load-next-btn[disabled], .theme-light .vertical-mode .load-prev-btn[disabled] {
+    background-color: hsla(0, 0%, 0%, .2)!important;
+    color: hsla(0, 0%, 0%, .4)!important
+}
+
 .dp-inline {
     display: inline
 }
@@ -520,6 +530,14 @@ a {
 
 .manga-button:disabled {
     cursor: not-allowed
+}
+
+.manga-button::after {
+    content: '下一话'
+}
+
+.manga-button:disabled::after {
+    content: '没有下一话了'
 }
 
 .manga-button.primary:disabled {

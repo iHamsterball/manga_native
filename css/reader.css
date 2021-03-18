@@ -1427,6 +1427,14 @@ a {
     animation-play-state: paused
 }
 
+.manga-reader-ui+.info-hud, .manga-reader-ui~.floating-buttons {
+    transform: translateY(-5em)
+}
+
+.manga-reader-ui.v-hidden+.info-hud, .manga-reader-ui.v-hidden~.floating-buttons {
+    transform: translateY(0)
+}
+
 .manga-reader-ui .action-bar-container {
     left: 0;
     bottom: 0

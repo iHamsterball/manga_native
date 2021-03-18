@@ -177,6 +177,10 @@ a {
     color: #fff;
 }
 
+.theme-dark .circular-overlay {
+    stroke: hsl(205, 100%, 60%);
+}
+
 .theme-dark .manga-button.primary {
     color: #fff;
     background-color: hsl(205, 100%, 60%);
@@ -379,6 +383,10 @@ a {
 
 .theme-light .collapse a {
     color: rgba(0, 0, 0, .9);
+}
+
+.theme-light .circular-overlay {
+    stroke: hsl(25, 100%, 60%);
 }
 
 .theme-light .inner-content span::after {

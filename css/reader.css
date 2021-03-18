@@ -1887,7 +1887,7 @@ a {
     .inner-content {
         padding: 0 1.2rem;
     }
-    .manga-navbar .episode-title:not(:empty)~a.manga-logo {
+    .manga-navbar .manga-title:not(:empty)~a.manga-logo {
         display: none
     }
     .manga-navbar .left-padding, .manga-navbar .right-padding {

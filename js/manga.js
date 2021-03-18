@@ -312,6 +312,8 @@ class Base {
         if (this.vertical != value) {
             document.getElementById('reader-body').classList.toggle('horizontal-mode');
             document.getElementById('reader-body').classList.toggle('vertical-mode');
+            document.getElementById('offset').disabled = !this.vertical;
+            document.getElementById('rotate').disabled = !this.vertical;
             [...event.target.parentNode.parentNode.parentNode.children]
                 .filter(child => child != event.target.parentNode.parentNode && child.nodeType == 1)
                 .forEach(element => element.classList.toggle('hidden'));

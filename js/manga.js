@@ -758,8 +758,8 @@ class Manga extends Base {
         if (tmp.length != 0) this.episodes = tmp;
         await this._episode_move(0);
         this.toggle_nav();
-        this._update();
         this._init_contents();
+        this._update();
         this._webrtc_transmit_meta();
     }
 

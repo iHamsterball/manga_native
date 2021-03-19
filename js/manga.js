@@ -156,6 +156,7 @@ class Base {
         const index = event.target.value - 1;
         if (this.vertical) {
             document.getElementById('image-list').children[index].scrollIntoView();
+            this.viewport.clear();
             this.viewport.set(index, 1);
         } else {
             this.cur = index * this.step;
@@ -640,7 +641,6 @@ class Base {
 
     _webrtc_dc_callback(event) {
         const channel = event.channel;
-        console.log(channel)
         if (['file', 'file_abstract'].includes(channel.label)) this.webrtc.channels.set(channel.id, channel);
     }
 

@@ -1078,23 +1078,23 @@ class WebRTCClient extends Base {
     }
 
     get page_up() {
-        return this.type == type.manga ? Manga.prototype.page_up : Episode.prototype.page_up;
+        return this.type == type.manga ? Manga.prototype.page_up : super.page_up;
     }
 
     get page_down() {
-        return this.type == type.manga ? Manga.prototype.page_down : Episode.prototype.page_down;
+        return this.type == type.manga ? Manga.prototype.page_down : super.page_down;
     }
 
     get page_arrowleft() {
-        return this.type == type.manga ? Manga.prototype.page_arrowleft : Episode.prototype.page_arrowleft;
+        return this.type == type.manga ? Manga.prototype.page_arrowleft : super.page_arrowleft;
     }
 
     get page_arrowright() {
-        return this.type == type.manga ? Manga.prototype.page_arrowright : Episode.prototype.page_arrowright;
+        return this.type == type.manga ? Manga.prototype.page_arrowright : super.page_arrowright;
     }
 
     get _page_move() {
-        return this.type == type.manga ? Manga.prototype._page_move : Episode.prototype._page_move;
+        return this.type == type.manga ? Manga.prototype._page_move : super._page_move;
     }
 
     get _content() {
@@ -1107,6 +1107,10 @@ class WebRTCClient extends Base {
 
     get _init_contents() {
         return Manga.prototype._init_contents;
+    }
+
+    get _init_vertical() {
+        return this.type == type.manga ? Manga.prototype._init_vertical : super._init_vertical;
     }
 
     get _update() {

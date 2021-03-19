@@ -153,7 +153,7 @@ class Base {
     }
 
     page_drag(event) {
-        this.cur = (event.target.value - 1) * 2;
+        this.cur = (event.target.value - 1) * this.step;
         this._update();
     }
 

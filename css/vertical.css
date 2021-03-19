@@ -45,18 +45,13 @@
 
 .image-list .image-item {
     display: table;
-    width: 100%;
-    min-height: 100%
-}
-
-.image-list .image-item.image-loaded {
-    min-width: auto!important;
-    min-height: auto!important
-}
-
-.image-list .image-item.image-loaded img {
-    display: table-cell;
     width: 100%
+}
+
+.image-list .image-item img {
+    display: table-cell;
+    width: 100%;
+    height: auto!important
 }
 
 @media screen and (max-width: 1080px) {

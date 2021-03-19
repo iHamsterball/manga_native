@@ -80,7 +80,8 @@
                                     </div>
                                 </div>
                                 <div id="load-next-btn-container" class="load-next-btn-container">
-                                    <button id="load-next-btn" class="manga-button load-next-btn primary" disabled="disabled" onclick="controller.episode_scrolldown()"></button>
+                                    <button id="load-next-btn" class="manga-button load-next-btn primary" onclick="controller.episode_scrolldown()"
+                                        disabled="disabled" data-load-next="下一话" data-no-more="没有下一话了"></button>
                                 </div>
                             </div>
                         </div>
@@ -95,7 +96,7 @@
                             <img src="img/dir.png" class="arrow-image ts-dot-4">
                         </div>
                         <div class="direction-text">当前阅读器翻页方向</div>
-                        <div class="direction-content"></div>
+                        <div class="direction-content" data-ltr="从左向右" data-rtl="从右向左"></div>
                     </div>
                     <div id="episode-toast" class="episode-toast a-fade-in episode-toast p-absolute info-layer hidden">
                         <div id="toast-content" class="toast-content"></div>
@@ -210,7 +211,7 @@
                             <span id="next-page" class="next-page p-absolute ts-dot-4 a-fade-in left-position"></span>
                         </div>
                         <div class="info-text dp-i-block v-middle">
-                            <div><span id="page-count" class="page-count"></span></div>
+                            <div><span id="page-count" class="page-count" data-before="N/A" data-after="P"></span></div>
                         </div>
                         <div class="dp-i-block v-middle v-middle" title="当前有图片或章节正在载入 >ㅂ<ﾉ ☆" style="margin-left: 10px; display: none;">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="22.8 22.8 45.7 45.7" class="progress-svg v-middle" style="width: 14px;">
@@ -246,7 +247,7 @@
                         <div>
                             <button id="rotate" class="floating-button app-button none-select ui-opener default" onclick="controller.toggle_rotate(event)">
                                 <img src="img/rotate-right-duotone.svg" class="v-middle">
-                                <span class="v-middle" style="margin-left: 8px;"></span>
+                                <span class="v-middle" style="margin-left: 8px;" data-restore-default="还原默认" data-rotate-right="向右旋转"></span>
                             </button>
                         </div>
                         <div>
@@ -280,9 +281,9 @@
                             </button>
                         </div>
                         <div>
-                            <button class="floating-button app-button none-select ui-opener" onclick="controller.toggle_ui()">
+                            <button class="floating-button app-button none-select ui-opener toggle-ui" onclick="controller.toggle_ui()">
                                 <img src="img/hamburger.svg" class="v-middle">
-                                <span class="v-middle" style="margin-left: 8px;">显示工具栏</span>
+                                <span class="v-middle" style="margin-left: 8px;" data-showbar="显示工具栏" data-hidebar="隐藏工具栏"></span>
                             </button>
                         </div>
                     </div>

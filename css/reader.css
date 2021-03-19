@@ -565,11 +565,11 @@ a {
 }
 
 .manga-button::after {
-    content: '下一话'
+    content: attr(data-load-next)
 }
 
 .manga-button:disabled::after {
-    content: '没有下一话了'
+    content: attr(data-no-more)
 }
 
 .manga-button.primary:disabled {
@@ -920,11 +920,11 @@ a {
 }
 
 .message-box .direction-content::before {
-    content: '从左向右'
+    content: attr(data-ltr)
 }
 
 .message-box .img-container.flip~.direction-content::before {
-    content: '从右向左'
+    content: attr(data-rtl)
 }
 
 .slider-component {
@@ -1439,6 +1439,10 @@ a {
     transform: translateY(0)
 }
 
+.manga-reader-ui.v-hidden+.info-hud, .manga-reader-ui.v-hidden~.floating-buttons .floating-button.toggle-ui>span::after {
+    content: attr(data-showbar)
+}
+
 .manga-reader-ui .action-bar-container {
     left: 0;
     bottom: 0
@@ -1637,7 +1641,7 @@ a {
 }
 
 .manga-reader .floating-button.default>span::after {
-    content: '向右旋转';
+    content: attr(data-rotate-right);
 }
 
 .manga-reader .floating-button.rotate_90_clockwise>img {
@@ -1647,7 +1651,11 @@ a {
 }
 
 .manga-reader .floating-button.rotate_90_clockwise>span::after {
-    content: '还原默认';
+    content: attr(data-restore-default);
+}
+
+.manga-reader .floating-button.toggle-ui>span::after {
+    content: attr(data-hidebar)
 }
 
 .manga-reader .message-box {
@@ -1742,11 +1750,11 @@ a {
 }
 
 .page-count::before {
-    content: 'N/A'
+    content: attr(data-before)
 }
 
 .page-count::after {
-    content: 'P'
+    content: attr(data-after)
 }
 
 .page-count:not(:empty)::before, .page-count:empty::after {

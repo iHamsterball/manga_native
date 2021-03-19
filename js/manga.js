@@ -411,7 +411,9 @@ class Base {
             item.classList.add('image-item', 'p-relative', 'unselectable');
             container.appendChild(image);
             item.appendChild(container);
-            list.appendChild(item);
+            // If switch forward and backward instantly, there will be redundant entries
+            // However it's far beyond normal user behavior, so won't fix
+            if (handle.getScope() == this.webrtc.scope) list.appendChild(item);
         }
     }
 
@@ -1223,7 +1225,11 @@ class WebRTCClient extends Base {
     }
 
     _webrtc_load_files(args) {
-        this.files = Array(args.length).fill().map((_, i) => ({ getFile: async _ => (new Blob(await this.webrtc.file(i))), getIndex: _ => i }));
+        this.files = Array(args.length).fill().map((_, i) => ({
+            getFile: async _ => (new Blob(await this.webrtc.file(i))),
+            getIndex: _ => i,
+            getScope: _ => this.webrtc.scope,
+        }));
         this.resolve();
     }
 

@@ -153,8 +153,14 @@ class Base {
     }
 
     page_drag(event) {
-        this.cur = (event.target.value - 1) * this.step;
-        this._update();
+        const index = event.target.value - 1;
+        if (this.vertical) {
+            document.getElementById('image-list').children[index].scrollIntoView();
+            this.viewport.set(index, 1);
+        } else {
+            this.cur = index * this.step;
+            this._update();
+        }
     }
 
     page_arrowleft() {

@@ -2021,7 +2021,8 @@ a {
         display: flex;
         justify-content: center;
         min-width: 84px;
-        padding: 4px
+        padding: 4px;
+        transform: unset!important
     }
     .info-hud .hinter-image-container .hinter-image {
         display: none

@@ -372,7 +372,8 @@ class Base {
     };
 
     async _load_files(handle) {
-        for await (const [_, entry] of handle.entries()) {
+        for await (let [_, entry] of handle.entries()) {
+            entry.scope = this.index;
             if (entry.kind === 'file') this.files.push(entry);
         };
         this.files.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
@@ -413,7 +414,7 @@ class Base {
             item.appendChild(container);
             // If switch forward and backward instantly, there will be redundant entries
             // However it's far beyond normal user behavior, so won't fix
-            if (handle.getScope() == this.webrtc.scope) list.appendChild(item);
+            if (handle.scope == (this.client ? this.webrtc.scope : this.index)) list.appendChild(item);
         }
     }
 
@@ -960,7 +961,10 @@ class Epub extends Episode {
     }
 
     _load_files() {
-        this.files = Array(this.api.epub_count()).fill().map((_, i) => ({ getFile: async _ => (new Blob([await this.module.epub_image(i)])) }));
+        this.files = Array(this.api.epub_count()).fill().map((_, i) => ({
+            scope: this.index,
+            getFile: async _ => (new Blob([await this.module.epub_image(i)]))
+        }));
     }
 }
 
@@ -1226,9 +1230,9 @@ class WebRTCClient extends Base {
 
     _webrtc_load_files(args) {
         this.files = Array(args.length).fill().map((_, i) => ({
+            index: i,
+            scope: this.webrtc.scope,
             getFile: async _ => (new Blob(await this.webrtc.file(i))),
-            getIndex: _ => i,
-            getScope: _ => this.webrtc.scope,
         }));
         this.resolve();
     }
@@ -1238,7 +1242,7 @@ class WebRTCClient extends Base {
     }
 
     async _file_abstract(handle) {
-        return new Blob(await this.webrtc.file(handle.getIndex(), true));
+        return new Blob(await this.webrtc.file(handle.index, true));
     }
 
     _update_info() {

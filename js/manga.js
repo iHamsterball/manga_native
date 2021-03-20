@@ -335,6 +335,11 @@ class Base {
         }
     }
 
+    toggle_theme() {
+        document.documentElement.classList.toggle('theme-dark');
+        document.documentElement.classList.toggle('theme-light');
+    }
+
     // WebRTC Signaling
     async create_offer() {
         let offer = document.getElementById('offer-generated');

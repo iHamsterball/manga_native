@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="theme-light">
+<html lang="zh-CN" class="theme-dark">
     <head>
 	    <meta charset="UTF-8">
         <!-- SEO -->
@@ -105,6 +105,12 @@
                         <div id="navbar-container" class="navbar-container w-100 p-absolute p-zero a-move-in-bottom">
                             <nav class="manga-navbar space-between p-relative t-no-wrap ts-dot-4">
                                 <div class="right-padding h-100"></div>
+                                <div class="theme-switcher-container">
+                                    <div class="theme-switcher" onclick="controller.toggle_theme()">
+                                        <div class="bg-light"></div>
+                                        <div class="bg-dark"></div>
+                                    </div>
+                                </div>
                                 <span id="episode-title" class="episode-title t-over-hidden"></span>
                                 <span id="manga-title" href="#" title="" class="manga-title t-over-hidden"></span>
                                 <a href="#" target="_blank" class="manga-logo dp-i-block v-middle">

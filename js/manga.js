@@ -388,12 +388,15 @@ class Base {
         return this._rotate_wrapper(await this.files[index].getFile());
     }
 
-    async _file_abstract(handle) {
-        let file = await handle.getFile();
-        return await file.slice(0, 2048, file.type);
+    async * _file_abstract() {
+        for (const handle of this.files) {
+            let file = await handle.getFile();
+            yield await file.slice(0, 2048, file.type);
+        }
     }
 
     async _init_vertical() {
+        let iter = this._file_abstract();
         let list = document.getElementById('image-list');
         let next = document.getElementById('load-next-btn');
         Array.from(list.children).forEach(element => (
@@ -407,7 +410,7 @@ class Base {
             let meta = new Image();
             image.dataset.index = index;
             meta.onload = _ => (image.width = meta.width, image.height = meta.height);
-            meta.src = this.URL.createObjectURL(await this._file_abstract(handle));
+            meta.src = this.URL.createObjectURL((await iter.next()).value);
             this.observer['image'].observe(image);
             this.observer['progress'].observe(image);
             let container = document.createElement('div');
@@ -656,6 +659,9 @@ class Base {
         let msg = JSON.parse(event.data);
         if (msg.target == this.webrtc.target.client) return;
         switch(msg.cmd) {
+            case 'abstract':
+                await this._webrtc_reply_abstract(msg.args);
+                break;
             case 'episode':
                 this._webrtc_reply_episode(msg.args);
                 break;
@@ -701,6 +707,30 @@ class Base {
         this.webrtc.cmd('episode', this.webrtc.target.client, episode);
     }
 
+    async _webrtc_reply_abstract(args) {
+        let files = null;
+        let data = null;
+        switch (this.type) {
+            case type.manga:
+                files = new Array();
+                for await (const [_, entry] of this.episodes[args.scope].entries()) {
+                    if (entry.kind === 'file') files.push(entry);
+                };
+                files.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
+                break;
+            case type.episode:
+            case type.epub:
+                files = this.files;
+                break;
+        }
+
+        data = await new Blob(await Promise.all(files.map(async handle => {
+            let file = await handle.getFile();
+            return await file.slice(0, 2048, file.type);
+        }))).arrayBuffer();
+        this.webrtc._transmit_data(data, args.channel);
+    }
+
     async _webrtc_reply_file(args) {
         let file = null;
         let data = null;
@@ -718,8 +748,8 @@ class Base {
                 file = await this.files[args.index].getFile();
                 break;
         }
-        data = await (args.abstract ? file.slice(0, 2048, file.type) : file).arrayBuffer();
-        this.webrtc._transmit_file(data, args.channel);
+        data = await file.arrayBuffer();
+        this.webrtc._transmit_data(data, args.channel);
     }
 
     _webrtc_transmit_meta() {
@@ -996,22 +1026,31 @@ class WebRTC {
         this.ctrl.send(JSON.stringify({ cmd: cmd, target: target, args: args }));
     }
 
-    async file(index, abstract=false) {
-        if (this.client) return;
-        let rx = this.pc.createDataChannel('file' + (abstract ? '_abstract' : ''));
+    async file(index) {
+        let args = {
+            scope: this.scope,
+            index: index,
+        };
+        return await this._request_data('file', 'fetch', args);
+    }
+
+    async file_abstract() {
+        let args = {
+            scope: this.scope,
+        };
+        return await this._request_data('file_abstract', 'abstract', args)
+    }
+
+    async _request_data(channel, cmd, args) {
+        let rx = this.pc.createDataChannel(channel);
         let buffer = new Array();
         let meta = null;
         let size = 0;
-        rx.onopen = (event) => {
+        args['channel'] = rx.id;
+        rx.onopen = event => {
             this.channels.set(rx.id, rx);
             rx.binaryType = 'arraybuffer';
-            let args = {
-                scope: this.scope,
-                index: index,
-                channel: rx.id,
-                abstract: abstract,
-            };
-            this.cmd('fetch', this.target.host, args);
+            this.cmd(cmd, this.target.host, args);
         };
         rx.onmessage = (event) => {
             const data = event.data;
@@ -1025,15 +1064,15 @@ class WebRTC {
             if (payload.type === 'meta') meta = { size: payload.size };
         };
         rx.onerror = (event) => (console.error(event.data));
-        rx.onclosing = (event) => (this.channels.delete(rx.id));
         return new Promise((resolve) => (
             rx.onclose = (event) => {
+                this.channels.delete(rx.id);
                 resolve(buffer);
             }
         ));
     }
 
-    _transmit_file(data, channel) {
+    _transmit_data(data, channel) {
         let offset = 0;
         let tx = this.channels.get(channel);
         if (tx.readyState != 'open') console.error('Datachannel not ready.');
@@ -1246,8 +1285,12 @@ class WebRTCClient extends Base {
         await this._webrtc_request_episode(index);
     }
 
-    async _file_abstract(handle) {
-        return new Blob(await this.webrtc.file(handle.index, true));
+    async * _file_abstract() {
+        let data = new Blob(await this.webrtc.file_abstract());
+        for (let i = 0; i < this.files.length; i++) {
+            let start = i * 2048, end = start + 2048;
+            yield await data.slice(start, end, data.type);
+        }
     }
 
     _update_info() {

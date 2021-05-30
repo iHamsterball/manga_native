@@ -46,6 +46,8 @@ class Base {
         this.rotate = this.rotate_flags.default;
         // Page step
         this.step = 2;
+        // Theme
+        this.theme = sessionStorage.getItem('theme') | (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);;
         // Title
         this.title = { 'episode': '', 'manga': '' }
         // Enum type
@@ -340,6 +342,8 @@ class Base {
     toggle_theme() {
         document.documentElement.classList.toggle('theme-dark');
         document.documentElement.classList.toggle('theme-light');
+        this.theme = (this.theme + 1) % 2;
+        sessionStorage.setItem('theme', this.theme);
     }
 
     // WebRTC Signaling
@@ -1395,6 +1399,8 @@ let init = () => {
     let body = document.getElementById('reader-body');
     let buttons = document.getElementById('floating-buttons');
     let container = document.getElementById('ps-container');
+    const theme = sessionStorage.getItem('theme') | (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.classList.add(theme ? 'theme-light' : 'theme-dark');
     ui.addEventListener('animationend', event => {
         if (event.animationName == 'fade-out') {
             event.target.classList.add('v-hidden');

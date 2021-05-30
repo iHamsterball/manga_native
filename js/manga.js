@@ -292,9 +292,11 @@ class Base {
 
     toggle_ui() {
         let ui = document.getElementById('reader-ui');
+        let buttons = document.getElementById('floating-buttons');
         if (ui.classList.contains('v-hidden')) {
             ui.classList.remove('v-hidden');
             ui.classList.add('autohide');
+            buttons.classList.remove('stable');
         } else {
             ui.classList.add('a-fade-out');
             ui.classList.remove('autohide');
@@ -1391,6 +1393,7 @@ window.addEventListener('DOMContentLoaded', () => init());
 let init = () => {
     let ui = document.getElementById('reader-ui');
     let body = document.getElementById('reader-body');
+    let buttons = document.getElementById('floating-buttons');
     let container = document.getElementById('ps-container');
     ui.addEventListener('animationend', event => {
         if (event.animationName == 'fade-out') {
@@ -1404,6 +1407,14 @@ let init = () => {
     ui.addEventListener('mouseleave', event => (
         event.target.classList.add('autohide')
     ));
+    buttons.addEventListener('mouseover', event => {
+
+    });
+    buttons.addEventListener('animationend', event => {
+        if (event.animationName == 'delayed-float-down') {
+            event.target.classList.add('stable');
+        }
+    });
     document.addEventListener('mousemove', event => {
         if (event.pageX < (window.innerWidth / 2)) {
             body.classList.add('arrow-left');

@@ -210,23 +210,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="info-hud none-select info-hud p-absolute info-layer">
-                        <div id="hinter-image-container" class="hinter-image-container double">
-                            <img id="hinter-image" height="32" class="hinter-image ts-dot-4 v-middle flip">
-                            <span id="current-page" class="current-page p-absolute ts-dot-4 a-fade-in right-position"></span>
-                            <span id="next-page" class="next-page p-absolute ts-dot-4 a-fade-in left-position"></span>
-                        </div>
-                        <div class="info-text dp-i-block v-middle">
-                            <div><span id="page-count" class="page-count" data-before="N/A" data-after="P"></span></div>
-                        </div>
-                        <div class="dp-i-block v-middle v-middle" title="当前有图片或章节正在载入 >ㅂ<ﾉ ☆" style="margin-left: 10px; display: none;">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="22.8 22.8 45.7 45.7" class="progress-svg v-middle" style="width: 14px;">
-                                <circle fill="transparent" cx="45.7" cy="45.7" r="20" stroke-width="5.7" stroke-dasharray="125.6" stroke-dashoffset="125.6" class="circular-overlay">
-                                </circle>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="floating-buttons p-absolute info-layer">
+                    <div id="floating-buttons" class="floating-buttons p-absolute info-layer">
                         <div class="t-right">
                             <button class="floating-button app-button none-select shortcuts-info circle" title="使用帮助" onclick="controller.toggle_help()">
                                 <span>?</span>
@@ -291,6 +275,22 @@
                                 <img src="img/hamburger.svg" class="v-middle">
                                 <span class="v-middle" style="margin-left: 8px;" data-showbar="显示工具栏" data-hidebar="隐藏工具栏"></span>
                             </button>
+                        </div>
+                    </div>
+                    <div id="info-hud" class="info-hud none-select p-absolute info-layer">
+                        <div id="hinter-image-container" class="hinter-image-container double">
+                            <img id="hinter-image" height="32" class="hinter-image ts-dot-4 v-middle flip">
+                            <span id="current-page" class="current-page p-absolute ts-dot-4 a-fade-in right-position"></span>
+                            <span id="next-page" class="next-page p-absolute ts-dot-4 a-fade-in left-position"></span>
+                        </div>
+                        <div class="info-text dp-i-block v-middle">
+                            <div><span id="page-count" class="page-count" data-before="N/A" data-after="P"></span></div>
+                        </div>
+                        <div class="dp-i-block v-middle v-middle" title="当前有图片或章节正在载入 >ㅂ<ﾉ ☆" style="margin-left: 10px; display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="22.8 22.8 45.7 45.7" class="progress-svg v-middle" style="width: 14px;">
+                                <circle fill="transparent" cx="45.7" cy="45.7" r="20" stroke-width="5.7" stroke-dasharray="125.6" stroke-dashoffset="125.6" class="circular-overlay">
+                                </circle>
+                            </svg>
                         </div>
                     </div>
                     <div data-dialog id="dialog-help" class="dialog-layout hidden" background-enter-class="a-fade-in">

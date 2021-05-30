@@ -1525,15 +1525,32 @@ a {
     animation-play-state: paused
 }
 
-.manga-reader-ui+.info-hud, .manga-reader-ui~.floating-buttons {
-    transform: translateY(-5em)
+.manga-reader-ui~.info-hud, .manga-reader-ui~.floating-buttons {
+    transform: translateY(-5em);
+    -webkit-animation-play-state: running;
+    animation-play-state: running
 }
 
-.manga-reader-ui.v-hidden+.info-hud, .manga-reader-ui.v-hidden~.floating-buttons {
+.manga-reader-ui.autohide~.info-hud, .manga-reader-ui.autohide~.floating-buttons, .manga-reader-ui.v-hidden~.info-hud, .manga-reader-ui.v-hidden~.floating-buttons {
+    -webkit-animation: deleyed-float-down cubic-bezier(.22, .58, .12, .98) 4s;
+    animation: delayed-float-down cubic-bezier(.22, .58, .12, .98) 4s;
+}
+
+.manga-reader-ui.autohide:hover~.info-hud, .manga-reader-ui.autohide:hover~.floating-buttons {
+    -webkit-animation: none;
+    animation: none
+}
+
+.manga-reader-ui~.floating-buttons.stable+.info-hud, .manga-reader-ui~.floating-buttons.stable {
     transform: translateY(0)
 }
 
-.manga-reader-ui.v-hidden+.info-hud, .manga-reader-ui.v-hidden~.floating-buttons .floating-button.toggle-ui>span::after {
+.manga-reader-ui~.floating-buttons:hover, .manga-reader-ui~.floating-buttons:hover+.info-hud {
+    -webkit-animation-play-state: paused;
+    animation-play-state: paused
+}
+
+.manga-reader-ui.v-hidden~.info-hud, .manga-reader-ui.v-hidden~.floating-buttons .floating-button.toggle-ui>span::after {
     content: attr(data-showbar)
 }
 

@@ -34,6 +34,8 @@ class Base {
             primary: Symbol('primary'),
             secondary: Symbol('secondary')
         });
+        // PSD library
+        this.psd = require('psd');
         // Scale ratio
         this.ratio = 1;
         // Rotate switch
@@ -391,6 +393,13 @@ class Base {
     }
 
     async _file(index) {
+        if (this.files[index].name.endsWith('.psd')) {
+            let file = await this.files[index].getFile();
+            let buffer = await file.arrayBuffer();
+            let psd = new this.psd(new Uint8Array(buffer));
+            psd.parse();
+            return this._rotate_wrapper(await fetch(psd.image.toBase64()).then(res => res.blob()))
+        };
         return this._rotate_wrapper(await this.files[index].getFile());
     }
 

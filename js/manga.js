@@ -393,7 +393,7 @@ class Base {
     }
 
     async _file(index) {
-        if (this.files[index].name.endsWith('.psd')) {
+        if (this.files[index].name?.endsWith('.psd')) {
             let file = await this.files[index].getFile();
             let buffer = await file.arrayBuffer();
             let psd = new this.psd(new Uint8Array(buffer));

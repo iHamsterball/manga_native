@@ -1127,6 +1127,10 @@ a {
     color: hsla(0, 0%, 100%, .8)
 }
 
+.theme-dark .manga-navbar-manga-logo .logo-img {
+    filter: invert(1);
+}
+
 .nav-list .nav-item {
     padding: 0 12px;
     font-size: 14px;

@@ -362,7 +362,7 @@ class Base {
 
     _webrtc_signaling_peer_message_callback(address, message, packet) {
         const candidates = document.getElementById('webrtc-candidates');
-        console.log(address, message, packet);
+        const answer = document.getElementById('answer-responsed');
         switch(message.type) {
             case 'offer':
                 this.webrtc.pc.addIceCandidate(message);
@@ -371,7 +371,6 @@ class Base {
                 entry.dataset.address = address;
                 entry.dataset.sdp = message.sdp;
                 entry.onclick = async event => {
-                    console.log(event.target);
                     const remote = event.target;
                     await this.webrtc.pc.setRemoteDescription({ type: "offer", sdp: remote.dataset.sdp });
                     await this.webrtc.pc.setLocalDescription(await this.webrtc.pc.createAnswer());
@@ -381,14 +380,15 @@ class Base {
                 break;
             case 'answer':
                 this.webrtc.pc.setRemoteDescription(message);
+                answer.value = this.webrtc.pc.localDescription.sdp;
                 break;
             default:
-                console.log('Undefined behavior.');
+                console.error('Undefined behavior.');
         }
     }
 
     _webrtc_signaling_connections_callback(count) {
-        console.log('Active connections: ', count);
+        console.info('Active connections: ', count);
     }
 
     async _webrtc_negotiation_needed_callback() {
@@ -703,7 +703,7 @@ class Base {
                 // The connection has become fully connected
                 this._webrtc_connected();
                 if (!this.client) this._webrtc_transmit_meta();
-                if (this.client) controller = new WebRTCClient(this.module, this.webrtc);
+                if (this.client) controller = new WebRTCClient(this.module, this.signaling, this.webrtc);
                 Notifier.info(preset.INFO_WEBRTC_CONNECTED);
                 break;
             case "disconnected":
@@ -1198,8 +1198,8 @@ class Signaling {
 }
 
 class WebRTCClient extends Base {
-    constructor(module, webrtc) {
-        super(module, webrtc);
+    constructor(module, signaling, webrtc) {
+        super(module, signaling, webrtc);
         // WebRTC Client
         this.client = true;
         // Episode list

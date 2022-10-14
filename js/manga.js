@@ -1,5 +1,5 @@
 class Base {
-    constructor(module, webrtc) {
+    constructor(module, signaling, webrtc) {
         // Wasm api
         this.api = {
             // Image processing Section
@@ -58,8 +58,14 @@ class Base {
         this.vertical = false;
         // Viewport
         this.viewport = new Map();
+        // WebRTC signaling
+        this.signaling = signaling;
+        this.signaling.bugout.on('seen', this._webrtc_signaling_peer_connection_callback.bind(this));
+        this.signaling.bugout.on('message', this._webrtc_signaling_peer_message_callback.bind(this));
+        this.signaling.bugout.on('connections', this._webrtc_signaling_connections_callback.bind(this));
         // WebRTC submodule
         this.webrtc = webrtc;
+        this.webrtc.pc.onnegotiationneeded = this._webrtc_negotiation_needed_callback.bind(this);
         this.webrtc.pc.onconnectionstatechange = this._webrtc_connect_callback.bind(this);
         this.webrtc.pc.ondatachannel = this._webrtc_dc_callback.bind(this);
         this.webrtc.ctrl.onmessage = this._webrtc_control_callback.bind(this);
@@ -105,7 +111,7 @@ class Base {
             return;
         });
         if (handle === undefined) return;
-        controller = new Manga(handle, this.module, this.webrtc);
+        controller = new Manga(handle, this.module, this.signaling, this.webrtc);
         await controller.init();
     }
 
@@ -116,7 +122,7 @@ class Base {
             return;
         });
         if (handle === undefined) return;
-        controller = new Episode(handle, this.module, this.webrtc);
+        controller = new Episode(handle, this.module, this.signaling, this.webrtc);
         await controller.init();
     }
 
@@ -137,7 +143,7 @@ class Base {
             return;
         });
         if (handle === undefined) return;
-        controller = new Epub(handle, this.module, this.webrtc);
+        controller = new Epub(handle, this.module, this.signaling, this.webrtc);
         await controller.init();
     }
 
@@ -348,7 +354,52 @@ class Base {
         localStorage.setItem('theme', this.theme);
     }
 
-    // WebRTC Signaling
+    // WebRTC Auto Signaling
+    _webrtc_signaling_peer_connection_callback(address) {
+        // Send SDP to each peer connected with local
+        this.signaling.bugout.send(address, this.webrtc.pc.localDescription);
+    }
+
+    _webrtc_signaling_peer_message_callback(address, message, packet) {
+        const candidates = document.getElementById('webrtc-candidates');
+        console.log(address, message, packet);
+        switch(message.type) {
+            case 'offer':
+                this.webrtc.pc.addIceCandidate(message);
+                let entry = document.createElement('p');
+                entry.innerText = address;
+                entry.dataset.address = address;
+                entry.dataset.sdp = message.sdp;
+                entry.onclick = async event => {
+                    console.log(event.target);
+                    const remote = event.target;
+                    await this.webrtc.pc.setRemoteDescription({ type: "offer", sdp: remote.dataset.sdp });
+                    await this.webrtc.pc.setLocalDescription(await this.webrtc.pc.createAnswer());
+                    this.signaling.bugout.send(remote.dataset.address, this.webrtc.pc.localDescription);
+                }
+                candidates.appendChild(entry);
+                break;
+            case 'answer':
+                this.webrtc.pc.setRemoteDescription(message);
+                break;
+            default:
+                console.log('Undefined behavior.');
+        }
+    }
+
+    _webrtc_signaling_connections_callback(count) {
+        console.log('Active connections: ', count);
+    }
+
+    async _webrtc_negotiation_needed_callback() {
+        const offer = await this.webrtc.pc.createOffer();
+        const textarea = document.getElementById('offer-generated');
+        this.webrtc.pc.setLocalDescription(offer);
+        textarea.value = offer.sdp;
+        textarea.select();
+    }
+
+    // WebRTC Manual Signaling
     async create_offer() {
         let offer = document.getElementById('offer-generated');
         await this.webrtc.pc.setLocalDescription(await this.webrtc.pc.createOffer());
@@ -780,8 +831,8 @@ class Base {
 }
 
 class Episode extends Base {
-    constructor(handle, module, webrtc) {
-        super(module, webrtc);
+    constructor(handle, module, signaling, webrtc) {
+        super(module, signaling, webrtc);
         // File handle
         this.handle = handle;
         // Type definition
@@ -813,8 +864,8 @@ class Episode extends Base {
 }
 
 class Manga extends Base {
-    constructor(handle, module, webrtc) {
-        super(module, webrtc);
+    constructor(handle, module, signaling, webrtc) {
+        super(module, signaling, webrtc);
         // Episode list
         this.episodes = new Array();
         // Episode index
@@ -982,8 +1033,8 @@ class Manga extends Base {
 }
 
 class Epub extends Episode {
-    constructor(handle, module, webrtc) {
-        super(handle, module, webrtc);
+    constructor(handle, module, signaling, webrtc) {
+        super(handle, module, signaling, webrtc);
         // Type definition
         this.type = type.epub;
     }
@@ -1020,7 +1071,7 @@ class Epub extends Episode {
 
 class WebRTC {
     constructor() {
-        const config = { iceServers: [] };
+        const config = { iceServers: [{ url: 'stun:stun.l.google.com' }] };
         this.pc = new RTCPeerConnection(config);
         this.ctrl = this.pc.createDataChannel("ctrl", { negotiated: true, id: 0 });
         this.channels = new Map();
@@ -1121,6 +1172,28 @@ class WebRTC {
             tx.send(JSON.stringify(meta));
         }
         // tx.onopen = (event) => (tx.send(JSON.stringify(meta)));
+    }
+}
+
+class Signaling {
+    constructor() {
+        const identifier = 'manga_native';
+        const opts = {
+            torrentOpts: {
+                announce: [
+                    "wss://hub.bugout.link",
+                    "wss://tracker.openwebtorrent.com",
+                    "wss://tracker.btorrent.xyz",
+                    "wss://tracker.novage.com.ua",
+                    "wss://tracker.magnetoo.io",
+                    "wss://tracker.sloppyta.co",
+                    "wss://video.blender.org:443/tracker/socket",
+                    "wss://peertube.cpy.re:443/tracker/socket",
+                    "wss://tube.privacytools.io:443/tracker/socket"
+                ]
+            }
+        }
+        this.bugout = new Bugout(identifier, opts);
     }
 }
 
@@ -1491,8 +1564,7 @@ let init = () => {
         (ops[event.code] || (() => void 0))();
     };
     Module().onRuntimeInitialized = async _ => {
-        controller = new Base(Module(), new WebRTC());
-        controller.create_offer();
+        controller = new Base(Module(), new Signaling, new WebRTC());
         Notifier.show_dir();
     };
 };

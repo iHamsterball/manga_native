@@ -30,6 +30,7 @@
         <script src="js/manga.js"></script>
         <script src="js/plugin.js"></script>
         <script src="js/psd.js"></script>
+        <script src="js/vendor/bugout/bugout.min.js"></script>
         <!-- Google Analytics -->
         <!-- <script>
             (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -324,8 +325,16 @@
                                     </button>
                                     <div data-dialog class="panel-title">建立连接</div>
                                     <div data-dialog class="content-container">
-                                        <p>选择发起连接或接受连接以继续</p>
                                         <div data-dialog class="collapse-content">
+                                            <div data-dialog class="collapse" id="webrtc-auto">
+                                                <a data-dialog href="#webrtc-auto">连接候选</a>
+                                                <div data-dialog class="content">
+                                                    <div data-dialog class="inner-content">
+                                                        <p id="webrtc-ice-state">正在搜索……这可能需要长达数分钟</p>
+                                                        <div data-dialog id="webrtc-candidates"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             <div data-dialog class="collapse" id="webrtc-create">
                                                 <a data-dialog href="#webrtc-create">发起连接</a>
                                                 <div data-dialog class="content">

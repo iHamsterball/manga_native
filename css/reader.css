@@ -1888,7 +1888,7 @@ a {
 
 .collapse a {
     display: flex;
-    font-size: 1rem;
+    font-size: 1.1rem;
     padding: 0.9rem 1.8rem;
     color: #fff;
     position: relative;

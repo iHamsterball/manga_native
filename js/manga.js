@@ -362,7 +362,6 @@ class Base {
 
     _webrtc_signaling_peer_message_callback(address, message, packet) {
         const candidates = document.getElementById('webrtc-candidates');
-        const answer = document.getElementById('answer-responsed');
         switch(message.type) {
             case 'offer':
                 this.webrtc.pc.addIceCandidate(message);
@@ -380,7 +379,6 @@ class Base {
                 break;
             case 'answer':
                 this.webrtc.pc.setRemoteDescription(message);
-                answer.value = this.webrtc.pc.localDescription.sdp;
                 break;
             default:
                 console.error('Undefined behavior.');

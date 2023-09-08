@@ -452,6 +452,7 @@ class Base {
         return this._rotate_wrapper(await this.files[index].getFile());
     }
 
+    //* @deprecated Removed temporary workaround and use CSS with Observer only
     async * _file_abstract() {
         for (const handle of this.files) {
             let file = await handle.getFile();
@@ -460,7 +461,6 @@ class Base {
     }
 
     async _init_vertical() {
-        let iter = this._file_abstract();
         let list = document.getElementById('image-list');
         let next = document.getElementById('load-next-btn');
         Array.from(list.children).forEach(element => (
@@ -471,10 +471,7 @@ class Base {
         next.disabled = true;
         for (const [index, handle] of this.files.entries()) {
             let image = document.createElement('img');
-            let meta = new Image();
             image.dataset.index = index;
-            meta.onload = _ => (image.width = meta.width, image.height = meta.height);
-            meta.src = this.URL.createObjectURL((await iter.next()).value);
             this.observer['image'].observe(image);
             this.observer['progress'].observe(image);
             let container = document.createElement('div');

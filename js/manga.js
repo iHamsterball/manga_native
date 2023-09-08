@@ -10,6 +10,7 @@ class Base {
             // ePub processing Section
             epub_open: module.cwrap('epub_open', 'number', ['string']),
             epub_count: module.cwrap('epub_count', '', []),
+            epub_format: module.cwrap('epub_format', 'string', ['number'])
             // epub_bundle: module.cwrap('epub_bundle', '', []),
             // epub_image: module.cwrap('epub_image', 'number', ['number'])
         };
@@ -436,13 +437,14 @@ class Base {
     async _load_files(handle) {
         for await (let [_, entry] of handle.entries()) {
             entry.scope = this.index;
+            entry.format = entry.name.split('.').pop();
             if (entry.kind === 'file') this.files.push(entry);
         };
         this.files.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
     }
 
     async _file(index) {
-        if (this.files[index].name?.endsWith('.psd')) {
+        if (this.files[index].format === 'psd') {
             let file = await this.files[index].getFile();
             let buffer = await file.arrayBuffer();
             let psd = new this.psd(new Uint8Array(buffer));
@@ -1059,6 +1061,7 @@ class Epub extends Episode {
     _load_files() {
         this.files = Array(this.api.epub_count()).fill().map((_, i) => ({
             scope: this.index,
+            format: this.api.epub_format(i),
             getFile: async _ => (new Blob([await this.module.epub_image(i)]))
         }));
     }
@@ -1558,8 +1561,8 @@ let init = () => {
         };
         (ops[event.code] || (() => void 0))();
     };
-    Module().onRuntimeInitialized = async _ => {
-        controller = new Base(Module(), new Signaling, new WebRTC());
+    Module().then(instance => {
+        controller = new Base(instance, new Signaling, new WebRTC());
         Notifier.show_dir();
-    };
+    });
 };

@@ -444,14 +444,13 @@ class Base {
     }
 
     async _file(index) {
-        if (this.files[index].format === 'psd') {
-            let file = await this.files[index].getFile();
-            let buffer = await file.arrayBuffer();
-            let psd = new this.psd(new Uint8Array(buffer));
-            psd.parse();
-            return this._rotate_wrapper(await fetch(psd.image.toBase64()).then(res => res.blob()))
-        };
-        return this._rotate_wrapper(await this.files[index].getFile());
+        let blob = await this.files[index].getFile();
+        if (blob.type.length === 0) blob = blob.slice(0, blob.size, mime[this.files[index].format]);
+        if (this.files[index].format !== 'psd') return this._rotate_wrapper(blob);
+        let buffer = await file.arrayBuffer();
+        let psd = new this.psd(new Uint8Array(buffer));
+        psd.parse();
+        return this._rotate_wrapper(await fetch(psd.image.toBase64()).then(res => res.blob()))
     }
 
     //* @deprecated Removed temporary workaround and use CSS with Observer only

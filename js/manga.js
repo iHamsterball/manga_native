@@ -539,7 +539,9 @@ class Base {
         if (this.rotate >= 0) {
             let buffer = await blob.arrayBuffer();
             this.module.FS.writeFile('image', new Uint8Array(buffer));
-            blob = new Blob([await this.module.rotate_image('image', this.rotate)]);
+            blob = new Blob([await this.module.rotate_image('image', this.rotate)], {
+                type: blob.type
+            });
         }
         return blob;
     }

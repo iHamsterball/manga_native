@@ -1356,6 +1356,11 @@ a {
     color: hsla(0, 0%, 100%, .9)
 }
 
+.action-button img {
+    width: 2em;
+    height: 2em;
+}
+
 .action-button:disabled {
     opacity: .3
 }
@@ -1734,19 +1739,25 @@ a {
     bottom: 2%
 }
 
-.manga-reader .ui-opener {
-    width: 130px;
-    right: 2%;
-    bottom: 2%
-}
-
 .manga-reader .floating-buttons {
     right: 2%;
     bottom: 2%
 }
 
 .manga-reader .floating-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-evenly;
+    width: 130px;
     height: 44px
+}
+
+.manga-reader .floating-button .button-icon {
+    min-width: 2em;
+}
+
+.manga-reader .floating-button .button-icon~span {
+    min-width: 4em;
 }
 
 .manga-reader .floating-buttons .shortcuts-info {

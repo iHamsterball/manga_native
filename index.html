@@ -166,27 +166,27 @@
                                 <div class="divider"></div>
                                 <div class="action-buttons settings">
                                     <button class="action-button app-button t-center webrtc-button" onclick="controller.open_webrtc()">
-                                        <img src="img/chart-network-duotone.svg" width="24" style="width: 24px; height: 24px;"><br>
+                                        <img src="img/chart-network-duotone.svg"><br>
                                         <span>打开连接</span>
                                     </button>
                                     <button class="action-button app-button t-center open-button" onclick="controller.open_manga()">
-                                        <img src="img/folder-open-duotone.svg" width="24" style="width: 24px; height: 24px;"><br>
+                                        <img src="img/folder-open-duotone.svg"><br>
                                         <span>打开漫画</span>
                                     </button>
                                     <button class="action-button app-button t-center open-button" onclick="controller.open_episode()">
-                                        <img src="img/folder-open-light.svg"width="24" style="width: 24px; height: 24px;"><br>
+                                        <img src="img/folder-open-light.svg"><br>
                                         <span>打开章节</span>
                                     </button>
                                     <button class="action-button app-button t-center open-button" onclick="controller.open_epub()">
-                                        <img src="img/books-duotone.svg" width="24" style="width: 24px; height: 24px;"><br>
+                                        <img src="img/books-duotone.svg"><br>
                                         <span>打开文件</span>
                                     </button>
                                     <div class="setting-button-container">
                                         <button class="action-button app-button t-center setting-button w-100 p-relative v-middle" onclick="controller.toggle_settings()">
-                                            <img src="img/sliders-h-duotone.svg"width="24" style="width: 24px; height: 24px;"><br>
+                                            <img src="img/sliders-h-duotone.svg"><br>
                                             <span>阅读设置</span>
                                         </button>
-                                        <div data-setting id="reader-setting" class="reader-setting ts-dot-4 a-scale-in-ease hidden" style="height: auto;">
+                                        <div data-setting id="reader-setting" class="reader-setting ts-dot-4 a-scale-in-ease hidden">
                                             <div data-setting class="size-ruler border-box">
                                                 <div data-setting class="section a-scale-in-ease">
                                                     <div data-setting class="section-title">翻页方向</div>
@@ -232,51 +232,65 @@
                             </div>
                             <div class="p-relative">
                                 <button id="offset" class="floating-button app-button none-select" title="当您在并页模式阅读时，如果出现合并不正确的情况，请点击进行修正"
-                                    onclick="controller.toggle_offset()" style="width: 130px;">
+                                    onclick="controller.toggle_offset()">
                                     <span>更改跨页匹配</span><span style="margin-left: 5px; opacity: 0.5;">(C)</span>
                                 </button>
                             </div>
                         </div>
                         <div>
-                            <button id="rotate" class="floating-button app-button none-select ui-opener default" onclick="controller.toggle_rotate(event)">
-                                <img src="img/rotate-right-duotone.svg" class="v-middle">
-                                <span class="v-middle" style="margin-left: 8px;" data-restore-default="还原默认" data-rotate-right="向右旋转"></span>
+                            <button id="rotate" class="floating-button app-button none-select default" onclick="controller.toggle_rotate(event)">
+                                <div class="button-icon">
+                                    <img src="img/rotate-right-duotone.svg">
+                                </div>
+                                <span class="v-middle" data-restore-default="还原默认" data-rotate-right="向右旋转"></span>
                             </button>
                         </div>
                         <div>
-                            <button class="floating-button app-button none-select ui-opener" onclick="controller.sync()" title="当打开的漫画所在文件夹内容或结构变更时，无需重新打开，同步内容即可">
-                                <img src="img/sync-duotone.svg" class="v-middle">
-                                <span class="v-middle" style="margin-left: 8px; margin-right: 2px;">同步内容</span>
+                            <button class="floating-button app-button none-select" onclick="controller.sync()" title="当打开的漫画所在文件夹内容或结构变更时，无需重新打开，同步内容即可">
+                                <div class="button-icon">
+                                    <img src="img/sync-duotone.svg">
+                                </div>
+                                <span class="v-middle">同步内容</span>
                             </button>
                         </div>
                         <div>
-                            <button class="floating-button app-button none-select ui-opener" onclick="controller.toggle_fullscreen()">
-                                <img src="img/expand-wide-duotone.svg" class="v-middle">
-                                <span class="v-middle" style="margin-left: 6px;">切换全屏</span>
+                            <button class="floating-button app-button none-select" onclick="controller.toggle_fullscreen()">
+                                <div class="button-icon">
+                                    <img src="img/expand-wide-duotone.svg">
+                                </div>
+                                <span class="v-middle">切换全屏</span>
                             </button>
                         </div>
                         <div>
-                            <button id="download" class="floating-button app-button none-select ui-opener hidden" onclick="window.dispatchEvent(new Event('download'));">
-                                <img src="img/download-duotone.svg" class="v-middle">
-                                <span class="v-middle" style="margin-left: 8px;">打包下载</span>
+                            <button id="download" class="floating-button app-button none-select hidden" onclick="window.dispatchEvent(new Event('download'));">
+                                <div class="button-icon">
+                                    <img src="img/download-duotone.svg">
+                                </div>
+                                <span class="v-middle">打包下载</span>
                             </button>
                         </div>
                         <div>
-                            <button id="alt-previous-episode" class="floating-button app-button none-select ui-opener" disabled="disabled" onclick="controller.episode_up()">
-                                <img src="img/angle-up-duotone.svg" class="v-middle">
-                                <span class="v-middle" style="margin-left: 8px; margin-right: 12px;">上一话</span>
+                            <button id="alt-previous-episode" class="floating-button app-button none-select" disabled="disabled" onclick="controller.episode_up()">
+                                <div class="button-icon">
+                                    <img src="img/angle-up-duotone.svg">
+                                </div>
+                                <span class="v-middle">上一话</span>
                             </button>
                         </div>
                         <div>
-                            <button id="alt-next-episode" class="floating-button app-button none-select ui-opener" disabled="disabled" onclick="controller.episode_down()">
-                                <img src="img/angle-down-duotone.svg" class="v-middle">
-                                <span class="v-middle" style="margin-left: 8px; margin-right: 12px;">下一话</span>
+                            <button id="alt-next-episode" class="floating-button app-button none-select" disabled="disabled" onclick="controller.episode_down()">
+                                <div class="button-icon">
+                                    <img src="img/angle-down-duotone.svg">
+                                </div>
+                                <span class="v-middle">下一话</span>
                             </button>
                         </div>
                         <div>
-                            <button class="floating-button app-button none-select ui-opener toggle-ui" onclick="controller.toggle_ui()">
-                                <img src="img/hamburger.svg" class="v-middle">
-                                <span class="v-middle" style="margin-left: 8px;" data-showbar="显示工具栏" data-hidebar="隐藏工具栏"></span>
+                            <button class="floating-button app-button none-select toggle-ui" onclick="controller.toggle_ui()">
+                                <div class="button-icon">
+                                    <img src="img/hamburger.svg">
+                                </div>
+                                <span class="v-middle" data-showbar="显示工具栏" data-hidebar="隐藏工具栏"></span>
                             </button>
                         </div>
                     </div>

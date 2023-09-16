@@ -744,7 +744,7 @@ a {
 }
 
 .floating-button {
-    padding: 14px 18px;
+    padding: 14px 16px;
     margin: 5px 0;
     font-size: 12px;
     border-radius: 3px
@@ -1747,12 +1747,16 @@ a {
 .manga-reader .floating-button {
     display: inline-flex;
     align-items: center;
-    justify-content: space-evenly;
+    justify-content: center;
+    line-height: 1;
     width: 130px;
     height: 44px
 }
 
 .manga-reader .floating-button .button-icon {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
     min-width: 2em;
 }
 

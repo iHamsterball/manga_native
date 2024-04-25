@@ -26,7 +26,16 @@
      * but unfortunately there isn't any alternative,
      * which can achieve same effect with stylesheets only.
      * So, well, whatever. */
+    /**
+     * Attribute overflow: overlay behaved the same as auto since Chrome M114.
+     * Attribute scrollbar-width set to use overlay scrollbars on supported platforms,
+     * aka most mobile browsers, and desktop browsers with flags on,
+     * it will override ::-webkit-scrollbar settings.
+     * Attribute scrollbar-gutter set as placeholder to unsupported platforms.
+     */
     overflow: overlay;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
     scroll-behavior: smooth;
     -webkit-transform: translatez(0);
     transform: translatez(0)

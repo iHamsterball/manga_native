@@ -29,7 +29,11 @@
 .horizontal-mode .ps-container {
     width: 100vw;
     height: 100vh;
-    overflow: auto
+    overflow: auto;
+    scrollbar-color: #aaa transparent;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scroll-behavior: smooth;
 }
 
 .horizontal-mode.with-transition {
@@ -44,7 +48,7 @@
     -ms-flex-item-align: stretch;
     align-self: stretch;
     max-height: 100vh;
-    max-width: 100vw;
+    /* max-width: 100vw; */
     object-fit: contain
 }
 
@@ -130,12 +134,15 @@
     .horizontal-mode .images-container .view-container.primary-image {
         justify-content: center
     }
+
     .horizontal-mode .images-container .view-container.primary-image>img {
         transform-origin: center
     }
+
     .horizontal-mode .images-container .view-container.secondary-image {
         flex: 0
     }
+
     .horizontal-mode .images-container .view-container.secondary-image>img {
         display: none
     }

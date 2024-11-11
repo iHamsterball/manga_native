@@ -76,6 +76,7 @@ class Base {
         this._init_observer();
         this._observe_step();
         this._read_setting();
+        this._set_version();
     }
 
     get offset() {
@@ -701,6 +702,22 @@ class Base {
         list.style.width = `${50 * this.ratio}%`;
         // Scroll to nearest image instead of first image
         list.children[isNaN(this.viewtop) ? 0 : this.viewtop].scrollIntoView();
+    }
+
+    _set_version() {
+        const value = localStorage.getItem('version');
+        if (value == null) return;
+        // Create version tag if not exists
+        let version = document.getElementById('version');
+        if (version) {
+            version.textContent = value;
+        } else {
+            version = document.createElement('span');
+            version.id = 'version';
+            version.classList.add(...['version', 'dp-flex', 'v-middle']);
+            version.textContent = value;
+            document.getElementById('title').parentNode.appendChild(version);
+        }
     }
 
     _scroll_vertical_visibile(element) {
@@ -1586,6 +1603,23 @@ const type = Object.freeze({
 });
 
 window.addEventListener('DOMContentLoaded', () => init());
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+    // Register Service Worker
+    navigator.serviceWorker.register('/sw.js').then(_ => {
+        console.log(...Badge.args(badges.MangaNative), 'Service Worker registered.');
+    });
+    // Listen to the message back
+    navigator.serviceWorker.addEventListener('message', event => {
+        console.log(...Badge.args(badges.MangaNative), 'Service Worker version:', event.data);
+        localStorage.setItem('version', event.data);
+    });
+    // Manually trigger Service Worker update
+    navigator.serviceWorker.ready.then((registration) => {
+        registration.update();
+    });
+}
 
 let init = () => {
     let ui = document.getElementById('reader-ui');

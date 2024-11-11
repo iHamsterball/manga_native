@@ -614,7 +614,7 @@ class Base {
 
     async _update_images(e) {
         document.getElementById('image-primary').src = this._validate(this.pos.primary) ? this.URL.createObjectURL(await this._file(this.primary)) : '';
-        if (this.step == 2) document.getElementById('image-secondary').src = this._validate(this.pos.secondary) ? this.URL.createObjectURL(await this._file(this.secondary)) : '';
+        document.getElementById('image-secondary').src = this._validate(this.pos.secondary) && this.step == 2 ? this.URL.createObjectURL(await this._file(this.secondary)) : '';
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 

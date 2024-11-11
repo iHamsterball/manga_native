@@ -444,13 +444,33 @@ class Base {
     }
 
     async _file(index) {
-        let blob = await this.files[index].getFile();
+        let blob = await this.files[index].getFile().catch(async err => {
+            switch (err.name) {
+                case "NotAllowedError":
+                    Notifier.error(preset.ERR_NOT_ALLOWED);
+                    if (await this._verify()) return await this.files[index].getFile().catch(err => {
+                        console.error(...Badge.args(badges.MangaNative), err);
+                    });
+                    break;
+                case "NotFoundError":
+                    await this.load(false);
+                    return await this.files[index].getFile().catch(err => {
+                        console.error(...Badge.args(badges.MangaNative), err);
+                        Notifier.error(preset.ERR_NOT_FOUND);
+                    });
+                    break;
+                default:
+                    throw err;
+            }
+        });
+        if (blob === undefined) return new Blob();
         if (blob.type.length === 0) blob = blob.slice(0, blob.size, mime[this.files[index].format]);
         if (this.files[index].format !== 'psd') return this._rotate_wrapper(blob);
+        let file = await this.files[index].getFile();
         let buffer = await file.arrayBuffer();
         let psd = new this.psd(new Uint8Array(buffer));
         psd.parse();
-        return this._rotate_wrapper(await fetch(psd.image.toBase64()).then(res => res.blob()))
+        return this._rotate_wrapper(await fetch(psd.image.toBase64()).then(res => res.blob()));
     }
 
     //* @deprecated Removed temporary workaround and use CSS with Observer only
@@ -550,6 +570,20 @@ class Base {
         document.getElementById('image-primary').src = this._validate(this.pos.primary) ? this.URL.createObjectURL(await this._file(this.primary)) : '';
         if (this.step == 2) document.getElementById('image-secondary').src = this._validate(this.pos.secondary) ? this.URL.createObjectURL(await this._file(this.secondary)) : '';
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
+    }
+
+    async _verify() {
+        const options = { mode: "read" };
+        if (this.handle === undefined) {
+            return false;
+        }
+        if ((await this.handle.queryPermission(options)) === 'granted') {
+            return true;
+        }
+        if ((await this.handle.requestPermission(options)) === 'granted') {
+            return true;
+        }
+        return false;
     }
 
     _flush() {

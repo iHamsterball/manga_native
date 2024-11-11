@@ -14,6 +14,8 @@ class Base {
             // epub_bundle: module.cwrap('epub_bundle', '', []),
             // epub_image: module.cwrap('epub_image', 'number', ['number'])
         };
+        // Preload files
+        this.cache = new Map();
         // WebRTC Host
         this.client = false;
         // Current page & offset
@@ -443,6 +445,16 @@ class Base {
         this.files.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
     }
 
+    async _prefetch() {
+        const _cache = async (index) => this.URL.createObjectURL(await this._file(index));
+        const limit = 4;
+        const length = this.files.length;
+        for (let index = 0, cur = this.cur; index < limit && cur < length && length > 0; index++, cur++) {
+            if (this.cache.has(cur)) continue;
+            this.cache.set(cur, _cache(cur));
+        }
+    }
+
     async _file(index) {
         let blob = await this.files[index].getFile().catch(async err => {
             switch (err.name) {
@@ -514,9 +526,19 @@ class Base {
                 if (entry.isIntersecting) {
                     const image = entry.target;
                     const index = parseInt(image.dataset.index, 10);
+                    const _load = async (image, index) => {
                     image.src = this.URL.createObjectURL(await this.files[index].getFile());
                     image.parentNode.parentNode.classList.add('image-loaded');
-                    observer.unobserve(entry.target);
+                        observer.unobserve(image);
+                    }
+                    _load(image, index);
+                    // If scroll too fast, the previous image is not being loaded sometimes
+                    if (index > 0) {
+                        const sibling = document.querySelector(`img[data-index="${index - 1}"]`);
+                        if (sibling.parentNode.parentNode.classList.contains('image-loaded') === false) {
+                            _load(sibling, index - 1);
+                        }
+                    }
                 }
             })
         ));
@@ -564,6 +586,30 @@ class Base {
             });
         }
         return blob;
+    }
+
+    //* @deprecated
+    async _update_canvas() {
+        const id = {
+            primary: 'image-primary',
+            secondary: 'image-secondary',
+        }
+        let origin = {
+            primary: document.getElementById(id.primary),
+            secondary: document.getElementById(id.secondary),
+        }
+        if (this._validate(this.pos.primary) && this.primary != origin.primary.dataset.index) {
+            let primary = await this.cache.get(this.primary);
+            primary.id = id.primary;
+            console.log(...Badge.args(badges.MangaNative), origin.primary, primary)
+            origin.primary.replaceWith(primary);
+        }
+        if (this._validate(this.pos.secondary) && this.step == 2 && this.secondary != origin.secondary.dataset.index) {
+            let secondary = await this.cache.get(this.secondary);
+            secondary.id = id.secondary;
+            console.log(...Badge.args(badges.MangaNative), origin.secondary, secondary)
+            origin.secondary.replaceWith(secondary);
+        }
     }
 
     async _update_images(e) {
@@ -614,6 +660,7 @@ class Base {
     }
 
     _reset(full = false) {
+        this.cache = new Map();
         this.files = new Array();
         this.viewport.clear();
         if (full) this.cur = 0;
@@ -883,15 +930,26 @@ class Episode extends Base {
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 
-    async load() {
+    async load(update = true) {
         this._reset();
         this.title['episode'] = this.handle.name;
         await this._load_files(this.handle);
         this.toggle_nav();
-        this._update();
+        if (update) this._update();
         this._reset_content();
         this._init_vertical();
         this._webrtc_transmit_meta();
+    }
+
+    async _load_files(handle) {
+        await super._load_files(handle);
+        this._prefetch();
+    }
+
+    async _update_images() {
+        document.getElementById('image-primary').src = this._validate(this.pos.primary) ? await this.cache.get(this.primary) : '';
+        document.getElementById('image-secondary').src = this._validate(this.pos.secondary) && this.step == 2 ? await this.cache.get(this.secondary) : '';
+        this._prefetch();
     }
 }
 
@@ -920,7 +978,7 @@ class Manga extends Base {
         if (this.episodes.length == 0) Notifier.error(preset.ERR_NO_EPISODES);
     }
 
-    async load() {
+    async load(update = true) {
         let tmp = new Array();
         for await (const [_, entry] of this.root.entries()) {
             if (entry.kind === 'directory') tmp.push(entry);
@@ -930,7 +988,7 @@ class Manga extends Base {
         await this._episode_move(0);
         this.toggle_nav();
         this._init_contents();
-        this._update();
+        if (update) this._update();
         this._webrtc_transmit_meta();
     }
 
@@ -980,7 +1038,7 @@ class Manga extends Base {
         if (this._episode_check(this.index + offset)) {
             this.index += offset;
             this._reset(offset);
-            await this._load_files(this.episodes[this.index]);
+            await this._load_files(this.episodes[this.index]).catch(_ => this.load());
             this._init_vertical();
             if (this.vertical) this._scale();
         } else if (this.index + offset < 0) {
@@ -1037,10 +1095,21 @@ class Manga extends Base {
         old.parentNode.replaceChild(contents, old);
     }
 
+    async _load_files(handle) {
+        await super._load_files(handle);
+        this._prefetch();
+    }
+
     _update() {
         super._update();
         this._update_contents();
         this._update_nav();
+    }
+
+    async _update_images() {
+        document.getElementById('image-primary').src = this._validate(this.pos.primary) ? await this.cache.get(this.primary) : '';
+        document.getElementById('image-secondary').src = this._validate(this.pos.secondary) && this.step == 2 ? await this.cache.get(this.secondary) : '';
+        this._prefetch();
     }
 
     _update_info() {
@@ -1077,7 +1146,13 @@ class Epub extends Episode {
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 
-    async load() {
+    async sync() {
+        await this.load();
+        Notifier.info(preset.INFO_SYNCD);
+        if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
+    }
+
+    async load(update = true) {
         Notifier.loading();
         this._flush();
         const file = await this.handle.getFile();
@@ -1087,7 +1162,7 @@ class Epub extends Episode {
         this.title['episode'] = this.handle.name;
         this._load_files();
         this.toggle_nav();
-        this._update();
+        if (update) this._update();
         this._reset_content();
         this._init_vertical();
         this._webrtc_transmit_meta();

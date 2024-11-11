@@ -384,12 +384,12 @@ class Base {
                 this.webrtc.pc.setRemoteDescription(message);
                 break;
             default:
-                console.error('Undefined behavior.');
+                console.error(...Badge.args(badges.MangaNative), 'Undefined behavior.');
         }
     }
 
     _webrtc_signaling_connections_callback(count) {
-        console.info('Active connections: ', count);
+        console.info(...Badge.args(badges.MangaNative), 'Active connections: ', count);
     }
 
     async _webrtc_negotiation_needed_callback() {
@@ -814,7 +814,7 @@ class Base {
                 await this._webrtc_reply_file(msg.args);
                 break;
             default:
-                console.error('Unexpected command.')
+                console.error(...Badge.args(badges.MangaNative), 'Unexpected command.')
         }
     }
 
@@ -1240,7 +1240,7 @@ class WebRTC {
             const payload = JSON.parse(data);
             if (payload.type === 'meta') meta = { size: payload.size };
         };
-        rx.onerror = (event) => (console.error(event.data));
+        rx.onerror = (event) => (console.error(...Badge.args(badges.MangaNative), event.data));
         return new Promise((resolve) => (
             rx.onclose = (event) => {
                 this.channels.delete(rx.id);
@@ -1252,7 +1252,7 @@ class WebRTC {
     _transmit_data(data, channel) {
         let offset = 0;
         let tx = this.channels.get(channel);
-        if (tx.readyState != 'open') console.error('Datachannel not ready.');
+        if (tx.readyState != 'open') console.error(...Badge.args(badges.MangaNative), 'Datachannel not ready.');
         tx.send(JSON.stringify({ type: 'meta', size: data.byteLength }))
 
         let chunk_size = this.pc.sctp.maxMessageSize;
@@ -1447,7 +1447,7 @@ class WebRTCClient extends Base {
                 this._webrtc_load_files(msg.args);
                 break;
             default:
-                console.error('Unexpected command.')
+                console.error(...Badge.args(badges.MangaNative), 'Unexpected command.')
         }
     }
 

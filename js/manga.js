@@ -1528,7 +1528,7 @@ class Notifier {
         this._dir();
     }
 
-    static loaded() {
+    static loaded(trigger) {
         document.getElementById('loading-hinter').classList.add('hidden');
     }
 

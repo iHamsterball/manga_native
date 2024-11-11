@@ -1,5 +1,5 @@
 class Base {
-    constructor(module, signaling, webrtc) {
+    constructor() {
         // Wasm api
         this.api = {
             // Image processing Section
@@ -114,7 +114,7 @@ class Base {
             return;
         });
         if (handle === undefined) return;
-        controller = new Manga(handle, this.module, this.signaling, this.webrtc);
+        controller = new Manga(handle);
         await controller.init();
     }
 
@@ -125,7 +125,7 @@ class Base {
             return;
         });
         if (handle === undefined) return;
-        controller = new Episode(handle, this.module, this.signaling, this.webrtc);
+        controller = new Episode(handle);
         await controller.init();
     }
 
@@ -146,7 +146,7 @@ class Base {
             return;
         });
         if (handle === undefined) return;
-        controller = new Epub(handle, this.module, this.signaling, this.webrtc);
+        controller = new Epub(handle);
         await controller.init();
     }
 
@@ -782,7 +782,7 @@ class Base {
                 // The connection has become fully connected
                 this._webrtc_connected();
                 if (!this.client) this._webrtc_transmit_meta();
-                if (this.client) controller = new WebRTCClient(this.module, this.signaling, this.webrtc);
+                if (this.client) controller = new WebRTCClient();
                 Notifier.info(preset.INFO_WEBRTC_CONNECTED);
                 break;
             case "disconnected":
@@ -910,8 +910,8 @@ class Base {
 }
 
 class Episode extends Base {
-    constructor(handle, module, signaling, webrtc) {
-        super(module, signaling, webrtc);
+    constructor(handle) {
+        super();
         // File handle
         this.handle = handle;
         // Type definition
@@ -954,14 +954,15 @@ class Episode extends Base {
 }
 
 class Manga extends Base {
-    constructor(handle, module, signaling, webrtc) {
-        super(module, signaling, webrtc);
+    constructor(handle) {
+        super();
         // Episode list
         this.episodes = new Array();
         // Episode index
         this.index = 0;
         // Root directory file handle
         this.root = handle;
+        this.handle = handle;
         // Type definition
         this.type = type.manga;
     }
@@ -1133,9 +1134,11 @@ class Manga extends Base {
     }
 }
 
-class Epub extends Episode {
-    constructor(handle, module, signaling, webrtc) {
-        super(handle, module, signaling, webrtc);
+class Epub extends Base {
+    constructor(handle) {
+        super();
+        // File handle
+        this.handle = handle;
         // Type definition
         this.type = type.epub;
     }
@@ -1306,8 +1309,8 @@ class Signaling {
 }
 
 class WebRTCClient extends Base {
-    constructor(module, signaling, webrtc) {
-        super(module, signaling, webrtc);
+    constructor() {
+        super();
         // WebRTC Client
         this.client = true;
         // Episode list
@@ -1582,8 +1585,6 @@ const type = Object.freeze({
     manga: 2
 });
 
-let controller = null;
-
 window.addEventListener('DOMContentLoaded', () => init());
 
 let init = () => {
@@ -1673,8 +1674,11 @@ let init = () => {
         };
         (ops[event.code] || (() => void 0))();
     };
-    Module().then(instance => {
-        controller = new Base(instance, new Signaling, new WebRTC());
+    Promise.all([Module(), User.init()]).then(ret => {
+        [module, user] = ret;
+        webrtc = new WebRTC();
+        signaling = new Signaling();
+        controller = new Base();
         Notifier.show_dir();
     });
 };

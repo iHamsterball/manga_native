@@ -1,0 +1,15 @@
+{
+    "name": "Manga Reader Native (Alpha)",
+    "short_name": "Manga Native",
+    "start_url": "/",
+    "display": "standalone",
+    "display_override": ["fullscreen"],
+    "description": "Fullscreen WebApp.",
+    "icons": [
+        {
+            "src": "/img/logo-candidate-1.svg",
+            "type": "image/svg+xml",
+            "sizes": "512x512"
+        }
+    ]
+}

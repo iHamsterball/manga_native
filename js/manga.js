@@ -695,12 +695,12 @@ class Base {
             parent.scrollLeft = (parent.clientWidth / 2) * (this.ratio - 1);
         }
         // Vertical scale
-        list.style.transform = `scale(${this.ratio})`;
-        list.scrollIntoView();
-        if (this.vertical) {
-            let translate = list.clientHeight * (this.ratio - 1);
-            button.style.transform = `translateY(${translate}px)`;
-        }
+        // If use transform attribute like it is in horizontal mode,
+        // the height won't change which will cause several issues,
+        // the transform attribute applied on the button is workaround for this.
+        list.style.width = `${50 * this.ratio}%`;
+        // Scroll to nearest image instead of first image
+        list.children[isNaN(this.viewtop) ? 0 : this.viewtop].scrollIntoView();
     }
 
     _scroll_vertical_visibile(element) {

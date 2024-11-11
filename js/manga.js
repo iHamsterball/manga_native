@@ -1494,6 +1494,8 @@ const preset = Object.freeze({
     ERR_ALREADY_LAST_EPISODE: '没有下一话了',
     ERR_NO_FILES: '没有可显示的图片',
     ERR_NO_EPISODES: '没有可显示的章节',
+    ERR_NOT_ALLOWED: '没有访问权限',
+    ERR_NOT_FOUND: '没有找到文件',
 
     CUSTOM: null
 });

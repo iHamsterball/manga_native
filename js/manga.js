@@ -49,6 +49,8 @@ class Base {
             rotate_90_counterclockwise: 2
         });
         this.rotate = this.rotate_flags.default;
+        // Scale ratio history
+        this.scale = [1];
         // Page step
         this.step = 2;
         // Theme
@@ -98,6 +100,10 @@ class Base {
 
     get rtl() {
         return -this.ltr;
+    }
+
+    get viewnearest() {
+        return [...this.viewport.entries()].sort((a, b) => b[1] - a[1])[0]?.shift();
     }
 
     get viewtop() {
@@ -570,7 +576,7 @@ class Base {
                 controller._update_hinter();
                 controller._update_progress();
             })
-        ));
+        ), { threshold: Array.apply(null, { length: 11 }).map((_, index) => index / 10) });
     }
 
     _observe_step() {
@@ -687,21 +693,38 @@ class Base {
         let list = document.getElementById('image-list');
         let button = document.getElementById('load-next-btn-container');
 
+        // Add scale ratio history
+        this.scale.push(this._to_fixed(this.ratio, 1));
+
         // Horizontal scale
-        Array.from(container.querySelectorAll('img')).forEach(element => (
-            element.style.transform = `scale(${this.ratio})`
-        ));
+        Array.from(container.querySelectorAll('img')).forEach(element => {
+            element.style.marginTop = `${Math.round(Math.max(0, 1 - this.ratio) * 10) * 10}vh`;
+            element.style.transform = `scale(${this.ratio})`;
+        });
+        const origin = {
+            ratio: this.scale.shift(),
+            scrollTop: parent.scrollTop,
+            scrollLeft: parent.scrollLeft,
+        };
         if (this.ratio >= 1) {
             container.style.width = `${Math.round(this.ratio * 100)}%`;
-            parent.scrollLeft = (parent.clientWidth / 2) * (this.ratio - 1);
+            // origin.scrollTop - base = X - base
+            // X = origin.scrollTop - (parent.clientHeight / 2) * (origin.ratio - 1) + (parent.clientHeight / 2) * (this.ratio - 1)
+            parent.scrollTo({
+                top: origin.scrollTop + (parent.clientHeight / 2) * (this.ratio - origin.ratio),
+                left: origin.scrollLeft + (parent.clientWidth / 2) * (this.ratio - origin.ratio),
+                behavior: 'instant'
+            });
         }
         // Vertical scale
         // If use transform attribute like it is in horizontal mode,
         // the height won't change which will cause several issues,
         // the transform attribute applied on the button is workaround for this.
-        list.style.width = `${50 * this.ratio}%`;
-        // Scroll to nearest image instead of first image
-        list.children[isNaN(this.viewtop) ? 0 : this.viewtop].scrollIntoView();
+        // So remove them and change width directly, browser will do the rest.
+        list.style.width = `${Math.round(this.ratio * 50)}%`;
+        // Scroll to nearest image instead of first image,
+        // nor the viewtop image which may vary very often since intersection observer threshold is 0
+        list.children[isNaN(this.viewnearest) ? 0 : this.viewnearest].scrollIntoView({ behavior: 'instant' });
     }
 
     _set_version() {

@@ -6,16 +6,18 @@
         <title>Manga Reader Native (Alpha)</title>
         <meta name="description" content="Manga reader using Native File System API">
         <meta name="keywords" content="Manga Reader Native">
+        <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <!-- Favicon -->
         <!-- <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
         <link rel="icon preload" type="image/png" as="image" sizes="32x32" href="/favicon/favicon-32x32.png">
         <link rel="icon preload" type="image/png" as="image" sizes="16x16" href="/favicon/favicon-16x16.png">
-        <link rel="manifest preload" as="manifest" href="/favicon/site.webmanifest">
         <link rel="mask-icon preload" as="image" href="/favicon/safari-pinned-tab.svg" color="#5bbad5">
         <meta name="msapplication-TileColor" content="#da532c">
         <meta name="theme-color" content="#ffffff"> -->
+        <!-- Manifest -->
+        <link rel="manifest preload" as="manifest" href="site.webmanifest">
         <!-- Preload & Prefetch -->
         <link rel="stylesheet preload" as="style" type="text/css" href="css/reader.css">
         <link rel="stylesheet preload" as="style" type="text/css" href="css/animation.css">
@@ -119,8 +121,10 @@
                                 <span id="manga-title" href="#" title="" class="manga-title t-over-hidden"></span>
                                 <a href="/" target="_blank" class="manga-logo dp-i-block v-middle">
                                     <div class="manga-navbar-manga-logo">
-                                        <img src="img/logo-candidate-1.svg" class="logo-img dp-i-block v-middle">
-                                        <span class="dp-i-block v-middle">Manga Reader Native (Alpha)</span>
+                                        <img src="img/logo-candidate-1.svg" class="logo-img dp-flex v-middle">
+                                        <div class="manga-navbar-title-group">
+                                            <span id="title" class="title dp-flex v-middle">Manga Reader Native (Alpha)</span>
+                                        </div>
                                     </div>
                                 </a>
                                 <div class="left-padding h-100"></div>

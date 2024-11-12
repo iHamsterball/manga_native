@@ -1113,14 +1113,40 @@ a {
 }
 
 .manga-navbar-manga-logo {
+    display: grid;
+    align-items: center;
+    grid-auto-flow: row dense;
+    grid-template-columns: repeat(7, 1fr);
     font-size: 16px;
     color: rgba(0, 0, 0, .87)
 }
 
 .manga-navbar-manga-logo .logo-img {
+    grid-column-start: 1;
+    grid-column-end: 1;
     width: 36px;
     height: 36px;
     margin-right: 12px
+}
+
+.manga-navbar-manga-logo .manga-navbar-title-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    grid-column-start: 2;
+    grid-column-end: 8;
+    row-gap: 2px;
+}
+
+.manga-navbar-manga-logo .title {
+    flex-grow: 3;
+    line-height: 16px;
+}
+
+.manga-navbar-manga-logo .version {
+    flex-grow: 1;
+    font-size: 12px;
+    line-height: 12px;
 }
 
 .theme-dark .manga-navbar-manga-logo {

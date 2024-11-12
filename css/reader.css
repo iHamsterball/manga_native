@@ -2060,6 +2060,33 @@ a {
     background: transparent;
 }
 
+.w-25 { width: 25%; }
+.w-30 { width: 30%; }
+.w-35 { width: 35%; }
+.w-40 { width: 40%; }
+.w-45 { width: 45%; }
+.w-50 { width: 50%; }
+.w-55 { width: 55%; }
+.w-60 { width: 60%; }
+.w-65 { width: 65%; }
+.w-70 { width: 70%; }
+.w-75 { width: 75%; }
+.w-80 { width: 80%; }
+.w-85 { width: 85%; }
+.w-90 { width: 90%; }
+.w-95 { width: 95%; }
+.w-100 { width: 100%; }
+.w-110 { width: 110%; }
+.w-120 { width: 120%; }
+.w-130 { width: 130%; }
+.w-140 { width: 140%; }
+.w-150 { width: 150%; }
+.w-160 { width: 160%; }
+.w-170 { width: 170%; }
+.w-180 { width: 180%; }
+.w-190 { width: 190%; }
+.w-200 { width: 200%; }
+
 @media screen and (max-width: 768px) {
     .action-bar-container .action-buttons .episode-list-button .episode-list {
         margin-left: -45vw!important

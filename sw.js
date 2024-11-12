@@ -1,4 +1,4 @@
-const version = '0.1.A.0.72';
+const version = '0.1.A.0.124';
 const html = [
     '/',
     '/index.html',

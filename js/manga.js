@@ -696,6 +696,10 @@ class Base {
         // Add scale ratio history
         this.scale.push(this._to_fixed(this.ratio, 1));
 
+        // CSS classes like .w-25 .w-30 .w-35 ... .w-100 .w-110 ... .w-200
+        const classes = Array.apply(null, { length: 16 }).map((_, index) => `w-${index * 5 + 25}`).concat(
+            Array.apply(null, { length: 10 }).map((_, index) => `w-${index * 10 + 110}`));
+
         // Horizontal scale
         Array.from(container.querySelectorAll('img')).forEach(element => {
             element.style.marginTop = `${Math.round(Math.max(0, 1 - this.ratio) * 10) * 10}vh`;
@@ -707,7 +711,8 @@ class Base {
             scrollLeft: parent.scrollLeft,
         };
         if (this.ratio >= 1) {
-            container.style.width = `${Math.round(this.ratio * 100)}%`;
+            container.classList.remove(...classes);
+            container.classList.add(`w-${Math.round(this.ratio * 100) }`);
             // origin.scrollTop - base = X - base
             // X = origin.scrollTop - (parent.clientHeight / 2) * (origin.ratio - 1) + (parent.clientHeight / 2) * (this.ratio - 1)
             parent.scrollTo({
@@ -716,12 +721,16 @@ class Base {
                 behavior: 'instant'
             });
         }
+
         // Vertical scale
         // If use transform attribute like it is in horizontal mode,
         // the height won't change which will cause several issues,
         // the transform attribute applied on the button is workaround for this.
         // So remove them and change width directly, browser will do the rest.
-        list.style.width = `${Math.round(this.ratio * 50)}%`;
+        // However, setting width directly will cause .image-list width: 100vw overrided on mobile resolution.
+        // So add width class to change width
+        list.classList.remove(...classes);
+        list.classList.add(`w-${Math.round(this.ratio * 50)}`);
         // Scroll to nearest image instead of first image,
         // nor the viewtop image which may vary very often since intersection observer threshold is 0
         list.children[isNaN(this.viewnearest) ? 0 : this.viewnearest].scrollIntoView({ behavior: 'instant' });

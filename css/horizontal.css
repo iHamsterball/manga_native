@@ -55,13 +55,11 @@
 .horizontal-mode .images-container .view-container.primary-image {
     -ms-flex-pack: start;
     justify-content: flex-start;
-    z-index: 6
 }
 
 .horizontal-mode .images-container .view-container.secondary-image {
     -ms-flex-pack: end;
     justify-content: flex-end;
-    z-index: 7
 }
 
 .horizontal-mode .images-container.double-page .view-container>img {

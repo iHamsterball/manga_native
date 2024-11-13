@@ -1522,7 +1522,6 @@ a {
 .manga-reader-ui {
     -webkit-animation-duration: .2s;
     animation-duration: .2s;
-    z-index: 9
 }
 
 .manga-reader-ui .action-bar-container, .manga-reader-ui .navbar-container {
@@ -1540,16 +1539,6 @@ a {
     animation: move-out-bottom cubic-bezier(.22, .58, .12, .98) .4s
 }
 
-.manga-reader-ui.a-fade-in .navbar-container {
-    -webkit-animation: move-in-top cubic-bezier(.22, .58, .12, .98) .4s;
-    animation: move-in-top cubic-bezier(.22, .58, .12, .98) .4s
-}
-
-.manga-reader-ui.a-fade-in .action-bar-container {
-    -webkit-animation: move-in-bottom cubic-bezier(.22, .58, .12, .98) .4s;
-    animation: move-in-bottom cubic-bezier(.22, .58, .12, .98) .4s
-}
-
 .manga-reader-ui.autohide .navbar-container {
     -webkit-animation: delayed-move-out-top cubic-bezier(.22, .58, .12, .98) 4s;
     animation: delayed-move-out-top cubic-bezier(.22, .58, .12, .98) 4s
@@ -1560,7 +1549,7 @@ a {
     animation: delayed-move-out-bottom cubic-bezier(.22, .58, .12, .98) 4s
 }
 
-.manga-reader-ui.autohide:hover, .manga-reader-ui.autohide:hover .navbar-container, .manga-reader-ui.autohide:hover .action-bar-container {
+.manga-reader-ui.autohide:hover:not(.idle), .manga-reader-ui.autohide:hover:not(.idle) .navbar-container, .manga-reader-ui.autohide:hover:not(.idle) .action-bar-container {
     -webkit-animation: none;
     animation: none
 }
@@ -1834,10 +1823,6 @@ a {
     left: calc(50% - 88px);
     bottom: 120px;
     z-index: 10
-}
-
-.reader-body {
-    z-index: 4
 }
 
 .info-layer {

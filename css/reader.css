@@ -1540,6 +1540,16 @@ a {
     animation: move-out-bottom cubic-bezier(.22, .58, .12, .98) .4s
 }
 
+.manga-reader-ui.a-fade-in .navbar-container {
+    -webkit-animation: move-in-top cubic-bezier(.22, .58, .12, .98) .4s;
+    animation: move-in-top cubic-bezier(.22, .58, .12, .98) .4s
+}
+
+.manga-reader-ui.a-fade-in .action-bar-container {
+    -webkit-animation: move-in-bottom cubic-bezier(.22, .58, .12, .98) .4s;
+    animation: move-in-bottom cubic-bezier(.22, .58, .12, .98) .4s
+}
+
 .manga-reader-ui.autohide .navbar-container {
     -webkit-animation: delayed-move-out-top cubic-bezier(.22, .58, .12, .98) 4s;
     animation: delayed-move-out-top cubic-bezier(.22, .58, .12, .98) 4s

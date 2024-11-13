@@ -315,7 +315,7 @@ class Base {
         let buttons = document.getElementById('floating-buttons');
         if (ui.classList.contains('v-hidden')) {
             ui.classList.remove('v-hidden');
-            ui.classList.add('autohide');
+            ui.classList.add('a-fade-in', 'autohide');
             buttons.classList.remove('stable');
         } else {
             ui.classList.add('a-fade-out');
@@ -1661,12 +1661,21 @@ let init = () => {
     const theme = localStorage.getItem('theme') | (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
     document.documentElement.classList.add(theme ? 'theme-light' : 'theme-dark');
     ui.addEventListener('animationend', event => {
-        if (event.animationName == 'fade-out') {
+        switch (event.animationName) {
+            case 'fade-out':
             event.target.classList.add('v-hidden');
             event.target.classList.remove('a-fade-out');
-        } else if (event.animationName == 'delayed-move-out-top' || event.animationName == 'delayed-move-out-bottom') {
+                break;
+            case 'fade-in':
+                if (event.target.id == 'reader-ui') {
+                    event.target.classList.remove('a-fade-in');
+                    event.target.classList.add('autohide');
+                }
+                break;
+            case 'delayed-move-out-top', 'delayed-move-out-bottom':
             event.target.parentNode.classList.add('v-hidden');
             event.target.parentNode.classList.remove('autohide');
+                break;
         }
     });
     ui.addEventListener('mouseleave', event => (

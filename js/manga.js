@@ -1663,8 +1663,8 @@ let init = () => {
     ui.addEventListener('animationend', event => {
         switch (event.animationName) {
             case 'fade-out':
-            event.target.classList.add('v-hidden');
-            event.target.classList.remove('a-fade-out');
+                event.target.classList.add('v-hidden');
+                event.target.classList.remove('a-fade-out');
                 break;
             case 'fade-in':
                 if (event.target.id == 'reader-ui') {
@@ -1673,8 +1673,8 @@ let init = () => {
                 }
                 break;
             case 'delayed-move-out-top', 'delayed-move-out-bottom':
-            event.target.parentNode.classList.add('v-hidden');
-            event.target.parentNode.classList.remove('autohide');
+                event.target.parentNode.classList.add('v-hidden');
+                event.target.parentNode.classList.remove('autohide');
                 break;
         }
     });

@@ -365,14 +365,16 @@ class Base {
     }
 
     // WebRTC Auto Signaling
+    //* @deprecated
     _webrtc_signaling_peer_connection_callback(address) {
         // Send SDP to each peer connected with local
         this.signaling.bugout.send(address, this.webrtc.pc.localDescription);
     }
 
+    //* @deprecated
     _webrtc_signaling_peer_message_callback(address, message, packet) {
         const candidates = document.getElementById('webrtc-candidates');
-        switch(message.type) {
+        switch (message.type) {
             case 'offer':
                 this.webrtc.pc.addIceCandidate(message);
                 let entry = document.createElement('p');
@@ -391,12 +393,13 @@ class Base {
                 this.webrtc.pc.setRemoteDescription(message);
                 break;
             default:
-                console.error(...Badge.args(badges.MangaNative), 'Undefined behavior.');
+                console.error(...Badge.args(badges.MangaNative, badges.WebRTC), 'Undefined behavior.');
         }
     }
 
+    //* @deprecated
     _webrtc_signaling_connections_callback(count) {
-        console.info(...Badge.args(badges.MangaNative), 'Active connections: ', count);
+        console.info(...Badge.args(badges.MangaNative, badges.WebRTC), 'Active connections: ', count);
     }
 
     async _webrtc_negotiation_needed_callback() {
@@ -408,6 +411,7 @@ class Base {
     }
 
     // WebRTC Manual Signaling
+    //* @deprecated
     async create_offer() {
         let offer = document.getElementById('offer-generated');
         await this.webrtc.pc.setLocalDescription(await this.webrtc.pc.createOffer());
@@ -418,6 +422,7 @@ class Base {
         };
     }
 
+    //* @deprecated
     async receive_offer() {
         let offer = document.getElementById('offer-provided');
         let answer = document.getElementById('answer-responsed');
@@ -435,6 +440,7 @@ class Base {
         this.client = true;
     };
 
+    //* @deprecated
     receive_answer() {
         let answer = document.getElementById('answer-replied');
         if (this.webrtc.pc.signalingState != "have-local-offer") return;
@@ -712,7 +718,7 @@ class Base {
         };
         if (this.ratio >= 1) {
             container.classList.remove(...classes);
-            container.classList.add(`w-${Math.round(this.ratio * 100) }`);
+            container.classList.add(`w-${Math.round(this.ratio * 100)}`);
             // origin.scrollTop - base = X - base
             // X = origin.scrollTop - (parent.clientHeight / 2) * (origin.ratio - 1) + (parent.clientHeight / 2) * (this.ratio - 1)
             parent.scrollTo({
@@ -811,12 +817,14 @@ class Base {
         document.getElementById('scale-percentage').innerHTML = `${Math.round(this.ratio * 100)}%`;
     }
 
+    //* @deprecated
     _webrtc_connecting() {
         document.querySelectorAll('[id^="answer"]').forEach(element => (
             element.parentNode.classList.add('loading')
         ));
     }
 
+    //* @deprecated
     _webrtc_connected() {
         document.querySelectorAll('[id^="answer"]').forEach(element => {
             element.parentNode.classList.remove('loading');
@@ -833,6 +841,7 @@ class Base {
                 if (!this.client) this._webrtc_transmit_meta();
                 if (this.client) controller = new WebRTCClient();
                 Notifier.info(preset.INFO_WEBRTC_CONNECTED);
+                console.info(...Badge.args(badges.MangaNative, badges.WebRTC), 'Connection established.');
                 break;
             case "disconnected":
             case "failed":
@@ -852,7 +861,7 @@ class Base {
     async _webrtc_control_callback(event) {
         let msg = JSON.parse(event.data);
         if (msg.target == this.webrtc.target.client) return;
-        switch(msg.cmd) {
+        switch (msg.cmd) {
             case 'abstract':
                 await this._webrtc_reply_abstract(msg.args);
                 break;
@@ -863,7 +872,7 @@ class Base {
                 await this._webrtc_reply_file(msg.args);
                 break;
             default:
-                console.error(...Badge.args(badges.MangaNative), 'Unexpected command.')
+                console.error(...Badge.args(badges.MangaNative, badges.WebRTC), 'Unexpected command.')
         }
     }
 
@@ -901,6 +910,7 @@ class Base {
         this.webrtc.cmd('episode', this.webrtc.target.client, episode);
     }
 
+    //* @depracated
     async _webrtc_reply_abstract(args) {
         let files = null;
         let data = null;
@@ -952,9 +962,10 @@ class Base {
             manga: this.title.manga,
             episode: this.title.episode,
             type: this.type,
-            episodes: this.episodes ? this.episodes.map(episode => ({name: episode.name})) : null,
+            episodes: this.episodes ? this.episodes.map(episode => ({ name: episode.name })) : null,
         };
         this.webrtc._transmit_meta(meta);
+        console.info(...Badge.args(badges.MangaNative, badges.WebRTC), 'Meta data transmited.');
     }
 }
 
@@ -1247,7 +1258,7 @@ class WebRTC {
         return this.pc.connectionState == 'connected' && this.ctrl.readyState == 'open';
     }
 
-    cmd(cmd, target, args=null) {
+    cmd(cmd, target, args = null) {
         if (this.ctrl.readyState != 'open') return;
         this.ctrl.send(JSON.stringify({ cmd: cmd, target: target, args: args }));
     }
@@ -1289,7 +1300,7 @@ class WebRTC {
             const payload = JSON.parse(data);
             if (payload.type === 'meta') meta = { size: payload.size };
         };
-        rx.onerror = (event) => (console.error(...Badge.args(badges.MangaNative), event.data));
+        rx.onerror = (event) => (console.error(...Badge.args(badges.MangaNative, badges.WebRTC), event.data));
         return new Promise((resolve) => (
             rx.onclose = (event) => {
                 this.channels.delete(rx.id);
@@ -1301,7 +1312,7 @@ class WebRTC {
     _transmit_data(data, channel) {
         let offset = 0;
         let tx = this.channels.get(channel);
-        if (tx.readyState != 'open') console.error(...Badge.args(badges.MangaNative), 'Datachannel not ready.');
+        if (tx.readyState != 'open') console.error(...Badge.args(badges.MangaNative, badges.WebRTC), 'Datachannel not ready.');
         tx.send(JSON.stringify({ type: 'meta', size: data.byteLength }))
 
         let chunk_size = this.pc.sctp.maxMessageSize;
@@ -1496,7 +1507,7 @@ class WebRTCClient extends Base {
                 this._webrtc_load_files(msg.args);
                 break;
             default:
-                console.error(...Badge.args(badges.MangaNative), 'Unexpected command.')
+                console.error(...Badge.args(badges.MangaNative, badges.WebRTC), 'Unexpected command.')
         }
     }
 
@@ -1640,11 +1651,11 @@ window.addEventListener('DOMContentLoaded', () => init());
 if ('serviceWorker' in navigator) {
     // Register Service Worker
     navigator.serviceWorker.register('/sw.js').then(_ => {
-        console.log(...Badge.args(badges.MangaNative), 'Service Worker registered.');
+        console.log(...Badge.args(badges.MangaNative, badges.ServiceWorker), 'Service Worker registered.');
     });
     // Listen to the message back
     navigator.serviceWorker.addEventListener('message', event => {
-        console.log(...Badge.args(badges.MangaNative), 'Service Worker version:', event.data);
+        console.log(...Badge.args(badges.MangaNative, badges.ServiceWorker), 'Service Worker version:', event.data);
         localStorage.setItem('version', event.data);
     });
     // Manually trigger Service Worker update

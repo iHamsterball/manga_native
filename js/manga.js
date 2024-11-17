@@ -1245,6 +1245,10 @@ class WebRTC {
         const config = { iceServers: [{ url: 'stun:stun.l.google.com' }] };
         this.pc = new RTCPeerConnection(config);
         this.ctrl = this.pc.createDataChannel("ctrl", { negotiated: true, id: 0 });
+        this.ctrl.onclose = _ => {
+            this.ctrl.close();
+            this.ctrl = this.pc.createDataChannel('ctrl', { negotiated: true, id: 0 });
+        }
         this.channels = new Map();
         this.scope = 0;
         this.target = Object.freeze({
@@ -1259,7 +1263,10 @@ class WebRTC {
     }
 
     cmd(cmd, target, args = null) {
-        if (this.ctrl.readyState != 'open') return;
+        if (this.ctrl.readyState != 'open') {
+            console.error(...Badge.args(badges.MangaNative, badges.WebRTC), 'Ctrl channel has been closed.');
+            return;
+        }
         this.ctrl.send(JSON.stringify({ cmd: cmd, target: target, args: args }));
     }
 

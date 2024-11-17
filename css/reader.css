@@ -1856,7 +1856,7 @@ a {
 .touch-control {
     display: none;
     pointer-events: none;
-    z-index: 3
+    z-index: -1
 }
 
 .touch-control .touch-btn {

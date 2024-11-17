@@ -1,3 +1,14 @@
+:root {
+    --color-theme-dark: hsl(205, 100%, 60%);
+    --color-theme-dark-hover: hsl(205, 100%, 54%);
+    --color-theme-dark-active: hsl(205, 100%, 48%);
+    --color-theme-dark-overexposure: hsl(205, 100%, 72%);
+    --color-theme-light: hsl(25, 100%, 60%);
+    --color-theme-light-hover: hsl(25, 100%, 54%);
+    --color-theme-light-active: hsl(25, 100%, 48%);
+    --color-theme-light-overexposure: hsl(25, 100%, 72%);
+}
+
 html {
     font-size: 12px;
     font-family: Arial, Microsoft YaHei, Microsoft Sans Serif, Microsoft SanSerf, 微软雅黑;
@@ -14,7 +25,7 @@ button, input, textarea {
 }
 
 a {
-    color: #32aaff;
+    color: var(--color-theme-dark);
     text-decoration: none
 }
 
@@ -29,7 +40,7 @@ a {
 
 .theme-dark .theme-switcher::before {
     content: url(../img/stars.svg);
-    filter: brightness(120%) drop-shadow(0 0 4px hsl(205, 100%, 72%));
+    filter: brightness(120%) drop-shadow(0 0 4px var(--color-theme-dark-overexposure));
     transform: translateX(0.25em) translateY(-2px);
 }
 
@@ -59,7 +70,7 @@ a {
 
 .theme-light .theme-switcher::before {
     content: url(../img/sun.svg);
-    filter: brightness(120%) drop-shadow(0 0 1px hsl(25, 100%, 72%));
+    filter: brightness(120%) drop-shadow(0 0 1px var(--color-theme-light-overexposure));
     transform: translateX(-0.25em);
 }
 
@@ -121,7 +132,7 @@ a {
 }
 
 .theme-dark .episode-list .data-list .list-item.selected[data-contents] {
-    color: #32aaff
+    color: var(--color-theme-dark)
 }
 
 .theme-dark .episode-list .data-list .list-item[data-contents]:hover {
@@ -183,8 +194,8 @@ a {
 }
 
 .theme-dark .reader-setting .section .app-button[data-setting].selected {
-    color: #32aaff;
-    border-color: #32aaff
+    color: var(--color-theme-dark);
+    border-color: var(--color-theme-dark)
 }
 
 .theme-dark .info-hud {
@@ -205,27 +216,27 @@ a {
 }
 
 .theme-dark .slider-component .slider-body .range-input::-webkit-slider-thumb {
-    background-color: #32aaff;
+    background-color: var(--color-theme-dark);
 }
 
 .theme-dark .slider-component .slider-body .range-input::-moz-range-thumb {
-    background-color: #32aaff;
+    background-color: var(--color-theme-dark);
 }
 
 .theme-dark .slider-component .slider-body .range-input::-ms-fill-lower {
-    background-color: #32aaff;
+    background-color: var(--color-theme-dark);
 }
 
 .theme-dark .slider-component .slider-body .range-input:focus::-ms-fill-lower {
-    background-color: #32aaff;
+    background-color: var(--color-theme-dark);
 }
 
 .theme-dark .slider-component .slider-body .range-input::-ms-thumb {
-    background-color: #32aaff;
+    background-color: var(--color-theme-dark);
 }
 
 .theme-dark .nav-list .nav-item:hover {
-    color: #32aaff
+    color: var(--color-theme-dark)
 }
 
 .theme-dark .dialog-layout .app-button[data-dialog] {
@@ -237,20 +248,20 @@ a {
 }
 
 .theme-dark .circular-overlay {
-    stroke: hsl(205, 100%, 60%);
+    stroke: var(--color-theme-dark);
 }
 
 .theme-dark .manga-button.primary {
     color: #fff;
-    background-color: hsl(205, 100%, 60%);
+    background-color: var(--color-theme-dark);
 }
 
 .theme-dark .manga-button.primary:hover {
-    background-color: hsl(205, 100%, 54%);
+    background-color: var(--color-theme-dark-hover);
 }
 
 .theme-dark .manga-button.primary:active {
-    background-color: hsl(205, 100%, 48%);
+    background-color: var(--color-theme-dark-active);
 }
 
 .theme-dark .vertical-mode .load-next-btn[disabled], .theme-dark .vertical-mode .load-prev-btn[disabled] {
@@ -320,7 +331,7 @@ a {
 }
 
 .theme-light .episode-list .data-list .list-item.selected[data-contents] {
-    color: #cd5500;
+    color: var(--color-theme-light);
 }
 
 .theme-light .episode-list .data-list .list-item[data-contents]:hover {
@@ -394,8 +405,8 @@ a {
 }
 
 .theme-light .reader-setting .section .app-button[data-setting].selected {
-    color: #cd5500;
-    border-color: #cd5500;
+    color: var(--color-theme-light);
+    border-color: var(--color-theme-light);
 }
 
 .theme-light .info-hud {
@@ -432,27 +443,27 @@ a {
 }
 
 .theme-light .slider-component .slider-body .range-input::-webkit-slider-thumb {
-    background-color: #cd5500;
+    background-color: var(--color-theme-light);
 }
 
 .theme-light .slider-component .slider-body .range-input::-moz-range-thumb {
-    background-color: #cd5500;
+    background-color: var(--color-theme-light);
 }
 
 .theme-light .slider-component .slider-body .range-input::-ms-fill-lower {
-    background-color: #cd5500;
+    background-color: var(--color-theme-light);
 }
 
 .theme-light .slider-component .slider-body .range-input:focus::-ms-fill-lower {
-    background-color: #cd5500;
+    background-color: var(--color-theme-light);
 }
 
 .theme-light .slider-component .slider-body .range-input::-ms-thumb {
-    background-color: #cd5500;
+    background-color: var(--color-theme-light);
 }
 
 .theme-light .nav-list .nav-item:hover {
-    color: #cd5500;
+    color: var(--color-theme-light);
 }
 
 .theme-light .dialog-layout .app-button[data-dialog] {
@@ -464,7 +475,7 @@ a {
 }
 
 .theme-light .circular-overlay {
-    stroke: hsl(25, 100%, 60%);
+    stroke: var(--color-theme-light);
 }
 
 .theme-light .inner-content span::after {
@@ -473,15 +484,15 @@ a {
 
 .theme-light .manga-button.primary {
     color: #fff;
-    background-color: hsl(25, 100%, 60%);
+    background-color: var(--color-theme-light);
 }
 
 .theme-light .manga-button.primary:hover {
-    background-color: hsl(25, 100%, 54%);
+    background-color: var(--color-theme-light-hover);
 }
 
 .theme-light .manga-button.primary:active {
-    background-color: hsl(25, 100%, 48%);
+    background-color: var(--color-theme-light-active);
 }
 
 .theme-light .vertical-mode .load-next-btn[disabled], .theme-light .vertical-mode .load-prev-btn[disabled] {
@@ -938,6 +949,10 @@ a {
     right: 25%
 }
 
+.info-layer {
+    z-index: 8
+}
+
 .message-box {
     min-width: 280px;
     padding: 12px 12px 24px;
@@ -1367,12 +1382,12 @@ a {
 
 .overlay .buttons .app-button.confirm {
     margin-right: 16px;
-    color: #32aaff;
-    border: 1px solid #32aaff
+    color: var(--color-theme-dark);
+    border: 1px solid var(--color-theme-dark)
 }
 
 .overlay .buttons .app-button.cancel {
-    background-color: #32aaff;
+    background-color: var(--color-theme-dark);
     color: #fff
 }
 
@@ -1823,10 +1838,6 @@ a {
     left: calc(50% - 88px);
     bottom: 120px;
     z-index: 10
-}
-
-.info-layer {
-    z-index: 8
 }
 
 .incorrect-url {

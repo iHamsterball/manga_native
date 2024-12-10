@@ -172,18 +172,6 @@ class Base {
         this._update();
     }
 
-    page_drag(event) {
-        const index = event.target.value - 1;
-        if (this.vertical) {
-            document.getElementById('image-list').children[index].scrollIntoView();
-            this.viewport.clear();
-            this.viewport.set(index, 1);
-        } else {
-            this.cur = index * this.step;
-            this._update();
-        }
-    }
-
     page_arrowleft() {
         this._page_move(-this.ltr * this.step);
         this._update();
@@ -496,14 +484,6 @@ class Base {
         let psd = new this.psd(new Uint8Array(buffer));
         psd.parse();
         return this._rotate_wrapper(await fetch(psd.image.toBase64()).then(res => res.blob()));
-    }
-
-    //* @deprecated Removed temporary workaround and use CSS with Observer only
-    async * _file_abstract() {
-        for (const handle of this.files) {
-            let file = await handle.getFile();
-            yield await file.slice(0, 2048, file.type);
-        }
     }
 
     async _init_vertical() {
@@ -859,16 +839,13 @@ class Base {
 
     _webrtc_dc_callback(event) {
         const channel = event.channel;
-        if (['file', 'file_abstract'].includes(channel.label)) this.webrtc.channels.set(channel.id, channel);
+        if (['file'].includes(channel.label)) this.webrtc.channels.set(channel.id, channel);
     }
 
     async _webrtc_control_callback(event) {
         let msg = JSON.parse(event.data);
         if (msg.target == this.webrtc.target.client) return;
         switch (msg.cmd) {
-            case 'abstract':
-                await this._webrtc_reply_abstract(msg.args);
-                break;
             case 'episode':
                 this._webrtc_reply_episode(msg.args);
                 break;
@@ -912,31 +889,6 @@ class Base {
         }
         this.webrtc.scope = args.index;
         this.webrtc.cmd('episode', this.webrtc.target.client, episode);
-    }
-
-    //* @depracated
-    async _webrtc_reply_abstract(args) {
-        let files = null;
-        let data = null;
-        switch (this.type) {
-            case type.manga:
-                files = new Array();
-                for await (const [_, entry] of this.episodes[args.scope].entries()) {
-                    if (entry.kind === 'file') files.push(entry);
-                };
-                files.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
-                break;
-            case type.episode:
-            case type.epub:
-                files = this.files;
-                break;
-        }
-
-        data = await new Blob(await Promise.all(files.map(async handle => {
-            let file = await handle.getFile();
-            return await file.slice(0, 2048, file.type);
-        }))).arrayBuffer();
-        this.webrtc._transmit_data(data, args.channel);
     }
 
     async _webrtc_reply_file(args) {
@@ -1270,13 +1222,6 @@ class WebRTC {
         return await this._request_data('file', 'fetch', args);
     }
 
-    async file_abstract() {
-        let args = {
-            scope: this.scope,
-        };
-        return await this._request_data('file_abstract', 'abstract', args)
-    }
-
     async _request_data(channel, cmd, args) {
         let rx = this.pc.createDataChannel(channel);
         let buffer = new Array();
@@ -1378,10 +1323,6 @@ class WebRTCClient extends Base {
         this.index = 0;
         // Episode promise resolve
         this.resolve;
-    }
-
-    get sync() {
-        // return this.type == type.manga ? Manga.prototype.sync : Episode.prototype.sync;
     }
 
     get episode_up() {
@@ -1488,7 +1429,6 @@ class WebRTCClient extends Base {
         const channel = event.channel;
         switch (channel.label) {
             case 'file':
-            case 'file_abstract':
                 this.webrtc.channels.set(channel.id, channel);
                 break;
             case 'meta':
@@ -1541,14 +1481,6 @@ class WebRTCClient extends Base {
 
     async _load_files(index) {
         await this._webrtc_request_episode(index);
-    }
-
-    async * _file_abstract() {
-        let data = new Blob(await this.webrtc.file_abstract());
-        for (let i = 0; i < this.files.length; i++) {
-            let start = i * 2048, end = start + 2048;
-            yield await data.slice(start, end, data.type);
-        }
     }
 
     _update_info() {

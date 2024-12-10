@@ -625,9 +625,12 @@ class Base {
         }
     }
 
-    async _update_images(e) {
-        document.getElementById('image-primary').src = this._validate(this.pos.primary) ? this.URL.createObjectURL(await this._file(this.primary)) : '';
-        document.getElementById('image-secondary').src = this._validate(this.pos.secondary) && this.step == 2 ? this.URL.createObjectURL(await this._file(this.secondary)) : '';
+    async _update_images() {
+        const _fallback = async (pos) => (this.URL.createObjectURL(await this._file(pos)));
+        const _fetch = async (pos) => (await this.cache.get(pos) || await _fallback(pos));
+        document.getElementById('image-primary').src = this._validate(this.pos.primary) ? await _fetch(this.primary) : '';
+        document.getElementById('image-secondary').src = this._validate(this.pos.secondary) && this.step == 2 ? await _fetch(this.secondary) : '';
+        this._prefetch();
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 
@@ -1005,12 +1008,6 @@ class Episode extends Base {
         await super._load_files(handle);
         this._prefetch();
     }
-
-    async _update_images() {
-        document.getElementById('image-primary').src = this._validate(this.pos.primary) ? await this.cache.get(this.primary) : '';
-        document.getElementById('image-secondary').src = this._validate(this.pos.secondary) && this.step == 2 ? await this.cache.get(this.secondary) : '';
-        this._prefetch();
-    }
 }
 
 class Manga extends Base {
@@ -1165,12 +1162,6 @@ class Manga extends Base {
         super._update();
         this._update_contents();
         this._update_nav();
-    }
-
-    async _update_images() {
-        document.getElementById('image-primary').src = this._validate(this.pos.primary) ? await this.cache.get(this.primary) : '';
-        document.getElementById('image-secondary').src = this._validate(this.pos.secondary) && this.step == 2 ? await this.cache.get(this.secondary) : '';
-        this._prefetch();
     }
 
     _update_info() {

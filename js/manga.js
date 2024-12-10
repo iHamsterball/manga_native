@@ -1625,6 +1625,7 @@ const preset = Object.freeze({
     INFO_NEXT_EPISODE: '已切换至下一话',
     INFO_SYNCD: '已同步文件内容',
     INFO_WEBRTC_CONNECTED: '已建立连接',
+    INFO_BEFORE_UNLOAD: '再次点击以退出',
 
     ERR_ALREADY_FIRST_PAGE: '已经是第一页了',
     ERR_ALREADY_LAST_PAGE: '已经是最后一页了',
@@ -1646,6 +1647,21 @@ const type = Object.freeze({
 });
 
 window.addEventListener('DOMContentLoaded', () => init());
+
+// Prevent accidentally exit in PWA
+window.addEventListener('load', function () {
+    window.history.pushState({}, '')
+});
+
+window.addEventListener('popstate', () => {
+    // Confirm exiting in 2000ms grace
+    const grace = 2000;
+    // Show a "Press back again to exit" tooltip
+    Notifier.info(preset.INFO_BEFORE_UNLOAD);
+    setTimeout(() => {
+        window.history.pushState({}, '');
+    }, grace);
+});
 
 // Register Service Worker
 if ('serviceWorker' in navigator) {

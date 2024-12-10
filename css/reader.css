@@ -1568,7 +1568,7 @@ a {
     animation: delayed-move-out-bottom cubic-bezier(.22, .58, .12, .98) 4s
 }
 
-.manga-reader-ui.autohide:hover:not(.idle), .manga-reader-ui.autohide:hover:not(.idle) .navbar-container, .manga-reader-ui.autohide:hover:not(.idle) .action-bar-container {
+.manga-reader-ui.autohide:hover, .manga-reader-ui.autohide:hover .navbar-container, .manga-reader-ui.autohide:hover .action-bar-container {
     -webkit-animation: none;
     animation: none
 }

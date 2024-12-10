@@ -1560,6 +1560,7 @@ class WebRTCClient extends Base {
                 break;
             case type.episode:
             case type.epub:
+                this.title['manga'] = this.meta.manga || '';
                 this.title['episode'] = this.meta.episode || '';
                 break;
         }

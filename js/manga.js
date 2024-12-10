@@ -742,7 +742,8 @@ class Base {
         list.classList.add(`w-${Math.round(this.ratio * 50)}`);
         // Scroll to nearest image instead of first image,
         // nor the viewtop image which may vary very often since intersection observer threshold is 0
-        list.children[isNaN(this.viewnearest) ? 0 : this.viewnearest].scrollIntoView({ behavior: 'instant' });
+        // Skip if directory is empty, which leads to undefined child
+        list.children[isNaN(this.viewnearest) ? 0 : this.viewnearest]?.scrollIntoView({ behavior: 'instant' });
     }
 
     _set_version() {

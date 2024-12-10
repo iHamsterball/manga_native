@@ -1671,8 +1671,16 @@ if ('serviceWorker' in navigator) {
     });
     // Listen to the message back
     navigator.serviceWorker.addEventListener('message', event => {
-        console.log(...Badge.args(badges.MangaNative, badges.ServiceWorker), 'Service Worker version:', event.data);
-        localStorage.setItem('version', event.data);
+        switch (event.data.command) {
+            case 'version':
+                console.log(...Badge.args(badges.MangaNative, badges.ServiceWorker), 'Service Worker version:', event.data.version);
+                localStorage.setItem('version', event.data.version);
+                break;
+            case 'reload':
+                console.log(...Badge.args(badges.MangaNative, badges.ServiceWorker), 'Reloading...');
+                location.reload();
+                break;
+        }
     });
     // Manually trigger Service Worker update
     navigator.serviceWorker.ready.then((registration) => {

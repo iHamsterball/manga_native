@@ -1,4 +1,4 @@
-const version = '0.1.A.0.124';
+const version = '0.1.A.0.377';
 const html = [
     '/',
     '/index.html',
@@ -94,7 +94,7 @@ self.addEventListener("install", (event) => {
         clients.forEach(client => {
             console.log(...Badge.args(badges.ServiceWorker), 'Client:', client);
             // Send message to window
-            client.postMessage(version);
+            client.postMessage({ command: 'version', version: version });
         });
     });
     // Cache all resources
@@ -125,6 +125,14 @@ self.addEventListener("activate", event => {
                     }
                 })
             ]);
-        })
+        }).then(
+            // Send reload command to window
+            clients.matchAll({ includeUncontrolled: true, type: 'window' }).then(clients => {
+                clients.forEach(client => {
+                    // Send message to window
+                    client.postMessage({ command: 'reload' });
+                });
+            })
+        )
     );
 });

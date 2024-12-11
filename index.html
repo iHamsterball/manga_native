@@ -278,7 +278,7 @@
                             </button>
                         </div>
                         <div>
-                            <button id="alt-previous-episode" class="floating-button app-button none-select" disabled="disabled" onclick="controller.episode_up()">
+                            <button data-navigator id="alt-previous-episode" class="floating-button app-button none-select" disabled="disabled" onclick="controller.episode_up()">
                                 <div class="button-icon">
                                     <img src="img/angle-up-duotone.svg">
                                 </div>
@@ -286,7 +286,7 @@
                             </button>
                         </div>
                         <div>
-                            <button id="alt-next-episode" class="floating-button app-button none-select" disabled="disabled" onclick="controller.episode_down()">
+                            <button data-navigator id="alt-next-episode" class="floating-button app-button none-select" disabled="disabled" onclick="controller.episode_down()">
                                 <div class="button-icon">
                                     <img src="img/angle-down-duotone.svg">
                                 </div>
@@ -311,7 +311,7 @@
                         <div class="info-text dp-i-block v-middle">
                             <div><span id="page-count" class="page-count" data-before="N/A" data-after="P"></span></div>
                         </div>
-                        <div class="dp-i-block v-middle v-middle" title="当前有图片或章节正在载入 >ㅂ<ﾉ ☆" style="margin-left: 10px; display: none;">
+                        <div class="dp-i-block v-middle" title="当前有图片或章节正在载入 >ㅂ<ﾉ ☆" style="margin-left: 10px; display: none;">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="22.8 22.8 45.7 45.7" class="progress-svg v-middle" style="width: 14px;">
                                 <circle fill="transparent" cx="45.7" cy="45.7" r="20" stroke-width="5.7" stroke-dasharray="125.6" stroke-dashoffset="125.6" class="circular-overlay">
                                 </circle>

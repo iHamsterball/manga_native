@@ -270,13 +270,9 @@ class Base {
     }
 
     toggle_nav() {
-        if (this.type == type.manga == document.getElementById('content-button').disabled) {
-            Array.from(document.querySelectorAll('[data-navigator] button')).forEach(element => (
-                element.disabled = !element.disabled
-            ));
-            document.getElementById('alt-previous-episode').disabled = this.type != type.manga;
-            document.getElementById('alt-next-episode').disabled = this.type != type.manga;
-        }
+        Array.from(document.querySelectorAll('button[data-navigator].app-button')).forEach(element => (
+            element.disabled = this.type != type.manga
+        ));
     }
 
     toggle_rotate(event) {

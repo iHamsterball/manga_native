@@ -945,8 +945,10 @@ class Base {
             type: this.type,
             episodes: this.episodes ? this.episodes.map(episode => ({ name: episode.name })) : null,
         };
-        this.webrtc._transmit_meta(meta);
-        console.info(...Badge.args(badges.MangaNative, badges.WebRTC), 'Meta data transmited.');
+        if (!this.client) {
+            this.webrtc._transmit_meta(meta);
+            console.info(...Badge.args(badges.MangaNative, badges.WebRTC), 'Meta data transmited:', meta);
+        }
     }
 }
 

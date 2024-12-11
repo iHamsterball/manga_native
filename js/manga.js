@@ -459,13 +459,27 @@ class Base {
     }
 
     async _prefetch() {
-        const _cache = async (index) => this.URL.createObjectURL(await this._file(index));
         const limit = 4;
         const length = this.files.length;
         for (let index = 0, cur = this.cur; index < limit && cur < length && length > 0; index++, cur++) {
+            // Already cached
             if (this.cache.has(cur)) continue;
-            this.cache.set(cur, _cache(cur));
+            // Fetch and cache
+            this._fetch(cur);
         }
+    }
+
+    async _postfetch(index) {
+        // If cache missed, fallback to normal fetch
+        return await this.cache.get(index) || await this._fetch(index);
+    }
+
+    async _fetch(index) {
+        const content = await this._file(index);
+        const cache = this.URL.createObjectURL(content);
+        // Cache if not empty
+        if (content.size) this.cache.set(index, cache);
+        return cache;
     }
 
     async _file(index) {
@@ -618,10 +632,8 @@ class Base {
     }
 
     async _update_images() {
-        const _fallback = async (pos) => (this.URL.createObjectURL(await this._file(pos)));
-        const _fetch = async (pos) => (await this.cache.get(pos) || await _fallback(pos));
-        document.getElementById('image-primary').src = this._validate(this.pos.primary) ? await _fetch(this.primary) : '';
-        document.getElementById('image-secondary').src = this._validate(this.pos.secondary) && this.step == 2 ? await _fetch(this.secondary) : '';
+        document.getElementById('image-primary').src = this._validate(this.pos.primary) ? await this._postfetch(this.primary) : '';
+        document.getElementById('image-secondary').src = this._validate(this.pos.secondary) && this.step == 2 ? await this._postfetch(this.secondary) : '';
         this._prefetch();
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
@@ -1193,6 +1205,7 @@ class Epub extends Base {
             format: this.api.epub_format(i),
             getFile: async _ => (new Blob([await this.module.epub_image(i)]))
         }));
+        this._prefetch();
     }
 }
 

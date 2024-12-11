@@ -4,8 +4,8 @@ const badges = Object.freeze({
     Sector:        { name: 'Sector',         color: 'hsl(59, 70%, 60%)' },
     Firebase:      { name: 'Firebase',       color: 'hsl(71, 65%, 60%)' },
     ServiceWorker: { name: 'Service Worker', color: 'hsl(205, 100%, 65%)' },
-    WebRTC:        { name: 'WebRTC',         color: 'hsl(0, 60%, 50%)'},
-    WebAssembly:   { name: 'WebAssembly',    color: 'hsl(248, 60%, 50%)'},
+    WebRTC:        { name: 'WebRTC',         color: 'hsl(0, 60%, 65%)'},
+    WebAssembly:   { name: 'WebAssembly',    color: 'hsl(248, 60%, 65%)'},
 });
 
 class Badge {

@@ -172,6 +172,18 @@ class Base {
         this._update();
     }
 
+    page_drag(event) {
+        const index = event.target.value - 1;
+        if (this.vertical) {
+            document.getElementById('image-list').children[index].scrollIntoView();
+            this.viewport.clear();
+            this.viewport.set(index, 1);
+        } else {
+            this.cur = index * this.step;
+            this._update();
+        }
+    }
+
     page_arrowleft() {
         this._page_move(-this.ltr * this.step);
         this._update();

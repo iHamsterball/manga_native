@@ -895,6 +895,7 @@ class Base {
         let episode = {
             name: '',
             length: 0,
+            index: args.index,
         };
         switch (this.type) {
             case type.manga:

@@ -1739,7 +1739,12 @@ let init = () => {
         };
         (ops[event.code] || (() => void 0))();
     };
-    Promise.all([Module(), User.init()]).then(ret => {
+    const override = {
+        print: Badge.wrap(console.log.bind(console), [badges.MangaNative, badges.WebAssembly]),
+        printErr: Badge.wrap(console.error.bind(console), [badges.MangaNative, badges.WebAssembly]),
+        locateFile: (path) => ('wasm/' + path),
+    }
+    Promise.all([Module(override), User.init()]).then(ret => {
         [module, user] = ret;
         webrtc = new WebRTC();
         signaling = new Signaling();

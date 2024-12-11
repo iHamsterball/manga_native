@@ -467,15 +467,15 @@ class Base {
 
     async _postfetch(index) {
         // If cache missed, fallback to normal fetch
-        return await this.cache.get(index) || await this._fetch(index);
+        const blob = await this._rotate_wrapper(await this.cache.get(index) || await this._fetch(index));
+        return this.URL.createObjectURL(blob);
     }
 
     async _fetch(index) {
         const content = await this._file(index);
-        const cache = this.URL.createObjectURL(content);
         // Cache if not empty
-        if (content.size) this.cache.set(index, cache);
-        return cache;
+        if (content.size) this.cache.set(index, content);
+        return content;
     }
 
     async _file(index) {
@@ -500,12 +500,12 @@ class Base {
         });
         if (blob === undefined) return new Blob();
         if (blob.type.length === 0) blob = blob.slice(0, blob.size, mime[this.files[index].format]);
-        if (this.files[index].format !== 'psd') return this._rotate_wrapper(blob);
+        if (this.files[index].format !== 'psd') return blob;
         let file = await this.files[index].getFile();
         let buffer = await file.arrayBuffer();
         let psd = new this.psd(new Uint8Array(buffer));
         psd.parse();
-        return this._rotate_wrapper(await fetch(psd.image.toBase64()).then(res => res.blob()));
+        return await fetch(psd.image.toBase64()).then(res => res.blob());
     }
 
     async _init_vertical() {

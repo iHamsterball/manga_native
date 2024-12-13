@@ -152,7 +152,7 @@ class Base {
         const [handle] = await window.showOpenFilePicker(opts).catch(err => {
             this._update();
             Notifier.info(preset.INFO_CANCELLED);
-            return;
+            return [undefined];
         });
         if (handle === undefined) return;
         controller = new Epub(handle);

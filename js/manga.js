@@ -10,11 +10,11 @@ class Base {
             // ePub processing Section
             epub_open: module.cwrap('epub_open', 'number', ['string']),
             epub_count: module.cwrap('epub_count', '', []),
-            epub_format: module.cwrap('epub_format', 'string', ['number'])
+            epub_format: module.cwrap('epub_format', 'string', ['number']),
             // epub_bundle: module.cwrap('epub_bundle', '', []),
             // epub_image: module.cwrap('epub_image', 'number', ['number'])
         };
-        // Preload files
+        // Preloaded files
         this.cache = new Map();
         // WebRTC Host
         this.client = false;
@@ -22,6 +22,8 @@ class Base {
         this.cur = this._offset = 0;
         // File list
         this.files = new Array();
+        // Prefetch limit
+        this.limit = 4;
         // Right-to-Left Order (Left-to-Right -1)
         this.ltr = -1;
         // Messagebox timer
@@ -446,16 +448,18 @@ class Base {
     };
 
     async _load_files(handle) {
-        for await (let [_, entry] of handle.entries()) {
-            entry.scope = this.index;
-            entry.format = entry.name.split('.').pop();
-            if (entry.kind === 'file') this.files.push(entry);
-        };
-        this.files.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
+        let files = (await Array.fromAsync(handle.entries(), ([_, entry], index) => entry))
+            .filter(entry => entry.kind === 'file')
+            .map(entry => {
+                entry.scope = this.index;
+                entry.format = entry.name.split('.').pop();
+                return entry;
+            });
+        files.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
+        return files;
     }
 
-    async _prefetch() {
-        const limit = 4;
+    async _prefetch(limit = this.limit) {
         const length = this.files.length;
         for (let index = 0, cur = this.cur; index < limit && cur < length && length > 0; index++, cur++) {
             // Already cached
@@ -471,25 +475,28 @@ class Base {
         return this.URL.createObjectURL(blob);
     }
 
-    async _fetch(index) {
-        const content = await this._file(index);
+    async _fetch(index, files = this.files) {
+        if (files == null) files = this.files;
+        const content = await this._file(index, files);
         // Cache if not empty
         if (content.size) this.cache.set(index, content);
         return content;
     }
 
-    async _file(index) {
-        let blob = await this.files[index].getFile().catch(async err => {
+    async _file(index, files = this.files) {
+        if (files == null) files = this.files;
+        if (index > files.length) return new Blob();
+        let blob = await files[index].getFile().catch(async err => {
             switch (err.name) {
                 case "NotAllowedError":
                     Notifier.error(preset.ERR_NOT_ALLOWED);
-                    if (await this._verify()) return await this.files[index].getFile().catch(err => {
+                    if (await this._verify()) return await files[index].getFile().catch(err => {
                         console.error(...Badge.args(badges.MangaNative), err);
                     });
                     break;
                 case "NotFoundError":
                     await this.load(false);
-                    return await this.files[index].getFile().catch(err => {
+                    return await files[index].getFile().catch(err => {
                         console.error(...Badge.args(badges.MangaNative), err);
                         Notifier.error(preset.ERR_NOT_FOUND);
                     });
@@ -499,9 +506,9 @@ class Base {
             }
         });
         if (blob === undefined) return new Blob();
-        if (blob.type.length === 0) blob = blob.slice(0, blob.size, mime[this.files[index].format]);
-        if (this.files[index].format !== 'psd') return blob;
-        let file = await this.files[index].getFile();
+        if (blob.type.length === 0) blob = blob.slice(0, blob.size, mime[files[index].format]);
+        if (files[index].format !== 'psd') return blob;
+        let file = await files[index].getFile();
         let buffer = await file.arrayBuffer();
         let psd = new this.psd(new Uint8Array(buffer));
         psd.parse();
@@ -542,7 +549,10 @@ class Base {
                     const image = entry.target;
                     const index = parseInt(image.dataset.index, 10);
                     const _load = async (image, index) => {
-                        image.src = this.URL.createObjectURL(await this.files[index].getFile());
+                        // Prevent request amplification, send request for same file once
+                        if (this.webrtc.pending.has(index)) return;
+                        this.webrtc.pending.add(index);
+                        image.src = await this._postfetch(index);
                         image.parentNode.parentNode.classList.add('image-loaded');
                         observer.unobserve(image);
                     }
@@ -891,16 +901,14 @@ class Base {
         let episode = {
             name: '',
             length: 0,
-            index: args.index,
+            scope: args.scope,
         };
         switch (this.type) {
             case type.manga:
-                let files = new Array();
-                for await (const [_, entry] of this.episodes[args.index].entries()) {
-                    if (entry.kind === 'file') files.push(entry);
-                };
-                episode.name = this.episodes[args.index].name;
-                episode.length = files.length;
+                // Save file list for future use
+                this.webrtc.files = await this._load_files(this.episodes[args.scope]);
+                episode.name = this.episodes[args.scope].name;
+                episode.length = this.webrtc.files.length;
                 break;
             case type.episode:
             case type.epub:
@@ -908,7 +916,7 @@ class Base {
                 episode.length = this.files.length;
                 break;
         }
-        this.webrtc.scope = args.index;
+        this.webrtc.scope = args.scope;
         this.webrtc.cmd('episode', this.webrtc.target.client, episode);
     }
 
@@ -917,16 +925,11 @@ class Base {
         let data = null;
         switch (this.type) {
             case type.manga:
-                let files = new Array();
-                for await (const [_, entry] of this.episodes[args.scope].entries()) {
-                    if (entry.kind === 'file') files.push(entry);
-                };
-                files.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
-                file = await files[args.index].getFile();
+                file = await this._fetch(args.index, this.webrtc.files);
                 break;
             case type.episode:
             case type.epub:
-                file = await this.files[args.index].getFile();
+                file = await this.cache.get(args.index) || await this._fetch(args.index);
                 break;
         }
         data = await file.arrayBuffer();
@@ -972,17 +975,13 @@ class Episode extends Base {
     async load(update = true) {
         this._reset();
         this.title['episode'] = this.handle.name;
-        await this._load_files(this.handle);
+        this.files = await this._load_files(this.handle);
+        this._prefetch();
         this.toggle_nav();
         if (update) this._update();
         this._reset_content();
         this._init_vertical();
         this._webrtc_transmit_meta();
-    }
-
-    async _load_files(handle) {
-        await super._load_files(handle);
-        this._prefetch();
     }
 }
 
@@ -1013,12 +1012,9 @@ class Manga extends Base {
     }
 
     async load(update = true) {
-        let tmp = new Array();
-        for await (const [_, entry] of this.root.entries()) {
-            if (entry.kind === 'directory') tmp.push(entry);
-        };
-        tmp.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
-        if (tmp.length != 0) this.episodes = tmp;
+        this.episodes = (await Array.fromAsync(this.root.entries(), ([_, entry], index) => entry))
+            .filter(entry => entry.kind === 'directory');
+        this.episodes.sort((a, b) => (a.name.localeCompare(b.name, {}, { numeric: true })));
         await this._episode_move(0);
         this.toggle_nav();
         this._init_contents();
@@ -1072,7 +1068,8 @@ class Manga extends Base {
         if (this._episode_check(this.index + offset)) {
             this.index += offset;
             this._reset(offset);
-            await this._load_files(this.episodes[this.index]).catch(_ => this.load());
+            this.files = await this._load_files(this.episodes[this.index]).catch(_ => this.load());
+            this._prefetch();
             this._init_vertical();
             if (this.vertical) this._scale();
         } else if (this.index + offset < 0) {
@@ -1129,11 +1126,6 @@ class Manga extends Base {
         old.parentNode.replaceChild(contents, old);
     }
 
-    async _load_files(handle) {
-        await super._load_files(handle);
-        this._prefetch();
-    }
-
     _update() {
         super._update();
         this._update_contents();
@@ -1185,12 +1177,14 @@ class Epub extends Base {
     async load(update = true) {
         Notifier.loading();
         this._flush();
+        const path = 'tmp.epub';
         const file = await this.handle.getFile();
         let buffer = await file.arrayBuffer();
-        this.module.FS.writeFile('tmp.epub', new Uint8Array(buffer)); // Unicode filename not supported
-        this.api.epub_open('tmp.epub');
+        this.module.FS.writeFile(path, new Uint8Array(buffer)); // Unicode filename not supported
+        this.api.epub_open(path);
         this.title['episode'] = this.handle.name;
-        this._load_files();
+        this.files = this._load_files();
+        this._prefetch();
         this.toggle_nav();
         if (update) this._update();
         this._reset_content();
@@ -1199,12 +1193,11 @@ class Epub extends Base {
     }
 
     _load_files() {
-        this.files = Array(this.api.epub_count()).fill().map((_, i) => ({
+        return Array(this.api.epub_count()).fill().map((_, i) => ({
             scope: this.index,
             format: this.api.epub_format(i),
             getFile: async _ => (new Blob([await this.module.epub_image(i)]))
         }));
-        this._prefetch();
     }
 }
 
@@ -1268,7 +1261,7 @@ class WebRTC {
             const payload = JSON.parse(data);
             if (payload.type === 'meta') meta = { size: payload.size };
         };
-        rx.onerror = (event) => (console.error(...Badge.args(badges.MangaNative, badges.WebRTC), event.data));
+        rx.onerror = (event) => (console.error(...Badge.args(badges.MangaNative, badges.WebRTC), 'Data receive failed.'));
         return new Promise((resolve) => (
             rx.onclose = (event) => {
                 this.channels.delete(rx.id);
@@ -1425,8 +1418,9 @@ class WebRTCClient extends Base {
                 break;
             case type.episode:
             case type.epub:
-                await this._load_files(this.index);
+                this.files = await this._load_files(this.index);
                 this.title['episode'] = this.meta.episode;
+                this._prefetch();
                 this._update();
                 this._reset_content();
                 break;
@@ -1439,7 +1433,8 @@ class WebRTCClient extends Base {
         if (this._episode_check(this.index + offset)) {
             this.index += offset;
             this._reset(offset);
-            await this._load_files(this.index);
+            this.files = await this._load_files(this.index);
+            this._prefetch();
             this._init_vertical();
             if (this.vertical) this._scale();
         } else if (this.index + offset < 0) {
@@ -1476,11 +1471,17 @@ class WebRTCClient extends Base {
 
     async _webrtc_request_episode(index) {
         let args = {
-            index: index,
+            scope: index,
         };
         this.webrtc.scope = index;
         this.webrtc.cmd('episode', this.webrtc.target.host, args);
         return new Promise((resolve) => this.resolve = resolve);
+    }
+
+    _reset(full = false) {
+        super._reset(full);
+        // Clear client-side webrtc pending request file index list
+        this.webrtc.pending.clear();
     }
 
     _webrtc_request_meta() {
@@ -1495,16 +1496,16 @@ class WebRTCClient extends Base {
     }
 
     _webrtc_load_files(args) {
-        this.files = Array(args.length).fill().map((_, i) => ({
+        let files = Array(args.length).fill().map((_, i) => ({
             index: i,
             scope: this.webrtc.scope,
-            getFile: async _ => (new Blob(await this.webrtc.file(i))),
+            getFile: async _ => (new Blob(await this.cache.get(i) || await this.webrtc.file(i))),
         }));
-        this.resolve();
+        this.resolve(files);
     }
 
     async _load_files(index) {
-        await this._webrtc_request_episode(index);
+        return await this._webrtc_request_episode(index);
     }
 
     _update_info() {

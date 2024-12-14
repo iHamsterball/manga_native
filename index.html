@@ -55,10 +55,10 @@
                             <div id="ps-container" class="ps-container p-relative over-hidden h-100 ts-dot-2 ps">
                                 <div id="images-container" class="images-container p-zero h-100 w-100 m-auto double-page">
                                     <div class="view-container p-relative secondary-image unselectable">
-                                        <img id="image-secondary" class="h-100" onload="Notifier.loaded(this)">
+                                        <img id="image-secondary" class="h-100" data-bind="image_loaded">
                                     </div>
                                     <div class="view-container p-relative primary-image unselectable">
-                                        <img id="image-primary" class="h-100" onload="Notifier.loaded(this)">
+                                        <img id="image-primary" class="h-100" data-bind="image_loaded">
                                     </div>
                                 </div>
                                 <div id="image-list" class="image-list m-auto over-hidden">
@@ -86,16 +86,16 @@
                                     </div>
                                 </div>
                                 <div id="load-next-btn-container" class="load-next-btn-container">
-                                    <button id="load-next-btn" class="manga-button load-next-btn primary" onclick="controller.episode_scrolldown()"
-                                        disabled="disabled" data-load-next="下一话" data-no-more="没有下一话了"></button>
+                                    <button id="load-next-btn" class="manga-button load-next-btn primary" data-bind="episode_scrolldown"
+                                        disabled data-load-next="下一话" data-no-more="没有下一话了"></button>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="touch-control w-100 h-100 p-absolute p-zero">
-                        <div class="touch-button pointer touch-btn menu-opener" onclick="controller.toggle_ui()" title="显示工具栏"></div>
-                        <div class="touch-button pointer touch-btn go-prev" onclick="controller.page_arrowleft()"></div>
-                        <div class="touch-button pointer touch-btn go-next" onclick="controller.page_arrowright()"></div>
+                        <div class="touch-button pointer touch-btn menu-opener" data-bind="toggle_ui" title="显示工具栏"></div>
+                        <div class="touch-button pointer touch-btn go-prev" data-bind="page_arrowleft"></div>
+                        <div class="touch-button pointer touch-btn go-next" data-bind="page_arrowright"></div>
                     </div>
                     <div id="message-box" class="message-box none-select a-fade-in p-absolute info-layer hidden">
                         <div id="message-image-container" class="img-container flip">
@@ -112,7 +112,7 @@
                             <nav class="manga-navbar space-between p-relative t-no-wrap ts-dot-4">
                                 <div class="right-padding h-100"></div>
                                 <div class="theme-switcher-container">
-                                    <div class="theme-switcher" onclick="controller.toggle_theme()">
+                                    <div class="theme-switcher" data-bind="toggle_theme">
                                         <div class="bg-light"></div>
                                         <div class="bg-dark"></div>
                                     </div>
@@ -133,30 +133,30 @@
                         <div id="action-bar-container" class="action-bar-container w-100 p-absolute a-move-in-top">
                             <div class="action-bar-content">
                                 <div class="zoomer dp-i-block v-middle t-center">
-                                    <span class="v-middle zoom-btn btn-minus bg-center bg-no-repeat pointer" onclick="controller.scale_down()"></span><span id="scale-percentage" class="v-middle zoom-display t-center pointer" onclick="controller.scale_reset()">100%</span><span class="v-middle zoom-btn btn-plus bg-center bg-no-repeat pointer" onclick="controller.scale_up()"></span>
+                                    <span class="v-middle zoom-btn btn-minus bg-center bg-no-repeat pointer" data-bind="scale_down"></span><span id="scale-percentage" class="v-middle zoom-display t-center pointer" data-bind="scale_reset">100%</span><span class="v-middle zoom-btn btn-plus bg-center bg-no-repeat pointer" data-bind="scale_up"></span>
                                 </div>
                                 <div class="page-slider">
                                     <div class="slider-component">
                                         <div class="progress-indicator">1 / 1</div>
                                         <div class="slider-body w-100">
-                                            <input id="progress-indicator" type="range" max="1" min="1" step="1" class="range-input" oninput="controller.page_drag(event)">
+                                            <input id="progress-indicator" type="range" max="1" min="1" step="1" class="range-input" data-bind="page_drag">
                                         </div>
                                     </div>
                                 </div>
                                 <div data-navigator class="action-buttons navigate">
-                                    <button data-navigator id="previous-episode" class="app-button" disabled="disabled" onclick="controller.episode_up()">
+                                    <button data-navigator id="previous-episode" class="app-button" disabled data-bind="episode_up">
                                         <span class="v-middle pageup">上一话</span>
                                         <img src="img/error.svg" width="16" title="上一话加载失败了，您可进入章节后重新载入 (°▽°)ﾉ" class="v-middle hidden">
                                     </button>
-                                    <button data-navigator id="next-episode" class="app-button" disabled="disabled" onclick="controller.episode_down()">
+                                    <button data-navigator id="next-episode" class="app-button" disabled data-bind="episode_down">
                                         <span class="v-middle pagedown">下一话</span>
                                         <img src="img/error.svg" width="16" title="下一话加载失败了，您可进入章节后重新载入 (⁄ ⁄•⁄ω⁄•⁄ ⁄)" class="v-middle hidden">
                                     </button>
                                     <div data-navigator class="episode-list-button">
-                                        <button data-navigator id="content-button" class="app-button w-100" disabled="disabled" onclick="controller.toggle_contents()">
+                                        <button data-navigator id="content-button" class="app-button w-100" disabled data-bind="toggle_contents">
                                             <span class="v-middle toc">目录</span>
                                         </button>
-                                        <div data-contents data-navigator id="manga-contents" class="episode-list border-box p-absolute a-scale-in-ease hidden" onclick="controller.episode_switch(event)">
+                                        <div data-contents data-navigator id="manga-contents" class="episode-list border-box p-absolute a-scale-in-ease hidden" data-bind="episode_switch">
                                             <div data-contents class="panel-title">
                                                 <div data-contents class="text">全部章节（<span id="episode-count"></span>）</div>
                                             </div>
@@ -170,24 +170,24 @@
                                 </div>
                                 <div class="divider"></div>
                                 <div class="action-buttons settings">
-                                    <button class="action-button app-button t-center webrtc-button" onclick="controller.open_webrtc()">
+                                    <button class="action-button app-button t-center webrtc-button" data-bind="open_webrtc">
                                         <img src="img/chart-network-duotone.svg"><br>
                                         <span>打开连接</span>
                                     </button>
-                                    <button class="action-button app-button t-center open-button" onclick="controller.open_manga()">
+                                    <button class="action-button app-button t-center open-button" data-bind="open_manga">
                                         <img src="img/folder-open-duotone.svg"><br>
                                         <span>打开漫画</span>
                                     </button>
-                                    <button class="action-button app-button t-center open-button" onclick="controller.open_episode()">
+                                    <button class="action-button app-button t-center open-button" data-bind="open_episode">
                                         <img src="img/folder-open-light.svg"><br>
                                         <span>打开章节</span>
                                     </button>
-                                    <button class="action-button app-button t-center open-button" onclick="controller.open_epub()">
+                                    <button class="action-button app-button t-center open-button" data-bind="open_epub">
                                         <img src="img/books-duotone.svg"><br>
                                         <span>打开文件</span>
                                     </button>
                                     <div class="setting-button-container">
-                                        <button class="action-button app-button t-center setting-button w-100 p-relative v-middle" onclick="controller.toggle_settings()">
+                                        <button class="action-button app-button t-center setting-button w-100 p-relative v-middle" data-bind="toggle_settings">
                                             <img src="img/sliders-h-duotone.svg"><br>
                                             <span>阅读设置</span>
                                         </button>
@@ -220,7 +220,7 @@
                     </div>
                     <div id="floating-buttons" class="floating-buttons p-absolute info-layer">
                         <div class="t-right">
-                            <button class="floating-button app-button none-select shortcuts-info circle" title="使用帮助" onclick="controller.toggle_help()">
+                            <button class="floating-button app-button none-select shortcuts-info circle" title="使用帮助" data-bind="toggle_help">
                                 <span>?</span>
                             </button>
                         </div>
@@ -236,8 +236,7 @@
                                 </div>
                             </div>
                             <div class="p-relative">
-                                <button id="offset" class="floating-button app-button none-select" title="当您在并页模式阅读时，如果出现合并不正确的情况，请点击进行修正"
-                                    onclick="controller.toggle_offset()">
+                                <button id="offset" class="floating-button app-button none-select" data-bind="toggle_offset" title="当您在并页模式阅读时，如果出现合并不正确的情况，请点击进行修正">
                                     <div class="button-icon">
                                         <img src="img/c.svg">
                                     </div>
@@ -246,7 +245,7 @@
                             </div>
                         </div>
                         <div>
-                            <button id="rotate" class="floating-button app-button none-select default" onclick="controller.toggle_rotate(event)">
+                            <button id="rotate" class="floating-button app-button none-select default" data-bind="toggle_rotate">
                                 <div class="button-icon">
                                     <img src="img/rotate-right-duotone.svg">
                                 </div>
@@ -254,7 +253,7 @@
                             </button>
                         </div>
                         <div>
-                            <button class="floating-button app-button none-select" onclick="controller.sync()" title="当打开的漫画所在文件夹内容或结构变更时，无需重新打开，同步内容即可">
+                            <button class="floating-button app-button none-select" data-bind="sync" title="当打开的漫画所在文件夹内容或结构变更时，无需重新打开，同步内容即可">
                                 <div class="button-icon">
                                     <img src="img/sync-duotone.svg">
                                 </div>
@@ -262,7 +261,7 @@
                             </button>
                         </div>
                         <div>
-                            <button class="floating-button app-button none-select" onclick="controller.toggle_fullscreen()">
+                            <button class="floating-button app-button none-select" data-bind="toggle_fullscreen">
                                 <div class="button-icon">
                                     <img src="img/expand-wide-duotone.svg">
                                 </div>
@@ -270,7 +269,7 @@
                             </button>
                         </div>
                         <div>
-                            <button id="download" class="floating-button app-button none-select hidden" onclick="window.dispatchEvent(new Event('download'));">
+                            <button id="download" class="floating-button app-button none-select hidden" data-bind="download">
                                 <div class="button-icon">
                                     <img src="img/download-duotone.svg">
                                 </div>
@@ -278,7 +277,7 @@
                             </button>
                         </div>
                         <div>
-                            <button data-navigator id="alt-previous-episode" class="floating-button app-button none-select" disabled="disabled" onclick="controller.episode_up()">
+                            <button data-navigator id="alt-previous-episode" class="floating-button app-button none-select" disabled data-bind="episode_up">
                                 <div class="button-icon">
                                     <img src="img/angle-up-duotone.svg">
                                 </div>
@@ -286,7 +285,7 @@
                             </button>
                         </div>
                         <div>
-                            <button data-navigator id="alt-next-episode" class="floating-button app-button none-select" disabled="disabled" onclick="controller.episode_down()">
+                            <button data-navigator id="alt-next-episode" class="floating-button app-button none-select" disabled data-bind="episode_down">
                                 <div class="button-icon">
                                     <img src="img/angle-down-duotone.svg">
                                 </div>
@@ -294,7 +293,7 @@
                             </button>
                         </div>
                         <div>
-                            <button class="floating-button app-button none-select toggle-ui" onclick="controller.toggle_ui()">
+                            <button class="floating-button app-button none-select toggle-ui" data-bind="toggle_ui">
                                 <div class="button-icon">
                                     <img src="img/hamburger.svg">
                                 </div>

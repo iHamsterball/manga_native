@@ -1583,6 +1583,7 @@ const preset = Object.freeze({
     INFO_SYNCD: '已同步文件内容',
     INFO_WEBRTC_CONNECTED: '已建立连接',
     INFO_BEFORE_UNLOAD: '再次点击以退出',
+    INFO_NOT_INITIALIZED: '尚未初始化',
 
     ERR_ALREADY_FIRST_PAGE: '已经是第一页了',
     ERR_ALREADY_LAST_PAGE: '已经是最后一页了',
@@ -1706,6 +1707,25 @@ let init = () => {
             }
         })
     ));
+    Array.from(document.querySelectorAll('[data-bind]')).forEach(element => {
+        const name = element.dataset.bind;
+        const warning = _ => {
+            Notifier.info(preset.INFO_NOT_INITIALIZED);
+            console.warn(...Badge.args(badges.MangaNative), 'Not initialized yet.');
+        };
+        const listener = event => typeof controller === 'undefined' ? warning() : controller[name](event);
+        switch (name) {
+            case 'image_loaded':
+                element.addEventListener('load', _ => Notifier.loaded());
+                break;
+            case 'page_drag':
+                element.addEventListener('input', listener);
+                break;
+            default:
+                element.addEventListener('click', listener);
+                break;
+        }
+    });
     container.addEventListener('mouseup', event => {
         if (event.button != 0) return;
         if (controller.vertical) return;

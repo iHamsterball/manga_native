@@ -550,8 +550,8 @@ class Base {
                     const index = parseInt(image.dataset.index, 10);
                     const _load = async (image, index) => {
                         // Prevent request amplification, send request for same file once
-                        if (this.webrtc.pending.has(index)) return;
-                        this.webrtc.pending.add(index);
+                        if (image.dataset.requested) return;
+                        image.dataset.requested = true;
                         image.src = await this._postfetch(index);
                         image.parentNode.parentNode.classList.add('image-loaded');
                         observer.unobserve(image);
@@ -903,6 +903,8 @@ class Base {
             length: 0,
             scope: args.scope,
         };
+        // Clear host-side cached webrtc file list
+        this.webrtc.files = null;
         switch (this.type) {
             case type.manga:
                 // Save file list for future use
@@ -925,7 +927,8 @@ class Base {
         let data = null;
         switch (this.type) {
             case type.manga:
-                file = await this._fetch(args.index, this.webrtc.files);
+                // Bypass cache to avoid affecting host-side display
+                file = await this._file(args.index, this.webrtc.files);
                 break;
             case type.episode:
             case type.epub:
@@ -1273,7 +1276,7 @@ class WebRTC {
     _transmit_data(data, channel) {
         let offset = 0;
         let tx = this.channels.get(channel);
-        if (tx.readyState != 'open') console.error(...Badge.args(badges.MangaNative, badges.WebRTC), 'Datachannel not ready.');
+        if (typeof tx === 'undefined' || tx.readyState != 'open') console.error(...Badge.args(badges.MangaNative, badges.WebRTC), 'Datachannel not ready.');
         tx.send(JSON.stringify({ type: 'meta', size: data.byteLength }))
 
         let chunk_size = this.pc.sctp.maxMessageSize;
@@ -1476,12 +1479,6 @@ class WebRTCClient extends Base {
         this.webrtc.scope = index;
         this.webrtc.cmd('episode', this.webrtc.target.host, args);
         return new Promise((resolve) => this.resolve = resolve);
-    }
-
-    _reset(full = false) {
-        super._reset(full);
-        // Clear client-side webrtc pending request file index list
-        this.webrtc.pending.clear();
     }
 
     _webrtc_request_meta() {

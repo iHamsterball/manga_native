@@ -527,8 +527,8 @@ class Base {
 
     async _postfetch(index) {
         // If cache missed, fallback to normal fetch
-        const blob = await this._rotate_wrapper(await this.cache.get(index) || await this._fetch(index));
-        return this.URL.createObjectURL(blob);
+        const blob = await this.cache.get(index) || await this._fetch(index);
+        return blob;
     }
 
     async _fetch(index, files = this.files) {
@@ -673,8 +673,10 @@ class Base {
     }
 
     _observe_step() {
-        const secondary = document.getElementById('image-secondary');
-        this.observer['step'].observe(secondary);
+        const image = document.getElementById('image-secondary');
+        const video = document.getElementById('video-secondary');
+        this.observer['step'].observe(image);
+        this.observer['step'].observe(video);
     }
 
     async _rotate_wrapper(blob) {
@@ -719,6 +721,55 @@ class Base {
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 
+    async _update_media() {
+        const _update = async (symbol, index) => {
+            const image = document.getElementById(symbol == this.pos.primary ? 'image-primary' : 'image-secondary');
+            const video = document.getElementById(symbol == this.pos.primary ? 'video-primary' : 'video-secondary');
+            const types = {
+                'video': {
+                    update: async (blob) => {
+                        image.classList.add('hidden');
+                        video.classList.remove('hidden');
+                        // For videos, directly use blob URL without rotation
+                        video.src = this.URL.createObjectURL(blob);
+                    }
+                },
+                'image': {
+                    update: async (blob) => {
+                        image.classList.remove('hidden');
+                        video.classList.add('hidden');
+                        const rotated = await this._rotate_wrapper(blob);
+                        image.src = this.URL.createObjectURL(rotated);
+                    }
+                },
+                'default': {
+                    update: () => {
+                        image.classList.remove('hidden');
+                        video.classList.add('hidden');
+                        image.src = '';
+                        video.src = '';
+                    }
+                }
+            }
+
+            let type = 'default';
+            let blob = null;
+            if (this._validate(symbol)) {
+                if (!(symbol == this.pos.secondary && this.step == 1)) {
+                    blob = await this._postfetch(index);
+                    type = blob.type.split('/')?.at(0);
+                }
+            }
+
+            await types[type].update(blob);
+        };
+
+        await _update(this.pos.primary, this.primary);
+        await _update(this.pos.secondary, this.secondary);
+        this._prefetch();
+        if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
+    }
+
     async _verify() {
         const options = { mode: "read" };
         if (this.handle === undefined) {
@@ -735,7 +786,9 @@ class Base {
 
     _flush() {
         document.getElementById('image-primary').src = '';
+        document.getElementById('video-primary').src = '';
         document.getElementById('image-secondary').src = '';
+        document.getElementById('video-secondary').src = '';
     }
 
     _ltr(pos = this.pos.primary) {

@@ -1364,14 +1364,20 @@ a {
     animation-play-state: running
 }
 
-.manga-reader-ui.autohide~.info-hud, .manga-reader-ui.autohide~.floating-buttons, .manga-reader-ui.v-hidden~.info-hud, .manga-reader-ui.v-hidden~.floating-buttons {
+.manga-reader-ui:not(.idle)~.info-hud, .manga-reader-ui:not(.idle)~.floating-buttons {
     -webkit-animation: deleyed-float-down cubic-bezier(.22, .58, .12, .98) 4s;
     animation: delayed-float-down cubic-bezier(.22, .58, .12, .98) 4s;
 }
 
-.manga-reader-ui.autohide:hover~.info-hud, .manga-reader-ui.autohide:hover~.floating-buttons {
+.manga-reader-ui.idle~.info-hud, .manga-reader-ui.idle~.floating-buttons {
     -webkit-animation: none;
     animation: none;
+    translate: 0 -5em;
+}
+
+.manga-reader-ui.autohide:hover~.info-hud, .manga-reader-ui.autohide:hover~.floating-buttons {
+    -webkit-animation: paused;
+    animation: paused;
     translate: 0 -5em;
 }
 

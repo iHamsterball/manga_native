@@ -2184,16 +2184,24 @@ let init = () => {
             Notifier.info(preset.INFO_NOT_INITIALIZED);
             console.warn(...Badge.args(badges.MangaNative), 'Not initialized yet.');
         };
-        const listener = event => typeof controller === 'undefined' ? warning() : controller[name](event);
+        // const wrapper = function(func) {
+        //     func = typeof controller === 'undefined' ? warning : func;
+        //     return func;
+        // }
+        const wrapper = event => typeof controller === 'undefined' ? warning() : controller[name](event);
         switch (name) {
             case 'image_loaded':
                 element.addEventListener('load', _ => Notifier.loaded());
                 break;
             case 'page_drag':
-                element.addEventListener('input', listener);
+                element.addEventListener('input', event => wrapper(event));
+                break;
+            case 'episode_switch':
+            case 'toggle_rotate':
+                element.addEventListener('click', event => wrapper(event));
                 break;
             default:
-                element.addEventListener('click', listener);
+                element.addEventListener('click', _ => wrapper());
                 break;
         }
     });

@@ -312,7 +312,7 @@ a {
 }
 
 .app-button:active {
-    transform: scale(.97)
+    scale: .97;
 }
 
 .app-button:disabled {
@@ -424,7 +424,7 @@ a {
 }
 
 .manga-button:active:not([disabled]) {
-    transform: scale(.97)
+    scale: .97;
 }
 
 .manga-button:disabled {
@@ -1259,7 +1259,7 @@ a {
 }
 
 .episode-list .data-list .list-item[data-contents]:active {
-    transform: scale(.99)
+    scale: .99;
 }
 
 .episode-list .data-list .list-item .label[data-contents] {
@@ -1475,7 +1475,7 @@ a {
 }
 
 .manga-reader-ui .action-bar-container .action-buttons .hover-toast:active {
-    transform: scale(1) !important
+    scale: 1 !important;
 }
 
 .manga-reader-ui .action-bar-container .action-buttons .comment-button {

@@ -44,7 +44,7 @@ a {
 .theme-dark .theme-switcher::before {
     content: url(../img/stars.svg);
     filter: brightness(120%) drop-shadow(0 0 4px var(--color-theme-overexposure));
-    transform: translateX(0.25em) translateY(-2px);
+    translate: 0.25em -2px;
 }
 
 .theme-dark .theme-switcher .bg-dark {
@@ -68,7 +68,7 @@ a {
 .theme-light .theme-switcher::before {
     content: url(../img/sun.svg);
     filter: brightness(120%) drop-shadow(0 0 1px var(--color-theme-overexposure));
-    transform: translateX(-0.25em);
+    translate: -0.25em;
 }
 
 .theme-light .theme-switcher .bg-dark {
@@ -307,15 +307,11 @@ a {
 .app-button {
     background-color: transparent;
     border: 0;
-    -webkit-transform-origin: center center;
-    -ms-transform-origin: center center;
     transform-origin: center center;
     cursor: pointer
 }
 
 .app-button:active {
-    -webkit-transform: scale(.97);
-    -ms-transform: scale(.97);
     transform: scale(.97)
 }
 
@@ -428,8 +424,6 @@ a {
 }
 
 .manga-button:active:not([disabled]) {
-    -webkit-transform: scale(.97);
-    -ms-transform: scale(.97);
     transform: scale(.97)
 }
 
@@ -477,8 +471,6 @@ a {
 }
 
 .progress-svg {
-    -webkit-transform-origin: center center;
-    -ms-transform-origin: center center;
     transform-origin: center center;
     transition: all .2s ease-in-out;
     -webkit-animation: progress-circular-rotate 1.4s linear infinite;
@@ -498,15 +490,13 @@ a {
 
 @-webkit-keyframes progress-circular-rotate {
     to {
-        -webkit-transform: rotate(1turn);
-        transform: rotate(1turn)
+        rotate: 1turn;
     }
 }
 
 @keyframes progress-circular-rotate {
     to {
-        -webkit-transform: rotate(1turn);
-        transform: rotate(1turn)
+        rotate: 1turn;
     }
 }
 
@@ -595,92 +585,68 @@ a {
 .hover-toast-container .hover-toast.left {
     right: 110%;
     top: 50%;
-    -webkit-transform: translateY(-50%);
-    -ms-transform: translateY(-50%);
-    transform: translateY(-50%)
+    translate: 0% -50%;
 }
 
 .hover-toast-container .hover-toast.left .animation-element {
-    -webkit-transform-origin: 100% 50%;
-    -ms-transform-origin: 100% 50%;
     transform-origin: 100% 50%
 }
 
 .hover-toast-container .hover-toast.left:before {
     top: 50%;
     right: 0;
-    -webkit-transform: translate(100%, -25%);
-    -ms-transform: translate(100%, -25%);
-    transform: translate(100%, -25%);
+    translate: 100% -25%;
     border-left-color: hsl(0, 0%, 19%)
 }
 
 .hover-toast-container .hover-toast.right {
     left: 110%;
     top: 50%;
-    -webkit-transform: translateY(-50%);
-    -ms-transform: translateY(-50%);
-    transform: translateY(-50%)
+    translate: 0% -50%;
 }
 
 .hover-toast-container .hover-toast.right .animation-element {
-    -webkit-transform-origin: 0 50%;
-    -ms-transform-origin: 0 50%;
     transform-origin: 0 50%
 }
 
 .hover-toast-container .hover-toast.right:before {
     top: 50%;
     left: 0;
-    -webkit-transform: translate(-100%, -25%);
-    -ms-transform: translate(-100%, -25%);
-    transform: translate(-100%, -25%);
+    translate: -100% -25%;
     border-right-color: hsl(0, 0%, 19%)
 }
 
 .hover-toast-container .hover-toast.top {
     left: 50%;
     top: 0;
-    -webkit-transform: translate(-50%, -110%);
-    -ms-transform: translate(-50%, -110%);
-    transform: translate(-50%, -110%)
+    translate: -50% -110%;
 }
 
 .hover-toast-container .hover-toast.top .animation-element {
-    -webkit-transform-origin: 50% 0;
-    -ms-transform-origin: 50% 0;
     transform-origin: 50% 0
 }
 
 .hover-toast-container .hover-toast.top:before {
     top: 100%;
     left: 50%;
-    -webkit-transform: translate(-50%);
-    -ms-transform: translate(-50%);
-    transform: translate(-50%);
+    translate: -50%;
     border-top-color: hsl(0, 0%, 19%)
 }
 
 .hover-toast-container .hover-toast.bottom {
     left: 50%;
     bottom: 0;
-    -webkit-transform: translate(-50%, 110%);
-    -ms-transform: translate(-50%, 110%);
-    transform: translate(-50%, 110%)
+    translate: -50% 110%;
 }
 
 .hover-toast-container .hover-toast.bottom .animation-element {
-    -webkit-transform-origin: 50% 100%;
-    -ms-transform-origin: 50% 100%;
     transform-origin: 50% 100%
 }
 
 .hover-toast-container .hover-toast.bottom:before {
     top: 0;
     left: 50%;
-    -webkit-transform: translate(-50%, -100%);
-    -ms-transform: translate(-50%, -100%);
-    transform: translate(-50%, -100%);
+    translate: -50% -100%;
     border-bottom-color: hsl(0, 0%, 19%)
 }
 
@@ -825,8 +791,7 @@ a {
 }
 
 .message-box .img-container.flip .arrow-image {
-    -webkit-transform: rotateY(180deg);
-    transform: rotateY(180deg)
+    rotate: y 180deg;
 }
 
 .message-box .direction-text {
@@ -1035,9 +1000,7 @@ a {
     z-index: 1;
     top: 50%;
     left: 50%;
-    -webkit-transform: translate(13px, -24px);
-    -ms-transform: translate(13px, -24px);
-    transform: translate(13px, -24px);
+    translate: 13px -24px;
     line-height: 1.6
 }
 
@@ -1053,9 +1016,7 @@ a {
 }
 
 .manga-navbar.hide-mode {
-    -webkit-transform: translateY(-100%);
-    -ms-transform: translateY(-100%);
-    transform: translateY(-100%)
+    translate: 0% -100%;
 }
 
 .manga-navbar .size-ruler {
@@ -1118,16 +1079,12 @@ a {
 .manga-navbar .theme-switcher .bg-dark {
     background-color: hsl(0, 0%, 0%);
     transform: translateX(0.95em) scaleX(1.5) skewX(-20deg);
-    -webkit-transform-origin: right center;
-    -ms-transform-origin: right center;
     transform-origin: right center;
 }
 
 .manga-navbar .theme-switcher .bg-light {
     background-color: hsl(0, 0%, 100%);
     transform: translateX(-0.95em) scaleX(1.5) skewX(-20deg);
-    -webkit-transform-origin: left center;
-    -ms-transform-origin: left center;
     transform-origin: left center;
 }
 
@@ -1255,9 +1212,7 @@ a {
     position: absolute;
     top: 100%;
     left: 50%;
-    -webkit-transform: translate(-50%);
-    -ms-transform: translate(-50%);
-    transform: translate(-50%)
+    translate: -50%;
 }
 
 .episode-list .panel-title[data-contents] {
@@ -1304,8 +1259,6 @@ a {
 }
 
 .episode-list .data-list .list-item[data-contents]:active {
-    -webkit-transform: scale(.99);
-    -ms-transform: scale(.99);
     transform: scale(.99)
 }
 
@@ -1327,8 +1280,6 @@ a {
     position: absolute;
     bottom: 120%;
     right: 10px;
-    -webkit-transform-origin: 50% 100%;
-    -ms-transform-origin: 50% 100%;
     transform-origin: 50% 100%
 }
 
@@ -1409,7 +1360,6 @@ a {
 }
 
 .manga-reader-ui~.info-hud, .manga-reader-ui~.floating-buttons {
-    transform: translateY(-5em);
     -webkit-animation-play-state: running;
     animation-play-state: running
 }
@@ -1421,11 +1371,12 @@ a {
 
 .manga-reader-ui.autohide:hover~.info-hud, .manga-reader-ui.autohide:hover~.floating-buttons {
     -webkit-animation: none;
-    animation: none
+    animation: none;
+    translate: 0 -5em;
 }
 
 .manga-reader-ui~.floating-buttons.stable+.info-hud, .manga-reader-ui~.floating-buttons.stable {
-    transform: translateY(0)
+    translate: 0 0;
 }
 
 .manga-reader-ui~.floating-buttons:hover, .manga-reader-ui~.floating-buttons:hover+.info-hud {
@@ -1507,9 +1458,7 @@ a {
     white-space: normal;
     text-align: left;
     letter-spacing: 0;
-    -webkit-transform: translate(-50%);
-    -ms-transform: translate(-50%);
-    transform: translate(-50%)
+    translate: -50%;
 }
 
 .manga-reader-ui .action-bar-container .action-buttons .hover-toast .toast-info:before {
@@ -1522,15 +1471,11 @@ a {
     position: absolute;
     top: 100%;
     left: 50%;
-    -webkit-transform: translate(-50%);
-    -ms-transform: translate(-50%);
-    transform: translate(-50%)
+    translate: -50%;
 }
 
 .manga-reader-ui .action-bar-container .action-buttons .hover-toast:active {
-    -webkit-transform: scale(1)!important;
-    -ms-transform: scale(1)!important;
-    transform: scale(1)!important
+    transform: scale(1) !important
 }
 
 .manga-reader-ui .action-bar-container .action-buttons .comment-button {
@@ -1552,8 +1497,6 @@ a {
     bottom: 155%;
     left: 50%;
     margin-left: -140px;
-    -webkit-transform-origin: 50% 100%;
-    -ms-transform-origin: 50% 100%;
     transform-origin: 50% 100%
 }
 
@@ -1649,9 +1592,7 @@ a {
 }
 
 .manga-reader .floating-button.rotate_90_clockwise>div.button-icon>img {
-    -webkit-transform: rotateY(180deg);
-    -ms-transform: rotateY(180deg);
-    transform: rotateY(180deg)
+    rotate: y 180deg;
 }
 
 .manga-reader .floating-button.rotate_90_clockwise>span::after {
@@ -1726,7 +1667,7 @@ a {
     position: absolute;
     left: 50%;
     top: 50%;
-    transform: translate(-50%, -50%)
+    translate: -50% -50%;
 }
 
 .hidden {
@@ -1779,7 +1720,7 @@ a {
     content: ">";
     font-family: 'VT323', monospace;
     padding: 0 8px;
-    transform: rotate(90deg);
+    rotate: 90deg;
 }
 
 .inner-content {
@@ -1845,8 +1786,9 @@ a {
 }
 
 .collapse:target a:before {
-    transform: rotate(0deg);
+    rotate: 0deg;
 }
+
 
 .dialog-layout[data-dialog] {
     width: 100%;
@@ -2000,6 +1942,7 @@ a {
     .info-hud .hinter-image-container .current-page:empty::after {
         display: none
     }
+
     .manga-navbar .episode-title {
         flex: 2
     }

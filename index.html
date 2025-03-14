@@ -305,12 +305,17 @@
                     </div>
                     <div id="info-hud" class="info-hud none-select p-absolute info-layer">
                         <div id="hinter-image-container" class="hinter-image-container double">
-                            <img id="hinter-image" height="32" class="hinter-image ts-dot-4 v-middle flip">
-                            <span id="current-page" class="current-page p-absolute ts-dot-4 a-fade-in right-position"></span>
-                            <span id="next-page" class="next-page p-absolute ts-dot-4 a-fade-in left-position"></span>
+                            <!-- <div class="hinter-images ts-dot-4 v-middle flip">
+                                <img id="hinter-image" class="hinter-image ts-dot-4 v-middle flip">
+                            </div> -->
+                            <img id="hinter-image" class="hinter-image ts-dot-4 v-middle flip">
+                            <div id="hinter-pagination" class="hinter-pagination ts-dot-4 v-middle flip">
+                                <span id="current-page" class="current-page ts-dot-4 a-fade-in right-position"></span>
+                                <span id="next-page" class="next-page ts-dot-4 a-fade-in left-position"></span>
+                            </div>
                         </div>
                         <div class="info-text dp-i-block v-middle">
-                            <div><span id="page-count" class="page-count" data-before="N/A" data-after="P"></span></div>
+                            <span id="page-count" class="page-count" data-before="N/A" data-after="P"></span>
                         </div>
                         <div class="dp-i-block v-middle" title="当前有图片或章节正在载入 >ㅂ<ﾉ ☆" style="margin-left: 10px; display: none;">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="22.8 22.8 45.7 45.7" class="progress-svg v-middle" style="width: 14px;">

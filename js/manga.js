@@ -1040,13 +1040,14 @@ class Base {
      * @private
      */
     _reset_hinter() {
-        let hinter = document.getElementById('hinter-image');
-        hinter.classList.remove('flip', 'rotate');
-        hinter.parentNode.classList.remove('double', 'single');
-        if (this.ltr == -1) hinter.classList.add('flip');
-        if (this.step == 1 || this.vertical) hinter.parentNode.classList.add('single')
-        else hinter.parentNode.classList.add('double');
-        if (this.vertical) hinter.classList.add('rotate');
+        let hinter = document.getElementById('hinter-image-container');
+        hinter.classList.remove('double', 'single', 'scroll', 'flip');
+        if (this.vertical) {
+            hinter.classList.add('scroll');
+        } else {
+            hinter.classList.add(this.step == 1 ? 'single' : 'double');
+            if (this.ltr == -1) hinter.classList.add('flip');
+        }
     }
 
     /**

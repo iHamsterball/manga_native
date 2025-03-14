@@ -201,10 +201,11 @@ a {
 
 .theme-light .info-hud .hinter-image {
     filter: invert(100%);
+    height: 32px;
 }
 
 .theme-light .helpdesc-image {
-    filter: invert(100%) opacity(60%)!important;
+    filter: invert(100%) opacity(60%) !important;
 }
 
 .theme-light #dialog-help[data-dialog] .content-container img {
@@ -277,8 +278,8 @@ a {
 }
 
 .vertical-mode .load-next-btn[disabled], .vertical-mode .load-prev-btn[disabled] {
-    background-color: light-dark(hsla(0, 0%, 0%, .2), hsla(0, 0%, 100%, .1))!important;
-    color: light-dark(hsla(0, 0%, 0%, .4), hsla(0, 0%, 100%, .2))!important;
+    background-color: light-dark(hsla(0, 0%, 0%, .2), hsla(0, 0%, 100%, .1)) !important;
+    color: light-dark(hsla(0, 0%, 0%, .4), hsla(0, 0%, 100%, .2)) !important;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -380,9 +381,11 @@ a {
     0% {
         opacity: 1
     }
+
     50% {
         opacity: 0
     }
+
     to {
         opacity: 1
     }
@@ -392,9 +395,11 @@ a {
     0% {
         opacity: 1
     }
+
     50% {
         opacity: 0
     }
+
     to {
         opacity: 1
     }
@@ -437,7 +442,7 @@ a {
 }
 
 .manga-button.primary:disabled {
-    background-color: hsl(0, 0%, 67%)!important
+    background-color: hsl(0, 0%, 67%) !important
 }
 
 .manga-button.ghost {
@@ -456,7 +461,7 @@ a {
 }
 
 .manga-button.error:disabled {
-    background-color: hsl(0, 0%, 67%)!important
+    background-color: hsl(0, 0%, 67%) !important
 }
 
 .manga-button.error:hover {
@@ -506,10 +511,12 @@ a {
         stroke-dasharray: 1, 200;
         stroke-dashoffset: 0
     }
+
     50% {
         stroke-dasharray: 100, 200;
         stroke-dashoffset: -15px
     }
+
     to {
         stroke-dasharray: 100, 200;
         stroke-dashoffset: -125px
@@ -521,10 +528,12 @@ a {
         stroke-dasharray: 1, 200;
         stroke-dashoffset: 0
     }
+
     50% {
         stroke-dasharray: 100, 200;
         stroke-dashoffset: -15px
     }
+
     to {
         stroke-dasharray: 100, 200;
         stroke-dashoffset: -125px
@@ -672,75 +681,120 @@ a {
 }
 
 .info-hud {
+    display: flex;
+    align-items: center;
     padding: 8px 12px;
     font-size: 12px;
+    min-height: 32px;
     border-radius: 3px
 }
 
 .info-hud .hinter-image-container {
-    display: inline-block;
+    --var-mask-left: calc(var(--var-left) / var(--var-width) * 100%);
+    --var-mask-right: calc(var(--var-right) / var(--var-width) * 100%);
+    --var-mask-middle-left: calc(var(--var-middle-left) / var(--var-width) * 100%);
+    --var-mask-middle-right: calc(var(--var-middle-right) / var(--var-width) * 100%);
+    display: inline-flex;
+    flex-direction: column;
+    height: 32px;
     position: relative;
     vertical-align: middle
 }
 
-.info-hud .hinter-image-container .current-page, .info-hud .hinter-image-container .next-page {
+.info-hud .hinter-image-container .hinter-pagination {
+    --var-padding-left: calc((var(--var-left)) / 2 * 1px);
+    --var-padding-right: calc((var(--var-width) - var(--var-right) + 1) / 2 * 1px);
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    padding-left: var(--var-padding-left);
+    padding-right: var(--var-padding-right);
+    /* gap: calc(var(--var-padding) * 1px + 2px); */
+    gap: calc(var(--var-middle) * 1px);
+    min-height: 32px;
+    translate: 0 -100%;
+}
+
+.info-hud .hinter-image-container.flip .hinter-pagination {
+    --var-mask-direction: left;
+    flex-direction: row-reverse;
+    padding-left: var(--var-padding-right);
+    padding-right: var(--var-padding-left);
+}
+
+.info-hud .hinter-image-container .hinter-pagination .current-page,
+.info-hud .hinter-image-container .hinter-pagination .next-page {
+    --var-padding: 4;
     -webkit-animation-duration: .4s;
-    animation-duration: .4s
+    animation-duration: .4s;
+    display: inline-block;
+    padding-left: calc(var(--var-padding) * 1px);
+    padding-right: calc(var(--var-padding) * 1px);
+    /* translate: calc(var(--var-padding) * -1 * 1px); */
+    min-width: calc(((((var(--var-right) - var(--var-left) - var(--var-middle)) / var(--var-count)) / 2) - var(--var-padding) * 2) * 1px);
+    text-align: center;
 }
 
-.info-hud .hinter-image-container.single .current-page {
-    left: 50%;
-    top: 50%;
-    -webkit-transform: translate(-50%, -50%);
-    -ms-transform: translate(-50%, -50%);
-    transform: translate(-50%, -50%)
-}
-
-.info-hud .hinter-image-container.single .next-page {
+.info-hud .hinter-image-container:not(.double) .next-page {
     display: none
 }
 
+.info-hud .hinter-image-container.single {
+    --var-mask-direction: right;
+    --var-left: 10;
+    --var-right: 55;
+    --var-middle: 0;
+    --var-count: 1;
+    --var-middle-left: 31;
+    --var-middle-right: 32;
+    --var-width: 63;
+}
+
+.info-hud .hinter-image-container.double {
+    --var-mask-direction: right;
+    --var-left: 8;
+    --var-right: 103;
+    --var-middle: 2;
+    --var-count: 2;
+    --var-middle-left: 54;
+    --var-middle-right: 56;
+    --var-width: 111;
+}
+
+.info-hud .hinter-image-container.scroll {
+    --var-left: 6;
+    --var-right: 59;
+    --var-middle: 0;
+    --var-count: 1;
+    --var-middle-left: 19;
+    --var-middle-right: 46;
+    --var-width: 64;
+}
+
+.info-hud .hinter-image-container .hinter-image {
+    /* mask: linear-gradient(to var(--var-mask-direction), black var(--var-mask-left), transparent var(--var-mask-left), transparent var(--var-mask-right), black var(--var-mask-right)); */
+}
+
 .info-hud .hinter-image-container.single .hinter-image {
-    content: url(../img/scroll.png)
+    content: url(../img/ltr-single.png);
 }
 
 .info-hud .hinter-image-container.double .hinter-image {
-    content: url(../img/ltr.png)
+    content: url(../img/ltr.png);
 }
 
-.info-hud .hinter-image-container.single .hinter-image.flip {
-    -webkit-transform: rotate(180deg);
-    -ms-transform: rotate(180deg);
-    transform: rotate(180deg)
+.info-hud .hinter-image-container.scroll .hinter-image {
+    content: url(../img/scroll.png);
 }
 
-.info-hud .hinter-image-container.single .hinter-image.rotate {
-    -webkit-transform: rotate(90deg);
-    -ms-transform: rotate(90deg);
-    transform: rotate(90deg)
+.info-hud .hinter-image-container.single.flip .hinter-image {
+    rotate: 180deg;
 }
 
-.info-hud .hinter-image-container.double .hinter-image.flip {
-    -webkit-transform: rotateY(180deg);
-    transform: rotateY(180deg)
-}
-
-.info-hud .hinter-image-container.double .current-page, .info-hud .hinter-image-container.double .next-page {
-    top: 50%;
-    -webkit-transform: translate(35%, -50%);
-    -ms-transform: translate(35%, -50%);
-    transform: translate(35%, -50%)
-}
-
-.info-hud .hinter-image-container.double .current-page.left-position, .info-hud .hinter-image-container.double .next-page.left-position {
-    left: 25%;
-    -webkit-transform: translate(-50%, -50%);
-    -ms-transform: translate(-50%, -50%);
-    transform: translate(-50%, -50%)
-}
-
-.info-hud .hinter-image-container.double .current-page.right-position, .info-hud .hinter-image-container.double .next-page.right-position {
-    right: 25%
+.info-hud .hinter-image-container.double.flip .hinter-image {
+    rotate: y 180deg;
 }
 
 .info-layer {
@@ -1429,7 +1483,7 @@ a {
 }
 
 .manga-reader-ui .action-bar-container .action-buttons .hover-toast:hover .toast-info {
-    display: block!important
+    display: block !important
 }
 
 .manga-reader-ui .action-bar-container .action-buttons .hover-toast .toast-info {
@@ -1672,7 +1726,7 @@ a {
 }
 
 .hidden {
-    display: none!important
+    display: none !important
 }
 
 .unselectable {
@@ -1725,7 +1779,7 @@ a {
 }
 
 .inner-content {
-    padding: 0 3.6rem;
+    padding: 0 2rem;
 }
 
 .inner-content span {
@@ -1777,7 +1831,7 @@ a {
 }
 
 .content {
-    max-height: 0em;
+    /* max-height: 0em; */
     transition: 0.3s linear 0s;
     overflow: hidden;
 }
@@ -1871,57 +1925,85 @@ a {
 
 @media screen and (max-width: 768px) {
     .action-bar-container .action-buttons .episode-list-button .episode-list {
-        margin-left: -45vw!important
+        margin-left: -45vw !important
     }
+
     .action-bar-container .action-buttons .open-button {
         display: none
     }
+
     .action-bar-container .action-buttons.navigate {
         flex: 3
     }
+
     .action-bar-container .action-buttons.settings {
         flex: 2
     }
+
     .episode-list[data-contents] {
         max-width: none
     }
+
     .manga-reader-ui.autohide~.info-hud, .manga-reader-ui.v-hidden~.info-hud {
         -webkit-animation: none;
         animation: none;
     }
+
     .info-hud {
-        left: 0!important;
-        bottom: 0!important;
+        left: 0 !important;
+        bottom: 0 !important;
         border-radius: 0 3px 0 0;
         display: flex;
         justify-content: center;
+        min-height: unset;
         min-width: 84px;
         padding: 4px;
-        transform: unset!important
+        transform: unset !important
     }
+
+    .info-hud .hinter-image-container {
+        height: auto;
+        min-height: unset;
+    }
+
     .info-hud .hinter-image-container .hinter-image {
         display: none
     }
+
     .info-hud .hinter-image-container .current-page {
-        color: hsla(0, 0%, 100%, .7);
-        left: 0!important;
-        top: 0!important;
-        transform: none!important;
+        color: light-dark(hsla(0, 0%, 0%, .7), hsla(0, 0%, 100%, .7));
+        left: 0 !important;
+        top: 0 !important;
+        transform: none !important;
+        min-width: unset !important;
+        padding: 0 !important;
         position: relative
     }
+
+    .info-hud .hinter-image-container .hinter-pagination {
+        display: inline-block;
+        gap: 0;
+        min-height: unset;
+        padding: 0 !important;
+        translate: 0;
+    }
+
     .info-hud .hinter-image-container .current-page::after {
         content: '/';
         padding: 0 8px
     }
+
     .info-hud .hinter-image-container .current-page:empty::after {
         display: none
     }
     .manga-navbar .episode-title {
         flex: 2
     }
+
     .page-count {
         margin: 0
     }
+
     .page-count::after {
         display: none
     }
@@ -1931,29 +2013,37 @@ a {
     .collapse a {
         padding: 0.9rem 0
     }
+
     .inner-content {
         padding: 0 1.2rem;
     }
+
     .manga-navbar .episode-title:not(:empty)~a.manga-logo {
         display: none
     }
+
     .manga-navbar .left-padding, .manga-navbar .right-padding {
         flex: 0
     }
+
     .touch-control {
         display: block
     }
+
     .manga-reader .floating-buttons {
         display: none
     }
+
     .manga-reader-ui .action-bar-container .page-slider {
         display: none
     }
+
     .shortcuts-info[data-dialog] {
         width: 90vw
     }
+
     .zoomer {
-        display: none!important
+        display: none !important
     }
 }
 
@@ -1961,6 +2051,7 @@ a {
     .setting-button-container {
         position: relative
     }
+
     .reader-setting {
         left: 50%;
         margin-left: -140px

@@ -1545,6 +1545,7 @@ class Manga extends Base {
             this._prefetch();
             this._init_vertical();
             if (this.vertical) this._scale();
+            this.toggle_ui(true);
         } else if (this.index + offset < 0) {
             Notifier.error(preset.ERR_ALREADY_FIRST_EPISODE);
         } else if (this.index + offset >= this.episodes.length) {

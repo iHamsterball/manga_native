@@ -9,6 +9,14 @@ const badges = Object.freeze({
 });
 
 class Badge {
+    /**
+     * Construct string args used in {@link console}.
+     * @static
+     * @param {...Object} badges - Spreaded array that specifies badges to prepend to console.
+     * @param {string} badges[].name - String that specifies badge name.
+     * @param {string} badges[].color - String that specifies badge color.
+     * @returns {string} Constructed string args used in {@link console}.
+     */
     static args(...badges) {
         const text_color = '#FFFFFF';
         const names = badges.map(badge => `%c${badge.name}`);
@@ -19,6 +27,15 @@ class Badge {
         return Array.prototype.concat(names.join(''), values);
     }
 
+    /**
+     * Wrap specified {@link console} function with badges without affecting line information.
+     * @static
+     * @param {function} target - Function that specifies the target.
+     * @param {...Object} badges - Spreaded array that specifies badges to prepend to console.
+     * @param {string} badges[].name - String that specifies badge name.
+     * @param {string} badges[].color - String that specifies badge color.
+     * @returns {function} Wrapped function.
+     */
     static wrap(target, badges) {
         return function (...args) { return Function.prototype.bind.call(target, console, ...Badge.args(...badges), ...args) }();
     }

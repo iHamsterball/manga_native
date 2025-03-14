@@ -135,6 +135,11 @@ class Base {
         return window.URL || window.webkitURL;
     }
 
+    /**
+     * Open manga and init.
+     * @async
+     * @returns If no directory selected.
+     */
     async open_manga() {
         const handle = await window.showDirectoryPicker().catch(err => {
             Notifier.info(preset.INFO_CANCELLED);
@@ -145,6 +150,11 @@ class Base {
         await controller.init();
     }
 
+    /**
+     * Open episode and init.
+     * @async
+     * @returns If no directory selected.
+     */
     async open_episode() {
         const handle = await window.showDirectoryPicker().catch(err => {
             Notifier.info(preset.INFO_CANCELLED);
@@ -155,6 +165,11 @@ class Base {
         await controller.init();
     }
 
+    /**
+     * Open ePub file and init.
+     * @async
+     * @returns If no ePub file selected.
+     */
     async open_epub() {
         const opts = {
             types: [
@@ -175,21 +190,38 @@ class Base {
         await controller.init();
     }
 
+    /**
+     * Open WebRTC and start manual signaling procedure.
+     * @deprecated
+     * @async
+     */
+    //**@deprecated */
     async open_webrtc() {
         // TODO: Working flow should be reconsidered
         if (!this.webrtc.connected) this.toggle_webrtc();
     }
 
+    /**
+     * Page up by step.
+     */
     page_up() {
         this._page_move(-this.step);
         this._update();
     }
 
+    /**
+     * Page down by step.
+     */
     page_down() {
         this._page_move(this.step);
         this._update();
     }
 
+    /**
+     * Scroll into view of specified page if vertical mode.
+     * Update current page if horizontal mode.
+     * @param {event} event Progress bar drag event.
+     */
     page_drag(event) {
         const index = event.target.value - 1;
         if (this.vertical) {
@@ -202,16 +234,26 @@ class Base {
         }
     }
 
+    /**
+     * Proceed to page up or page down by light-to-right or right-to-left order.
+     */
     page_arrowleft() {
         this._page_move(-this.ltr * this.step);
         this._update();
     }
 
+    /**
+     * Proceed to page up or page down by light-to-right or right-to-left order.
+     */
     page_arrowright() {
         this._page_move(this.ltr * this.step);
         this._update();
     }
 
+    /**
+     * Scale up by 0.1 ratio.
+     * @returns If maximum ratio 2 reached.
+     */
     scale_up() {
         if (this._to_fixed(this.ratio, 1) == 2) return;
         this.ratio += 0.1;
@@ -219,6 +261,10 @@ class Base {
         this._update_scale();
     }
 
+    /**
+     * Scale down by 0.1 ratio.
+     * @returns If minimal ratio 0.5 reached.
+     */
     scale_down() {
         if (this._to_fixed(this.ratio, 1) == 0.5) return;
         this.ratio -= 0.1;
@@ -226,12 +272,16 @@ class Base {
         this._update_scale();
     }
 
+    /**
+     * Scale reset to 1 ratio.
+     */
     scale_reset() {
         this.ratio = 1;
         this._scale();
         this._update_scale();
     }
 
+    //* @deprecated
     copy_text(span) {
         let input = span.children[0];
         input.select();
@@ -245,6 +295,7 @@ class Base {
         if (input.id == 'answer-responsed') this._webrtc_connecting();
     }
 
+    //* @deprecated
     async paste_text(span) {
         let input = span.children[0];
         input.select();
@@ -255,10 +306,17 @@ class Base {
         if (input.id == 'answer-replied') this.receive_answer();
     }
 
+
+    /**
+     * Toggle contents popup dialog.
+     */
     toggle_contents() {
         document.getElementById('manga-contents').classList.toggle('hidden');
     }
 
+    /**
+     * Toggle fullscreen mode.
+     */
     toggle_fullscreen() {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen();
@@ -269,6 +327,9 @@ class Base {
         }
     }
 
+    /**
+     * Toggle WebRTC connection dialog.
+     */
     toggle_webrtc() {
         let dialog = document.getElementById('dialog-webrtc');
         let elements = Array.from(dialog.getElementsByClassName('hidden')).concat(dialog);
@@ -278,6 +339,9 @@ class Base {
         ), { once: true });
     }
 
+    /**
+     * Toggle help dialog.
+     */
     toggle_help() {
         let dialog = document.getElementById('dialog-help');
         let elements = Array.from(dialog.getElementsByClassName('hidden')).concat(dialog);
@@ -287,12 +351,24 @@ class Base {
         ), { once: true });
     }
 
+    /**
+     * Toggle navigator buttons disable state.
+     *
+     * Disable if in {@link Episode} or {@link Epub} mode.
+     * Enable if in {@link Manga} mode or remote Manga mode from {@link WebRTCClient}.
+     *
+     * It will be further set under specified condition in {@link Manga._update_nav}.
+     */
     toggle_nav() {
         Array.from(document.querySelectorAll('button[data-navigator].app-button')).forEach(element => (
             element.disabled = this.type != type.manga
         ));
     }
 
+    /**
+     * Toggle image rotate state, and modify corresponding button icon and content.
+     * @param {event} event Event binded to corresponding button.
+     */
     toggle_rotate(event) {
         Notifier.loading();
         this._flush();
@@ -314,10 +390,18 @@ class Base {
         this._update_hinter();
     }
 
+    /**
+     * Toggle reader setting dialog hidden and visible state.
+     */
     toggle_settings() {
         document.getElementById('reader-setting').classList.toggle('hidden');
     }
 
+    /**
+     * Update step and check edge conditions.
+     * @param {number} value Number that specifies the value of step.
+     * @param {boolean} [update] Boolean that specifies whether to update or not.
+     */
     toggle_step(value, update = true) {
         this.step = value;
         // These two condition check prevent some edge cases, and should run not just when step changes,
@@ -338,13 +422,18 @@ class Base {
         if (update) this._write_settings().then(_ => this._update());
     }
 
+    /**
+     * Toggle horizonal mode between double-page and single-page.
+     * @param {boolean} value Boolean that specifies single page mode.
+     * @param {boolean} [update] Boolean that specifies whether to update or not.
+     */
     toggle_single(value, update = true) {
         if (this.step == 1 != value) {
             const container = document.getElementById('images-container');
             container.classList.toggle('single-page');
             container.classList.toggle('double-page');
             Array.from(document.querySelectorAll('button[data-setting]'))
-                .filter(element => element.dataset.setting >= 2 && element.dataset.setting <=3)
+                .filter(element => element.dataset.setting >= 2 && element.dataset.setting <= 3)
                 .forEach(element => {
                     element.classList.remove('selected');
                     if (element.dataset.setting == (value ? 3 : 2)) element.classList.add('selected');
@@ -355,6 +444,9 @@ class Base {
         }
     }
 
+    /**
+     * Toggle reader UI hidden and visible state, and modify corresponding button content.
+     */
     toggle_ui(force = false) {
         let ui = document.getElementById('reader-ui');
         let buttons = document.getElementById('floating-buttons');
@@ -369,11 +461,21 @@ class Base {
         }
     }
 
+    /**
+     * Toggle offset.
+     * @param {number|undefined} [value] Set offset to value provided, or toggle between 0 or 1 if not.
+     * @param {boolean} [update] Boolean that specifies whether to update reader or not.
+     */
     toggle_offset(value, update = true) {
         this.offset = typeof value !== 'undefined' ? value : (this.offset + 1) % 2;
         if (update) this._write_settings().then(_ => this._update());
     }
 
+    /**
+     * Toggle RTL mode.
+     * @param {boolean} value Boolean that specifies the Right-to-Left mode state.
+     * @param {boolean} [update] Boolean that specifies whether to update reader or not.
+     */
     toggle_rtl(value, update = true) {
         if (this.ltr != (value ? -1 : 1)) {
             document.getElementById('images-container').classList.toggle('use-rtl');
@@ -389,6 +491,11 @@ class Base {
         }
     }
 
+    /**
+     * Toggle vertical mode.
+     * @param {boolean} value Boolean that specifies the vertical mode state.
+     * @param {boolean} [update] Boolean that specifies whether to update reader or not.
+     */
     toggle_vertical(value, update = true) {
         if (this.vertical != value) {
             document.getElementById('reader-body').classList.toggle('horizontal-mode');
@@ -411,6 +518,9 @@ class Base {
         }
     }
 
+    /**
+     * Toggle theme between light and dark.
+     */
     toggle_theme() {
         document.documentElement.classList.toggle('theme-dark');
         document.documentElement.classList.toggle('theme-light');
@@ -515,6 +625,11 @@ class Base {
         return files;
     }
 
+    /**
+     * Prefetch specified number of images to cache.
+     * @async
+     * @param {number} [limit] Override default prefetch limit if provided.
+     */
     async _prefetch(limit = this.limit) {
         const length = this.files.length;
         for (let index = 0, cur = this.cur; index < limit && cur < length && length > 0; index++, cur++) {
@@ -525,12 +640,25 @@ class Base {
         }
     }
 
+    /**
+     * Fetch and generate ObjectURL of specified image.
+     * @async
+     * @param {number} index Number that specifies the index of image to load.
+     * @returns {Promise<string>} Object URL which indicates the blob data of the fetched image.
+     */
     async _postfetch(index) {
         // If cache missed, fallback to normal fetch
         const blob = await this.cache.get(index) || await this._fetch(index);
         return blob;
     }
 
+    /**
+     * Fetch specified image, and then save to cache.
+     * @async
+     * @param {number} index Number that specifies the index of image to load.
+     * @param {Array} [files] Defaults to {@link Base.files}, or provided override value such as {@link WebRTC.files}.
+     * @returns {Promise<Blob>} Blob data which indicates the fetched image.
+     */
     async _fetch(index, files = this.files) {
         if (files == null) files = this.files;
         const content = await this._file(index, files);
@@ -539,6 +667,13 @@ class Base {
         return content;
     }
 
+    /**
+     * Fetch specified image.
+     * @async
+     * @param {number} index Number that specifies the index of image to load.
+     * @param {Array} [files] Defaults to {@link Base.files}, or provided override value such as {@link WebRTC.files}.
+     * @returns {Promise<Blob>} Blob data which indicates the fetched image.
+     */
     async _file(index, files = this.files) {
         if (files == null) files = this.files;
         if (index > files.length) return new Blob();
@@ -571,6 +706,10 @@ class Base {
         return await fetch(psd.image.toBase64()).then(res => res.blob());
     }
 
+    /**
+     * Init vertical images.
+     * @async
+     */
     async _init_vertical() {
         let list = document.getElementById('image-list');
         let next = document.getElementById('load-next-btn');
@@ -598,6 +737,11 @@ class Base {
         }
     }
 
+    /**
+     * Initializes the IndexedDB database for storing reader settings.
+     * Creates a database named 'manga-native-database' with a 'settings' object store.
+     * @private
+     */
     _init_indexeddb() {
         const name = 'manga-native-database';
         const version = 1; // NOT float number
@@ -620,6 +764,13 @@ class Base {
         };
     }
 
+    /**
+     * Initializes intersection observers for image loading, page step tracking, and scroll progress.
+     * - image: Handles lazy loading of images when they enter viewport
+     * - step: Tracks visibility of secondary image for auto single/double page mode
+     * - progress: Tracks scroll progress for vertical reading mode
+     * @private
+     */
     _init_observer() {
         this.observer['image'] = new IntersectionObserver((entries, observer) => (
             entries.forEach(async entry => {
@@ -672,6 +823,12 @@ class Base {
         ), { threshold: Array.apply(null, { length: 11 }).map((_, index) => index / 10) });
     }
 
+    /**
+     * Initializes step observer for secondary image container.
+     * The observer tracks visibility of secondary image for auto single/double page mode.
+     * The visibility is controlled by CSS media queries or specified manually.
+     * @private
+     */
     _observe_step() {
         const image = document.getElementById('image-secondary');
         const video = document.getElementById('video-secondary');
@@ -679,6 +836,13 @@ class Base {
         this.observer['step'].observe(video);
     }
 
+    /**
+     * Handles image rotation by passing image data through WebAssembly module.
+     * @param {Blob} blob - The image blob to rotate
+     * @returns {Promise<Blob>} The rotated image blob
+     * @private
+     * @async
+     */
     async _rotate_wrapper(blob) {
         if (this.rotate >= 0) {
             let buffer = await blob.arrayBuffer();
@@ -714,6 +878,12 @@ class Base {
         }
     }
 
+    /**
+     * Updates horizontal displayed images based on current state.
+     * Sets image sources, triggers prefetch, and notify if file list is empty.
+     * @private
+     * @async
+     */
     async _update_images() {
         document.getElementById('image-primary').src = this._validate(this.pos.primary) ? await this._postfetch(this.primary) : '';
         document.getElementById('image-secondary').src = this._validate(this.pos.secondary) && this.step == 2 ? await this._postfetch(this.secondary) : '';
@@ -721,6 +891,12 @@ class Base {
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 
+    /**
+     * Updates horizontal displayed images or videos based on current state.
+     * Sets media sources, triggers prefetch, and notify if file list is empty.
+     * @private
+     * @async
+     */
     async _update_media() {
         const _update = async (symbol, index) => {
             const image = document.getElementById(symbol == this.pos.primary ? 'image-primary' : 'image-secondary');
@@ -770,6 +946,13 @@ class Base {
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 
+    /**
+     * Verifies read permission of File System Access API.
+     * If permission denied, request permission again.
+     * @returns {Promise<boolean>} True if permissions granted, false otherwise
+     * @private
+     * @async
+     */
     async _verify() {
         const options = { mode: "read" };
         if (this.handle === undefined) {
@@ -784,6 +967,10 @@ class Base {
         return false;
     }
 
+    /**
+     * Clears current image sources.
+     * @private
+     */
     _flush() {
         document.getElementById('image-primary').src = '';
         document.getElementById('video-primary').src = '';
@@ -791,21 +978,44 @@ class Base {
         document.getElementById('video-secondary').src = '';
     }
 
+    /**
+     * Calculates left-to-right position index based on current state.
+     * @deprecated It's not used anywhere, and I forgot why I wrote this.
+     * @param {Symbol} [pos=this.pos.primary] - Position symbol (primary/secondary)
+     * @returns {number} Position index (0 or 1)
+     * @private
+     */
+    //**@deprecated */
     _ltr(pos = this.pos.primary) {
         return (((pos === this.pos.secondary) ? 1 : -1) * this.ltr + 1) / 2;
     }
 
+    /**
+     * Validates if page navigation is possible and shows appropriate errors.
+     * @param {number} after - Target page index after navigation
+     * @returns {boolean} True if navigation is valid
+     * @private
+     */
     _page_check(after) {
         if (after - this.step % 2 * this.offset < 0) Notifier.error(preset.ERR_ALREADY_FIRST_PAGE)
         else if (after >= this.files.length + this.offset) Notifier.error(preset.ERR_ALREADY_LAST_PAGE);
         return after - this.step % 2 * this.offset >= 0 && after < this.files.length + this.offset;
     }
 
+    /**
+     * Moves current page by specified offset if valid.
+     * @param {number} offset - Number of pages to move (positive or negative)
+     * @private
+     */
     _page_move(offset) {
         if (this.vertical) return;
         if (this._page_check(this.cur + offset)) this.cur += offset;
     }
 
+    /**
+     * Reads and applies initial settings from UI elements.
+     * @private
+     */
     _read_setting() {
         Array.from(document.getElementById('reader-setting').querySelectorAll('button.selected')).forEach(element => {
             if (element.dataset.setting > 4) this.vertical = element.dataset.setting == 5;
@@ -813,6 +1023,11 @@ class Base {
         });
     }
 
+    /**
+     * Resets reader state by clearing caches and arrays.
+     * @param {boolean} [full=false] - If true, also resets current page to 0
+     * @private
+     */
     _reset(full = false) {
         this.cache = new Map();
         this.files = new Array();
@@ -820,6 +1035,10 @@ class Base {
         if (full) this.cur = 0;
     }
 
+    /**
+     * Resets hinter UI elements based on current view mode.
+     * @private
+     */
     _reset_hinter() {
         let hinter = document.getElementById('hinter-image');
         hinter.classList.remove('flip', 'rotate');
@@ -830,10 +1049,19 @@ class Base {
         if (this.vertical) hinter.classList.add('rotate');
     }
 
+    /**
+     * Resets content panel to hidden state.
+     * @private
+     */
     _reset_content() {
         document.getElementById('manga-contents').classList.add('hidden');
     }
 
+    /**
+     * Handles image scaling for both horizontal and vertical modes.
+     * Updates CSS classes and scroll positions to maintain view.
+     * @private
+     */
     _scale() {
         let container = document.getElementById('images-container');
         let parent = container.parentNode;
@@ -884,6 +1112,11 @@ class Base {
         list.children[isNaN(this.viewnearest) ? 0 : this.viewnearest]?.scrollIntoView({ behavior: 'instant' });
     }
 
+    /**
+     * Sets version number in UI if available in localStorage.
+     * Creates version element if it doesn't exist.
+     * @private
+     */
     _set_version() {
         const value = localStorage.getItem('version');
         if (value == null) return;
@@ -900,6 +1133,14 @@ class Base {
         }
     }
 
+    /**
+     * Checks if an element is visible in vertical scroll mode.
+     * @deprecated
+     * @param {HTMLElement} element - Element to check visibility
+     * @returns {boolean} True if element is visible
+     * @private
+     */
+    //**@deprecated */
     _scroll_vertical_visibile(element) {
         let bounding = element.getBoundingClientRect();
         return (
@@ -909,24 +1150,47 @@ class Base {
         )
     };
 
+    /**
+     * Rounds a number to specified decimal places.
+     * @param {number} value - Number to round
+     * @param {number} float - Number of decimal places (must be positive integer)
+     * @returns {number} Rounded number
+     * @throws {Object} Error if float parameter is invalid
+     * @private
+     */
     _to_fixed(value, float) {
         if (float <= 0 || Math.round(float) != float) throw { msg: 'Value must be an interger which is greater than 0.', value: float };
         return (Math.round(parseFloat(value) * 10 * float) / (10 * float));
     }
 
+    /**
+     * Validates if image position is within bounds of current files.
+     * @param {Symbol} [pos=this.pos.primary] - Position to validate
+     * @returns {boolean} True if position is valid
+     * @private
+     */
     _validate(pos = this.pos.primary) {
         return ((pos === this.pos.primary && this.primary >= 0 && this.primary < this.files.length) ||
             (pos === this.pos.secondary && this.secondary >= 0 && this.secondary < this.files.length)) && this.files.length > 0;
     }
 
+    /**
+     * Updates all UI elements to reflect current state.
+     * @private
+     */
     _update() {
-        this._update_images();
+        if (this.type == type.undefined) return;
+        this._update_media();
         this._update_info();
         this._update_progress();
         this._update_hinter();
         this._update_scale();
     }
 
+    /**
+     * Updates page number indicators.
+     * @private
+     */
     _update_hinter() {
         let current_page = document.getElementById('current-page');
         let next_page = document.getElementById('next-page');
@@ -935,6 +1199,10 @@ class Base {
         if (this.vertical) current_page.innerHTML = isNaN(this.viewtop) ? '' : this.viewtop + 1;
     }
 
+    /**
+     * Updates manga and episode title and info displays.
+     * @private
+     */
     _update_info() {
         let manga = document.getElementById('manga-title');
         manga.innerHTML = this.title['manga'];
@@ -946,6 +1214,10 @@ class Base {
         // TODO: Change to logged location [Low priority]
     }
 
+    /**
+     * Updates progress bar indicators.
+     * @private
+     */
     _update_progress() {
         let value = this.vertical ? (isNaN(this.viewtop) ? 1 : this.viewtop + 1) : (Math.floor((this.cur + this.offset) / this.step) + 1);
         let max = Math.round((this.files.length + this.offset) / this.step);
@@ -955,10 +1227,18 @@ class Base {
         progress.max = max;
     }
 
+    /**
+     * Updates scale percentage display.
+     * @private
+     */
     _update_scale() {
         document.getElementById('scale-percentage').innerHTML = `${Math.round(this.ratio * 100)}%`;
     }
 
+    /**
+     * Read current handle settings and update it if needed.
+     * @async
+     */
     async _update_settings() {
         const handle = await this.handle.getUniqueId()
         let payload = this.settings;
@@ -992,6 +1272,10 @@ class Base {
             }
     }
 
+    /**
+     * Update current handle settings.
+     * @async
+     */
     async _write_settings() {
         const handle = await this.handle.getUniqueId()
         let payload = this.settings;

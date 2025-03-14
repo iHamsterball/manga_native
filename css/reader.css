@@ -264,6 +264,10 @@ a {
     stroke: var(--color-theme);
 }
 
+.loading-hinter .dp-i-block {
+    color: var(--color-theme);
+}
+
 .manga-button.primary {
     color: hsl(0, 0%, 100%);
     background-color: var(--color-theme);

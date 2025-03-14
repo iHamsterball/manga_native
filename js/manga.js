@@ -20,6 +20,8 @@ class Base {
         this.client = false;
         // Current page & offset
         this.cur = this._offset = 0;
+        // IndexedDB
+        this.db = null;
         // File list
         this.files = new Array();
         // Prefetch limit
@@ -77,6 +79,7 @@ class Base {
         this.webrtc.pc.ondatachannel = this._webrtc_dc_callback.bind(this);
         this.webrtc.ctrl.onmessage = this._webrtc_control_callback.bind(this);
 
+        this._init_indexeddb();
         this._init_observer();
         this._observe_step();
         this._read_setting();
@@ -100,6 +103,22 @@ class Base {
         return this.cur - this.offset + 1;
     }
 
+    get settings() {
+        return {
+            offset: this.offset,
+            rtl: this.rtl,
+            single: this.step == 1 || this.vertical == true,
+            vertical: this.vertical,
+        }
+    }
+
+    set settings(value) {
+        this.toggle_offset(value.offset, false);
+        this.toggle_single(value.single, false)
+        this.toggle_rtl(value.rtl == 1, false);
+        this.toggle_vertical(value.vertical, false);
+    }
+
     get rtl() {
         return -this.ltr;
     }
@@ -118,7 +137,6 @@ class Base {
 
     async open_manga() {
         const handle = await window.showDirectoryPicker().catch(err => {
-            this._update();
             Notifier.info(preset.INFO_CANCELLED);
             return;
         });
@@ -129,7 +147,6 @@ class Base {
 
     async open_episode() {
         const handle = await window.showDirectoryPicker().catch(err => {
-            this._update();
             Notifier.info(preset.INFO_CANCELLED);
             return;
         });
@@ -150,7 +167,6 @@ class Base {
             ]
         };
         const [handle] = await window.showOpenFilePicker(opts).catch(err => {
-            this._update();
             Notifier.info(preset.INFO_CANCELLED);
             return [undefined];
         });
@@ -286,47 +302,79 @@ class Base {
             button.classList.remove('default');
             button.classList.add('rotate_90_clockwise');
             this.rotate = this.rotate_flags.rotate_90_clockwise;
-            this.toggle_single(true);
+            this.toggle_single(true, false);
         } else {
             button.classList.remove('rotate_90_clockwise');
             button.classList.add('default');
             this.rotate = this.rotate_flags.default;
-            this.toggle_single(false);
+            this.toggle_single(false, false);
         }
+        this._update_images();
+        this._update_progress();
+        this._update_hinter();
     }
 
     toggle_settings() {
         document.getElementById('reader-setting').classList.toggle('hidden');
     }
 
-    toggle_single(value) {
+    toggle_step(value, update = true) {
+        this.step = value;
+        // These two condition check prevent some edge cases, and should run not just when step changes,
+        // but each time these values are accessed, since the step is occasionall changed without trigger these functions,
+        // and it will conflit with settings saved in indexedDB, causing unintended behavior or dead loop
+        // After the values are set, skip update since there is no visual change
+        // When step changes from 1 to 2, whatever this.offset is, this.cur should NOT BE odd
+        // Or the first page becomes unreachable
+        if (this.step == 2 && this.cur % 2) {
+            this.cur += -2 * this.offset + 1;
+            this.toggle_offset(undefined, false);
+        }
+        // When step changes from 2 to 1, if this.offset is 1, this.cur should NOT BE 0
+        // Or the first page becomes blank
+        if (this.step == 1 && this.offset == 1 && this.cur == 0) {
+            this.cur = 1;
+        }
+        if (update) this._write_settings().then(_ => this._update());
+    }
+
+    toggle_single(value, update = true) {
         if (this.step == 1 != value) {
             const container = document.getElementById('images-container');
             container.classList.toggle('single-page');
             container.classList.toggle('double-page');
-            this._update();
+            Array.from(document.querySelectorAll('button[data-setting]'))
+                .filter(element => element.dataset.setting >= 2 && element.dataset.setting <=3)
+                .forEach(element => {
+                    element.classList.remove('selected');
+                    if (element.dataset.setting == (value ? 3 : 2)) element.classList.add('selected');
+                });
+            const step = value ? 1 : 2;
+            this.toggle_step(step, update);
+            if (update) this._write_settings().then(_ => this._update());
         }
     }
 
-    toggle_ui() {
+    toggle_ui(force = false) {
         let ui = document.getElementById('reader-ui');
         let buttons = document.getElementById('floating-buttons');
         if (ui.classList.contains('v-hidden')) {
             ui.classList.remove('v-hidden');
             ui.classList.add('idle');
             buttons.classList.remove('stable');
-        } else {
+        } else if (force == false) {
+            // Hide reader ui if force param is unspecified
             ui.classList.add('a-fade-out');
             ui.classList.remove('autohide');
         }
     }
 
-    toggle_offset() {
-        this.offset = (this.offset + 1) % 2;
-        this._update();
+    toggle_offset(value, update = true) {
+        this.offset = typeof value !== 'undefined' ? value : (this.offset + 1) % 2;
+        if (update) this._write_settings().then(_ => this._update());
     }
 
-    toggle_rtl(value) {
+    toggle_rtl(value, update = true) {
         if (this.ltr != (value ? -1 : 1)) {
             document.getElementById('images-container').classList.toggle('use-rtl');
             document.getElementById('current-page').classList.toggle('left-position');
@@ -335,23 +383,31 @@ class Base {
             document.getElementById('next-page').classList.toggle('right-position');
             document.getElementById('message-image-container').classList.toggle('flip');
             Notifier.show_dir();
+            this.ltr = value ? -1 : 1;
+            this._reset_hinter();
+            if (update) this._write_settings().then(_ => this._update());
         }
-        this.ltr = value ? -1 : 1;
-        this._reset_hinter();
-        if (this.type != type.undefined) this._update();
     }
 
-    toggle_vertical(value, event) {
+    toggle_vertical(value, update = true) {
         if (this.vertical != value) {
             document.getElementById('reader-body').classList.toggle('horizontal-mode');
             document.getElementById('reader-body').classList.toggle('vertical-mode');
             document.getElementById('offset').disabled = !this.vertical;
             document.getElementById('rotate').disabled = !this.vertical;
-            [...event.target.parentNode.parentNode.parentNode.children]
-                .filter(child => child != event.target.parentNode.parentNode && child.nodeType == 1)
-                .forEach(element => element.classList.toggle('hidden'));
+            Array.from(document.querySelectorAll('button[data-setting]'))
+                .filter(element => element.dataset.setting >= 4)
+                .forEach(element => {
+                    element.classList.remove('selected');
+                    if (element.dataset.setting == (value ? 5 : 4)) element.classList.add('selected');
+                });
+            let settings = Array.from(document.querySelectorAll('.section[data-setting]'));
+            settings.pop();
+            settings.forEach(element => element.classList.toggle('hidden'));
             this.vertical = value;
             this._reset_hinter();
+            // If vertical mode is enabled, step should be 1
+            if (update) this._write_settings();
         }
     }
 
@@ -542,6 +598,28 @@ class Base {
         }
     }
 
+    _init_indexeddb() {
+        const name = 'manga-native-database';
+        const version = 1; // NOT float number
+        const request = indexedDB.open(name, version);
+        request.onsuccess = event => {
+            this.db = event.target.result;
+            this.db.onversionchange = _ => {
+                this.db.close();
+                console.warn(...Badge.args(badges.MangaNative, badges.IndexedDB), 'Reloading...');
+                location.reload();
+            }
+        };
+        request.onblocked = event => console.error(...Badge.args(badges.MangaNative, badges.IndexedDB), 'Open failed:', event.target.errorCode);
+        request.onerror = event => console.error(...Badge.args(badges.MangaNative, badges.IndexedDB), 'Open failed:', event.target.errorCode);
+        request.onupgradeneeded = event => {
+            this.db = event.target.result;
+            const name = 'settings';
+            this.db.createObjectStore(name, { keyPath: 'handle', autoIncrement: false });
+            console.info(...Badge.args(badges.MangaNative, badges.IndexedDB), 'Upgrade needed.');
+        };
+    }
+
     _init_observer() {
         this.observer['image'] = new IntersectionObserver((entries, observer) => (
             entries.forEach(async entry => {
@@ -569,18 +647,15 @@ class Base {
         ));
         this.observer['step'] = new IntersectionObserver((entries, observer) => (
             entries.forEach(entry => {
-                controller.step = entry.intersectionRatio == 0 ? 1 : 2;
-                // When step changes from 1 to 2, whatever this.offset is, this.cur should NOT BE odd
-                // Or the first page becomes unreachable
-                if (controller.step == 2 && controller.cur % 2) {
-                    controller.cur += -2 * controller.offset + 1;
-                    controller.toggle_offset();
-                }
-                // When step changes from 2 to 1, if this.offset is 1, this.cur should NOT BE 0
-                // Or the first page becomes blank
-                if (controller.step == 1 && controller.offset == 1 && controller.cur == 0) {
-                    controller.cur = 1;
-                }
+                // If entry.intersectionRatio == 0, it indicates that the secondary image is hidden
+                const step = entry.intersectionRatio == 0 ? 1 : 2;
+                // Update step without saving to database
+                if (controller.vertical == false && entry.target.classList.contains('hidden') == false) controller.toggle_step(step, false);
+                // Do NOT automatically update settings in observer
+                // This intersection observer is used to autohide secondary image on devices
+                // which is not wide enough to display in double page mode,
+                // So save those changes into settings will be meaningless.
+                // if (this.type != type.undefined) this._write_settings().then(_ => this._update());
                 if (controller.type != type.undefined) controller._update();
                 controller._reset_hinter();
             })
@@ -831,6 +906,62 @@ class Base {
         document.getElementById('scale-percentage').innerHTML = `${Math.round(this.ratio * 100)}%`;
     }
 
+    async _update_settings() {
+        const handle = await this.handle.getUniqueId()
+        let payload = this.settings;
+        payload.name = this.handle.name;
+        payload.handle = handle;
+
+        // If rotate wrapper is activated, pause all load and save actions.
+        // TODO: Open or switch episode while rotate wrapper is on.
+        if (this.rotate != this.rotate_flags.default) return;
+
+        // Load settings from IndexedDB
+        this.db.transaction('settings').objectStore('settings')
+            .get(handle).onsuccess = event => {
+                const result = event.target.result;
+                if (typeof result === 'undefined') {
+                    // If current handle is not in database, save its settings.
+                    this._write_settings();
+                } else {
+                    // If current handle found in database, load its settings.
+                    this.settings = result;
+                    // If settings from database differs from current setting
+                    const _equal = (a, b) => {
+                        const keys = Object.keys(b).sort();
+                        return Object.keys(a).sort().every((key, index) => a[key] === b[keys[index]]);
+                    }
+                    if (_equal(payload, result) == false) {
+                        this._update();
+                    }
+                    console.info(...Badge.args(badges.MangaNative, badges.IndexedDB), 'Settings loaded.', payload);
+                }
+            }
+    }
+
+    async _write_settings() {
+        const handle = await this.handle.getUniqueId()
+        let payload = this.settings;
+        payload.name = this.handle.name;
+        payload.handle = handle;
+
+        return new Promise((resolve, reject) => {
+            // Write settings to IndexedDB
+            const transaction = this.db.transaction(['settings'], 'readwrite')
+            const store = transaction.objectStore('settings');
+            const request = store.put(payload);
+            request.onsuccess = _ => {
+                console.info(...Badge.args(badges.MangaNative, badges.IndexedDB), 'Settings updated.', payload);
+                resolve();
+            }
+            request.onerror = error => {
+                console.error(...Badge.args(badges.MangaNative, badges.IndexedDB), 'Settings update failed:', error);
+                reject(error);
+            }
+        });
+
+    }
+
     //* @deprecated
     _webrtc_connecting() {
         document.querySelectorAll('[id^="answer"]').forEach(element => (
@@ -981,6 +1112,7 @@ class Episode extends Base {
         this.files = await this._load_files(this.handle);
         this._prefetch();
         this.toggle_nav();
+        this._update_settings();
         if (update) this._update();
         this._reset_content();
         this._init_vertical();
@@ -1021,6 +1153,7 @@ class Manga extends Base {
         await this._episode_move(0);
         this.toggle_nav();
         this._init_contents();
+        this._update_settings();
         if (update) this._update();
         this._webrtc_transmit_meta();
     }
@@ -1189,6 +1322,7 @@ class Epub extends Base {
         this.files = this._load_files();
         this._prefetch();
         this.toggle_nav();
+        this._update_settings();
         if (update) this._update();
         this._reset_content();
         this._init_vertical();
@@ -1417,6 +1551,7 @@ class WebRTCClient extends Base {
             case type.manga:
                 await this._episode_move(0);
                 this._init_contents();
+                this._update_settings();
                 this._update();
                 break;
             case type.episode:
@@ -1424,6 +1559,7 @@ class WebRTCClient extends Base {
                 this.files = await this._load_files(this.index);
                 this.title['episode'] = this.meta.episode;
                 this._prefetch();
+                this._update_settings();
                 this._update();
                 this._reset_content();
                 break;

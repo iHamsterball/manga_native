@@ -781,7 +781,7 @@ class Base {
                         // Prevent request amplification, send request for same file once
                         if (image.dataset.requested) return;
                         image.dataset.requested = true;
-                        image.src = await this._postfetch(index);
+                        image.src = this.URL.createObjectURL(await this._postfetch(index));
                         image.parentNode.parentNode.classList.add('image-loaded');
                         observer.unobserve(image);
                     }

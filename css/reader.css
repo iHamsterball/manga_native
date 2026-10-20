@@ -199,9 +199,12 @@ a {
     background-color: light-dark(rgba(207, 207, 207, .7), rgba(48, 48, 48, .7));
 }
 
+.info-hud .hinter-image {
+    height: 32px;
+}
+
 .theme-light .info-hud .hinter-image {
     filter: invert(100%);
-    height: 32px;
 }
 
 .theme-light .helpdesc-image {
@@ -1912,6 +1915,10 @@ a {
     .manga-reader-ui.autohide~.info-hud, .manga-reader-ui.v-hidden~.info-hud {
         -webkit-animation: none;
         animation: none;
+    }
+
+    .manga-reader-ui.autohide~.info-hud {
+        translate: 0 -5em;
     }
 
     .info-hud {

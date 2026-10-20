@@ -566,6 +566,7 @@ class Base {
         console.info(...Badge.args(badges.MangaNative, badges.WebRTC), 'Active connections: ', count);
     }
 
+    //* @deprecated
     async _webrtc_negotiation_needed_callback() {
         const offer = await this.webrtc.pc.createOffer();
         const textarea = document.getElementById('offer-generated');
@@ -1508,6 +1509,7 @@ class Base {
      * @async
      */
     async _update_settings() {
+        // TODO: The Unique ID may change sometimes, consider using path as key instead.
         const handle = await this.handle.getUniqueId()
         let payload = this.settings;
         payload.name = this.handle.name;
@@ -1546,7 +1548,8 @@ class Base {
      * @async
      */
     async _write_settings() {
-        const handle = await this.handle.getUniqueId()
+        if (this.handle === undefined) return;
+        const handle = await this.handle.getUniqueId();
         let payload = this.settings;
         payload.name = this.handle.name;
         payload.handle = handle;

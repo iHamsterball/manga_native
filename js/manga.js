@@ -1010,25 +1010,26 @@ class Base {
     }
 
     /**
-     * Validates if page navigation is possible and shows appropriate errors.
+     * Validates if page navigation is possible.
      * @param {number} after - Target page index after navigation
      * @returns {boolean} True if navigation is valid
      * @private
      */
     _page_check(after) {
-        if (after - this.step % 2 * this.offset < 0) Notifier.error(preset.ERR_ALREADY_FIRST_PAGE)
-        else if (after >= this.files.length + this.offset) Notifier.error(preset.ERR_ALREADY_LAST_PAGE);
         return after - this.step % 2 * this.offset >= 0 && after < this.files.length + this.offset;
     }
 
     /**
-     * Moves current page by specified offset if valid.
+     * Moves current page by specified offset if valid and shows appropriate errors.
      * @param {number} offset - Number of pages to move (positive or negative)
      * @private
      */
     _page_move(offset) {
         if (this.vertical) return;
-        if (this._page_check(this.cur + offset)) this.cur += offset;
+        const after = this.cur + offset;
+        if (after - this.step % 2 * this.offset < 0) Notifier.error(preset.ERR_ALREADY_FIRST_PAGE)
+        else if (after >= this.files.length + this.offset) Notifier.error(preset.ERR_ALREADY_LAST_PAGE);
+        if (this._page_check(after)) this.cur = after;
     }
 
     /**
@@ -1679,9 +1680,9 @@ class Manga extends Base {
     }
 
     async _episode_move(offset) {
-        if (offset == -1) Notifier.info(preset.INFO_PREVIOUS_EPISODE);
-        if (offset == 1) Notifier.info(preset.INFO_NEXT_EPISODE);
         if (this._episode_check(this.index + offset)) {
+            if (offset == -1) Notifier.info(preset.INFO_PREVIOUS_EPISODE);
+            if (offset == 1) Notifier.info(preset.INFO_NEXT_EPISODE);
             this.index += offset;
             this._reset(offset);
             this.files = await this._load_files(this.episodes[this.index]).catch(_ => this.load());
@@ -2064,9 +2065,9 @@ class WebRTCClient extends Base {
     }
 
     async _episode_move(offset) {
-        if (offset == -1) Notifier.info(preset.INFO_PREVIOUS_EPISODE);
-        if (offset == 1) Notifier.info(preset.INFO_NEXT_EPISODE);
         if (this._episode_check(this.index + offset)) {
+            if (offset == -1) Notifier.info(preset.INFO_PREVIOUS_EPISODE);
+            if (offset == 1) Notifier.info(preset.INFO_NEXT_EPISODE);
             this.index += offset;
             this._reset(offset);
             this.files = await this._load_files(this.index);

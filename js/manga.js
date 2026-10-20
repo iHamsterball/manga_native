@@ -81,7 +81,6 @@ class Base {
 
         this._init_indexeddb();
         this._init_observer();
-        this._observe_step();
         this._set_version();
     }
 
@@ -402,6 +401,11 @@ class Base {
      * @param {boolean} [update] Boolean that specifies whether to update or not.
      */
     toggle_step(value, update = true) {
+        // Update page state according to step
+        const container = document.getElementById('images-container');
+        container.classList.remove('single-page', 'double-page');
+        if (value == 1) container.classList.add('single-page');
+        if (value == 2) container.classList.add('double-page');
         this.step = value;
         // These two condition check prevent some edge cases, and should run not just when step changes,
         // but each time these values are accessed, since the step is occasionall changed without trigger these functions,
@@ -428,9 +432,6 @@ class Base {
      */
     toggle_single(value, update = true) {
         if (this.step == 1 != value) {
-            const container = document.getElementById('images-container');
-            container.classList.toggle('single-page');
-            container.classList.toggle('double-page');
             Array.from(document.querySelectorAll('button[data-setting]'))
                 .filter(element => element.dataset.setting >= 2 && element.dataset.setting <= 3)
                 .forEach(element => {
@@ -439,6 +440,7 @@ class Base {
                 });
             const step = value ? 1 : 2;
             this.toggle_step(step, update);
+            this._reset_hinter();
             if (update) this._write_settings().then(_ => this._update());
         }
     }
@@ -798,17 +800,27 @@ class Base {
         ));
         this.observer['step'] = new IntersectionObserver((entries, observer) => (
             entries.forEach(entry => {
+                // TODO: Trigger once when page resized
+                console.log(...Badge.args(badges.MangaNative), `Element: ${entry.target.id}, isIntersecting: ${entry.isIntersecting}, intersectionRatio: ${entry.intersectionRatio}`);
                 // If entry.intersectionRatio == 0, it indicates that the secondary image is hidden
                 const step = entry.intersectionRatio == 0 ? 1 : 2;
                 // Update step without saving to database
-                if (controller.vertical == false && entry.target.classList.contains('hidden') == false) controller.toggle_step(step, false);
+                if (controller.vertical == false && entry.target.classList.contains('hidden') == false) {
+                    controller.toggle_step(step, false);
+                    // Update class list of images container to prevent setting buttons from being out of sync
+                    // with the actual state of the reader and cause reverted page state issue
+                    controller.toggle_single(step == 1, false);
+                }
                 // Do NOT automatically update settings in observer
                 // This intersection observer is used to autohide secondary image on devices
                 // which is not wide enough to display in double page mode,
                 // So save those changes into settings will be meaningless.
                 // if (this.type != type.undefined) this._write_settings().then(_ => this._update());
-                if (controller.type != type.undefined) controller._update();
-                controller._reset_hinter();
+
+                // After logic change, no need to call update now
+                // if (controller.type != type.undefined) controller._update();
+                // controller._reset_hinter();
+                observer.unobserve(entry.target);
             })
         ));
         this.observer['progress'] = new IntersectionObserver((entries, observer) => (
@@ -832,8 +844,15 @@ class Base {
     _observe_step() {
         const image = document.getElementById('image-secondary');
         const video = document.getElementById('video-secondary');
-        this.observer['step'].observe(image);
-        this.observer['step'].observe(video);
+        const parent = document.getElementById('media-secondary');
+        if (parent.classList.contains('image')) {
+            this.observer['step'].observe(image);
+        } else if (parent.classList.contains('video')) {
+            this.observer['step'].observe(video);
+        } else if (parent.classList.contains('default')) {
+            this.observer['step'].observe(image);
+            this.observer['step'].observe(video);
+        }
     }
 
     /**
@@ -1240,8 +1259,9 @@ class Base {
      * @private
      */
     _update_progress() {
-        let value = this.vertical ? (isNaN(this.viewtop) ? 1 : this.viewtop + 1) : (Math.floor((this.cur + this.offset) / this.step) + 1);
-        let max = Math.round((this.files.length + this.offset) / this.step);
+        const step = this.vertical ? 1 : this.step;
+        let value = this.vertical ? (isNaN(this.viewtop) ? 1 : this.viewtop + 1) : (Math.floor((this.cur + this.offset) / step) + 1);
+        let max = Math.round((this.files.length + this.offset) / step);
         document.getElementsByClassName('progress-indicator')[0].innerHTML = `${value} / ${max}`;
         let progress = document.getElementById('progress-indicator');
         progress.value = value;

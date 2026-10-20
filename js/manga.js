@@ -748,6 +748,7 @@ class Base {
         request.onsuccess = event => {
             this.db = event.target.result;
             this.db.onversionchange = _ => {
+                Notifier.loading();
                 this.db.close();
                 console.warn(...Badge.args(badges.MangaNative, badges.IndexedDB), 'Reloading...');
                 location.reload();
@@ -2136,6 +2137,13 @@ class WebRTCClient extends Base {
 }
 
 class Notifier {
+    // Default toast display duration
+    static delay = 3000;
+
+    // Check if Popover API is supported
+    // Baseline 2025
+    static legacy = !Object.hasOwn(HTMLElement.prototype, "popover");
+
     constructor() {
     }
 
@@ -2164,22 +2172,35 @@ class Notifier {
     }
 
     static _toast(msg) {
-        this._clear(this.toast, 'episode-toast');
+        this._clear(this.toast);
+        console.debug(...Badge.args(badges.MangaNative, badges.Notifier), msg);
+        if (this.legacy) {
+            // Fallback to legacy toast
+            this._toast_legacy(msg);
+        } else {
+            // Use popover if available
+            document.getElementById('toast-content').innerHTML = msg;
+            document.getElementById('episode-toast').showPopover();
+            this.toast = setTimeout(() => (document.getElementById('episode-toast').hidePopover()), this.delay);
+        }
+    }
+
+    static _toast_legacy(msg) {
+        this._clear(this.toast);
         document.getElementById('toast-content').innerHTML = msg;
         document.getElementById('episode-toast').classList.remove('hidden');
-        this.toast = setTimeout(() => (document.getElementById('episode-toast').classList.add('hidden')), 3000);
+        this.toast = setTimeout(() => (document.getElementById('episode-toast').classList.add('hidden')), this.delay);
     }
 
     static _dir() {
         this._clear(this.dir, 'message-box');
         document.getElementById('message-box').classList.add('hidden');
         document.getElementById('message-box').classList.remove('hidden');
-        this.dir = setTimeout(() => (document.getElementById('message-box').classList.add('hidden')), 3000);
+        this.dir = setTimeout(() => (document.getElementById('message-box').classList.add('hidden')), this.delay);
     }
 
-    static _clear(timer, id) {
+    static _clear(timer) {
         window.clearTimeout(timer);
-        document.getElementById(id).classList.add('hidden');
     }
 }
 
@@ -2257,6 +2278,7 @@ if ('serviceWorker' in navigator) {
 }
 
 let init = () => {
+    Notifier.loading();
     let ui = document.getElementById('reader-ui');
     let body = document.getElementById('reader-body');
     let buttons = document.getElementById('floating-buttons');
@@ -2388,5 +2410,6 @@ let init = () => {
         signaling = new Signaling();
         controller = new Base();
         Notifier.show_dir();
+        Notifier.loaded();
     });
 };

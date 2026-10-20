@@ -542,13 +542,26 @@ a {
     animation-duration: .2s
 }
 
+.episode-toast:popover-open {
+    border: 0;
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    margin-left: 0;
+    margin-bottom: 0;
+}
+
 .episode-toast .toast-content {
     font-size: 18px;
     line-height: 18px;
     color: hsl(0, 0%, 100%);
     letter-spacing: 0;
     text-align: center;
-    margin: 23px auto
+    margin: 23px auto;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none
 }
 
 .floating-button {

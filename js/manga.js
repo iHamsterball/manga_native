@@ -255,7 +255,6 @@ class Base {
     scale_up() {
         if (this._to_fixed(this.ratio, 1) == 2) return;
         this.ratio += 0.1;
-        this._scale();
         this._update_scale();
     }
 
@@ -266,7 +265,6 @@ class Base {
     scale_down() {
         if (this._to_fixed(this.ratio, 1) == 0.5) return;
         this.ratio -= 0.1;
-        this._scale();
         this._update_scale();
     }
 
@@ -275,7 +273,6 @@ class Base {
      */
     scale_reset() {
         this.ratio = 1;
-        this._scale();
         this._update_scale();
     }
 
@@ -1098,7 +1095,7 @@ class Base {
             Array.apply(null, { length: 10 }).map((_, index) => `w-${index * 10 + 110}`));
 
         // Horizontal scale
-        Array.from(container.querySelectorAll('img')).forEach(element => {
+        Array.from(container.querySelectorAll('img, video')).forEach(element => {
             element.style.marginTop = `${Math.round(Math.max(0, 1 - this.ratio) * 10) * 10}vh`;
             element.style.transform = `scale(${this.ratio})`;
         });
@@ -1221,11 +1218,12 @@ class Base {
      */
     _update() {
         if (this.type == type.undefined) return;
-        this._update_media();
-        this._update_info();
-        this._update_progress();
-        this._update_hinter();
-        this._update_scale();
+        this._update_media().then(_ => {
+            this._update_info();
+            this._update_progress();
+            this._update_hinter();
+            this._update_scale();
+        });
     }
 
     /**
@@ -1275,6 +1273,7 @@ class Base {
      */
     _update_scale() {
         document.getElementById('scale-percentage').innerHTML = `${Math.round(this.ratio * 100)}%`;
+        this._scale();
     }
 
     /**
@@ -1688,7 +1687,7 @@ class Manga extends Base {
             this.files = await this._load_files(this.episodes[this.index]).catch(_ => this.load());
             this._prefetch();
             this._init_vertical();
-            if (this.vertical) this._scale();
+            this._scale();
             this.toggle_ui(true);
         } else if (this.index + offset < 0) {
             Notifier.error(preset.ERR_ALREADY_FIRST_EPISODE);
@@ -2073,7 +2072,7 @@ class WebRTCClient extends Base {
             this.files = await this._load_files(this.index);
             this._prefetch();
             this._init_vertical();
-            if (this.vertical) this._scale();
+            this._scale();
         } else if (this.index + offset < 0) {
             Notifier.error(preset.ERR_ALREADY_FIRST_EPISODE);
         } else if (this.index + offset >= this.episodes.length) {

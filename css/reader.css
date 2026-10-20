@@ -1459,56 +1459,6 @@ a {
     font-size: 14px
 }
 
-.manga-reader-ui .action-bar-container .action-buttons .hover-toast:hover .toast-info {
-    display: block !important
-}
-
-.manga-reader-ui .action-bar-container .action-buttons .hover-toast .toast-info {
-    display: none;
-    width: 280px;
-    height: 80px;
-    padding: 20px 24px;
-    position: absolute;
-    top: -116px;
-    left: 50%;
-    box-sizing: border-box;
-    background: hsl(0, 0%, 13%);
-    box-shadow: 0 8px 16px -4px rgba(0, 0, 0, .16);
-    font-size: 14px;
-    color: hsla(0, 0%, 100%, .5);
-    line-height: 20px;
-    white-space: normal;
-    text-align: left;
-    letter-spacing: 0;
-    translate: -50%;
-}
-
-.manga-reader-ui .action-bar-container .action-buttons .hover-toast .toast-info:before {
-    content: "";
-    display: block;
-    border: 8px solid hsl(0, 0%, 13%);
-    border-left-color: transparent;
-    border-right-color: transparent;
-    border-bottom-color: transparent;
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    translate: -50%;
-}
-
-.manga-reader-ui .action-bar-container .action-buttons .hover-toast:active {
-    scale: 1 !important;
-}
-
-.manga-reader-ui .action-bar-container .action-buttons .comment-button {
-    position: relative
-}
-
-.manga-reader-ui .action-bar-container .action-buttons .comment-button .episode-comment-count {
-    top: 0;
-    left: 78%
-}
-
 .manga-reader-ui .action-bar-container .action-buttons .episode-list-button {
     position: relative;
     -ms-flex-positive: 1;

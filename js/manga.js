@@ -82,7 +82,6 @@ class Base {
         this._init_indexeddb();
         this._init_observer();
         this._observe_step();
-        this._read_setting();
         this._set_version();
     }
 
@@ -1019,7 +1018,8 @@ class Base {
     _read_setting() {
         Array.from(document.getElementById('reader-setting').querySelectorAll('button.selected')).forEach(element => {
             if (element.dataset.setting > 4) this.vertical = element.dataset.setting == 5;
-            if (element.dataset.setting < 2) this.ltr = element.dataset.setting == 1 ? -1 : 1;
+            else if (element.dataset.setting < 2) this.ltr = element.dataset.setting == 1 ? -1 : 1;
+            else this.toggle_single(element.dataset.setting == 3, false);
         });
     }
 
@@ -1152,6 +1152,25 @@ class Base {
     };
 
     /**
+     * Sync current settings back to UI elements.
+     */
+    _sync_setting() {
+        Array.from(document.querySelectorAll('button[data-setting]')).forEach((element, index) => {
+            // Dis-select buttons if current setting is not matched
+            if (element.dataset.setting == '0' && element.classList.contains('selected') && this.ltr == -1) element.classList.toggle('selected');
+            if (element.dataset.setting == '1' && element.classList.contains('selected') && this.rtl == -1) element.classList.toggle('selected');
+            if (element.dataset.setting == '2' && element.classList.contains('selected') && this.step == 1) element.classList.toggle('selected');
+            if (element.dataset.setting == '3' && element.classList.contains('selected') && this.step == 2) element.classList.toggle('selected');
+            if (element.dataset.setting == '4' && element.classList.contains('selected') && this.vertical) element.classList.toggle('selected');
+            if (element.dataset.setting == '5' && element.classList.contains('selected') && !this.vertical) element.classList.toggle('selected');
+            // Check and select buttons
+            if (((this.ltr == 1 ? 0 : 1) == index)) element.classList.add('selected');
+            if (((this.step == 2 ? 2 : 3) == index)) element.classList.add('selected');
+            if (((!this.vertical ? 4 : 5) == index)) element.classList.add('selected');
+        });
+    }
+
+    /**
      * Rounds a number to specified decimal places.
      * @param {number} value - Number to round
      * @param {number} float - Number of decimal places (must be positive integer)
@@ -1267,6 +1286,7 @@ class Base {
                     }
                     if (_equal(payload, result) == false) {
                         this._update();
+                        this._sync_setting();
                     }
                     console.info(...Badge.args(badges.MangaNative, badges.IndexedDB), 'Settings loaded.', payload);
                 }
@@ -1527,6 +1547,8 @@ class Episode extends Base {
         this.handle = handle;
         // Type definition
         this.type = type.episode;
+
+        this._read_setting();
     }
 
     async init() {
@@ -1567,6 +1589,8 @@ class Manga extends Base {
         this.handle = handle;
         // Type definition
         this.type = type.manga;
+
+        this._read_setting();
     }
 
     async init() {
@@ -1732,6 +1756,8 @@ class Epub extends Base {
         this.handle = handle;
         // Type definition
         this.type = type.epub;
+
+        this._read_setting();
     }
 
     async init() {

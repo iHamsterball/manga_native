@@ -7,6 +7,7 @@ const badges = Object.freeze({
     WebRTC:        { name: 'WebRTC',         color: 'hsl(0, 60%, 65%)'},
     WebAssembly:   { name: 'WebAssembly',    color: 'hsl(248, 60%, 65%)'},
     Notifier:      { name: 'Notifier',       color: 'hsl(225, 100%, 65%)'},
+    IndexedDB:     { name: 'IndexedDB',      color: 'hsl(18, 80%, 55%)'},
 });
 
 class Badge {

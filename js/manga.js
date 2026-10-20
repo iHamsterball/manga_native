@@ -14,6 +14,8 @@ class Base {
             // epub_bundle: module.cwrap('epub_bundle', '', []),
             // epub_image: module.cwrap('epub_image', 'number', ['number'])
         };
+        // Bitmap Canvas Web Worker
+        this.bitmap = new Worker('/js/bitmap.js');
         // Preloaded files
         this.cache = new Map();
         // WebRTC Host
@@ -624,6 +626,53 @@ class Base {
     }
 
     /**
+     * If the type of media is image, generate a pre-rendered element.
+     * @param {string} src The source URL of the image.
+     * @param {string} type The MIME type of the media.
+     * @returns {HTMLImageElement|null} The pre-rendered image element or null if not an image.
+     */
+    _prerender(src, blob, index) {
+        if (blob.type.startsWith('image')) {
+            let image = new Image();
+            image.src = src;
+            image.classList.add('h-100');
+            image.dataset.bind = 'image_loaded';
+            image.decoding = 'async';
+            image.addEventListener('load', _ => {
+                Notifier.loaded();
+            });
+            image.decode().then().catch(_ => {});
+            return image;
+        } else {
+            return null;
+        }
+    }
+
+    _precanvas(blob) {
+        return new Promise((resolve, reject) => {
+            this.bitmap.postMessage({ blob });
+            this.bitmap.onmessage = (event) => {
+                const { bitmap, width, height, error } = event.data;
+                if (error) {
+                    reject(new Error(error));
+                    return;
+                }
+
+                // Create or reuse a canvas
+                let canvas = this.cache.get(this.index)?.get(this.rotate)?.canvas || document.createElement('canvas');
+                canvas.classList.add('h-100');
+                canvas.width = bitmap.width;
+                canvas.height = bitmap.height;
+                const context = canvas.getContext('2d');
+                context.drawImage(bitmap, 0, 0); // Draw the bitmap directly
+                bitmap.close(); // Clean up the bitmap
+
+                resolve(canvas);
+            };
+        });
+    }
+
+    /**
      * Prefetch specified number of images to cache.
      * @async
      * @param {number} [limit] Override default prefetch limit if provided.
@@ -645,9 +694,24 @@ class Base {
      * @returns {Promise<string>} Object URL which indicates the blob data of the fetched image.
      */
     async _postfetch(index) {
-        // If cache missed, fallback to normal fetch
-        const blob = await this.cache.get(index) || await this._fetch(index);
-        return blob;
+        if (this.cache.has(index)) {
+            // If file index with current rotate state exists in cache, return it
+            let map = this.cache.get(index);
+            return map.get(this.rotate);
+        } else {
+            // If cache missed, fallback to normal fetch
+            const blob = await this._rotate_wrapper(await this._fetch(index));
+            // Get current cache without regenerate it
+            let map = this.cache.get(index);
+            // Save to cache if current rotate state is not default, regenerate acquired image
+            if (map.has(this.rotate) == false) {
+                const src = this.URL.createObjectURL(blob);
+                const value = { src: src, type: blob.type, element: this._prerender(src, blob, index) };
+                map.set(this.rotate, value);
+                this.cache.set(index, map);
+            }
+            return map.get(this.rotate);
+        }
     }
 
     /**
@@ -658,11 +722,24 @@ class Base {
      * @returns {Promise<Blob>} Blob data which indicates the fetched image.
      */
     async _fetch(index, files = this.files) {
-        if (files == null) files = this.files;
-        const content = await this._file(index, files);
-        // Cache if not empty
-        if (content.size) this.cache.set(index, content);
-        return content;
+        return new Promise(async (resolve, reject) => {
+            if (files == null) files = this.files;
+            const content = await this._file(index, files);
+            if (content.size == 0) reject();
+            resolve(content);
+
+            // Cache if not empty
+            const src = this.URL.createObjectURL(content);
+            const value = { src: src, type: content.type, element: this._prerender(src, content, index) };
+            const map = this.cache.has(index) ? this.cache.get(index) : new Map();
+            map.set(this.rotate, value)
+            if (content.size) this.cache.set(index, map);
+
+            // Render canvas and add to cache
+            // value.canvas = await this._precanvas(content);
+            // map.set(this.rotate, value);
+            // if (content.size) this.cache.set(index, map);
+        })
     }
 
     /**
@@ -780,7 +857,8 @@ class Base {
                         // Prevent request amplification, send request for same file once
                         if (image.dataset.requested) return;
                         image.dataset.requested = true;
-                        image.src = this.URL.createObjectURL(await this._postfetch(index));
+                        const media = await this._postfetch(index);
+                        image.src = media.src;
                         image.parentNode.parentNode.classList.add('image-loaded');
                         observer.unobserve(image);
                     }
@@ -860,7 +938,7 @@ class Base {
      * @async
      */
     async _rotate_wrapper(blob) {
-        if (this.rotate >= 0) {
+        if (this.rotate >= 0 && blob.type.startsWith('image')) {
             let buffer = await blob.arrayBuffer();
             this.module.FS.writeFile('image', new Uint8Array(buffer));
             blob = new Blob([await this.module.rotate_image('image', this.rotate)], {
@@ -870,28 +948,46 @@ class Base {
         return blob;
     }
 
-    //* @deprecated
+    /**
+     * In this approach, pre-rendering bitmap is tested as a preloading mechanism.
+     * It is not used in the final implementation as it can't speed up image loading.
+     * The pre-rendered bitmap still needs lots of time to show if the image is large.
+     * @deprecated
+     */
     async _update_canvas() {
         const id = {
-            primary: 'image-primary',
-            secondary: 'image-secondary',
+            primary: 'canvas-primary',
+            secondary: 'canvas-secondary',
         }
-        let origin = {
+        let presets = {
             primary: document.getElementById(id.primary),
             secondary: document.getElementById(id.secondary),
         }
-        if (this._validate(this.pos.primary) && this.primary != origin.primary.dataset.index) {
-            let primary = await this.cache.get(this.primary);
-            primary.id = id.primary;
-            console.log(...Badge.args(badges.MangaNative), origin.primary, primary)
-            origin.primary.replaceWith(primary);
-        }
-        if (this._validate(this.pos.secondary) && this.step == 2 && this.secondary != origin.secondary.dataset.index) {
-            let secondary = await this.cache.get(this.secondary);
-            secondary.id = id.secondary;
-            console.log(...Badge.args(badges.MangaNative), origin.secondary, secondary)
-            origin.secondary.replaceWith(secondary);
-        }
+
+        const _update = async (symbol, index) => {
+            const origin = symbol == this.pos.primary ? presets.primary : presets.secondary;
+            let miss = true;
+            if (this.cache.has(index)) {
+                const cache = this.cache.get(index);
+                const target = cache.get(this.rotate).canvas;
+                if (typeof (target) != 'undefined') {
+                    target.id = origin.id;
+                    origin.parentNode.replaceChild(target, origin);
+                    miss = false;
+                }
+            }
+            if (miss) {
+                const blob = await this._file(index);
+                const target = await this._precanvas(blob);
+                target.id = canvas.id;
+                canvas.parentNode.replaceChild(target, canvas);
+            }
+        };
+
+        if (this._validate(this.pos.primary)) _update(this.pos.primary, this.primary);
+        if (this._validate(this.pos.primary) && this.step == 2) _update(this.pos.secondary, this.secondary);
+        this._prefetch();
+        if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 
     /**
@@ -901,8 +997,8 @@ class Base {
      * @async
      */
     async _update_images() {
-        document.getElementById('image-primary').src = this._validate(this.pos.primary) ? await this._postfetch(this.primary) : '';
-        document.getElementById('image-secondary').src = this._validate(this.pos.secondary) && this.step == 2 ? await this._postfetch(this.secondary) : '';
+        document.getElementById('image-primary').src = this._validate(this.pos.primary) ? (await this._postfetch(this.primary)).src : '';
+        document.getElementById('image-secondary').src = this._validate(this.pos.secondary) && this.step == 2 ? (await this._postfetch(this.secondary)).src : '';
         this._prefetch();
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
@@ -915,45 +1011,106 @@ class Base {
      */
     async _update_media() {
         const _update = async (symbol, index) => {
+            const parent = document.getElementById(symbol == this.pos.primary ? 'media-primary' : 'media-secondary');
             const image = document.getElementById(symbol == this.pos.primary ? 'image-primary' : 'image-secondary');
             const video = document.getElementById(symbol == this.pos.primary ? 'video-primary' : 'video-secondary');
+            const _clear = (image) => {
+                // Clone image and set src to null
+                // If modify current image directly, it will override cache
+                const clone = image.cloneNode();
+                clone.src = '';
+                clone.dataset.filename = '';
+                parent.replaceChild(clone, image);
+            }
             const types = {
                 'video': {
-                    update: async (blob) => {
-                        image.classList.add('hidden');
-                        video.classList.remove('hidden');
-                        // For videos, directly use blob URL without rotation
-                        video.src = this.URL.createObjectURL(blob);
+                    update: async (src) => {
+                        // Clear image src
+                        _clear(image);
+
+                        // Get current width and height of current video to prevent flash while new one is not yet loaded
+                        const current = { width: video.clientWidth, height: video.clientHeight };
+
+                        // Temporarily freeze current width and height
+                        video.style.width = `${current.width}px`;
+                        video.style.height = `${current.height}px`;
+
+                        if (video.src != src) video.src = src;
+
+                        // Clear temporary width and height after video metadata is loaded
+                        video.onloadedmetadata = () => {
+                            video.style.width = '';
+                            video.style.height = '';
+                        };
                     }
                 },
                 'image': {
-                    update: async (blob) => {
-                        image.classList.remove('hidden');
-                        video.classList.add('hidden');
-                        const rotated = await this._rotate_wrapper(blob);
-                        image.src = this.URL.createObjectURL(rotated);
+                    update: async (src, element) => {
+                        // If image is not a child of parent, it indicates this function is triggered multiple times
+                        // The image is replacing, and not attached to DOM tree yet
+                        if (parent.contains(image) == false) return;
+
+                        // Clear video src and data-filename
+                        video.src = '';
+
+                        if (image.src != src && typeof(element) == 'undefined' && element != null) {
+                            image.src = src;
+                        }
+
+                        // Testing if the prerendered image works
+                        if (image.src != src && element) {
+                            // Clone image and put clone back to cache
+                            // If prerendered image in cache is used directly, it will cause error when toggling offset
+                            let clone = element.cloneNode();
+                            let map = this.cache.get(index);
+                            let value = map.get(this.rotate);
+                            value.element = clone;
+                            map.set(this.rotate, value);
+                            this.cache.set(index, map);
+
+                            element.id = image.id;
+                            parent.replaceChild(element, image);
+                        }
                     }
                 },
                 'default': {
                     update: () => {
-                        image.classList.remove('hidden');
-                        video.classList.add('hidden');
-                        image.src = '';
+                        // Clear image src
+                        _clear(image);
+                        video.src = '';
+                    }
+                },
+                'text': {
+                    // TODO: Copyied from default, modify or reuse
+                    update: () => {
+                        // Clear image src
+                        _clear(image);
+                        video.src = '';
+                    }
+                },
+                'application': {
+                    // TODO: Copyied from default, modify or reuse
+                    update: () => {
+                        // Clear image src
+                        _clear(image);
                         video.src = '';
                     }
                 }
-            }
+            };
 
+            let src = '';
             let type = 'default';
-            let blob = null;
+            let element = null;
             if (this._validate(symbol)) {
                 if (!(symbol == this.pos.secondary && this.step == 1)) {
-                    blob = await this._postfetch(index);
-                    type = blob.type.split('/')?.at(0);
+                    ({ src, type, element } = await this._postfetch(index));
+                    type = type.split('/')?.at(0);
                 }
             }
 
-            await types[type].update(blob);
+            await types[type].update(src, element);
+            parent.classList.remove(...['video', 'image', 'default', 'text']);
+            parent.classList.add(type);
         };
 
         await _update(this.pos.primary, this.primary);
@@ -992,6 +1149,10 @@ class Base {
         document.getElementById('video-primary').src = '';
         document.getElementById('image-secondary').src = '';
         document.getElementById('video-secondary').src = '';
+        this.cache.forEach((map, index) => map.forEach((value, rotate) => {
+            this.URL.revokeObjectURL(value.src);
+            value.element.remove();
+        }));
     }
 
     /**

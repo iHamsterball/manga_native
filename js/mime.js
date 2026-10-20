@@ -1,5 +1,6 @@
 const reserved = [
     [["epub"], "application/epub+zip"],
+    [["pdf"], "application/pdf"],
     [["sdp"], "application/sdp"],
     [["zip"], "application/zip"],
     [["exr"], "image/aces"],

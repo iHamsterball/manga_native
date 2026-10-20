@@ -1316,32 +1316,96 @@ class Base {
         setTimeout(() => (document.getElementById('dialog-webrtc').classList.add('hidden')), 3000);
     }
 
-    _webrtc_connect_callback(event) {
+    /**
+     ** Both Sides
+     * WebRTC connection state change handler.
+     * Handles reconnection of control channel and client initialization.
+     * @param {RTCPeerConnectionIceEvent} event - The connection state change event
+     * @private
+     */
+    _webrtc_onconnectionstatechange(event) {
         switch (event.target.connectionState) {
             case "connected":
+                // Restart ctrl datachannel if closed
+                if (this.webrtc.ctrl.readyState == 'closed') {
+                    console.info(...Badge.args(badges.MangaNative, badges.WebRTC), 'Restarting Ctrl datachannel.');
+                    this.webrtc.ctrl = this.webrtc.pc.createDataChannel('ctrl', { negotiated: true, id: 0 });
+                    this.webrtc.ctrl.onmessage = this._webrtc_control_onmessage.bind(this);
+                    this.webrtc.ctrl.onopen = _ => {
+                        console.info(...Badge.args(badges.MangaNative, badges.WebRTC), 'Ctrl datachannel reopened.');
+                        this._webrtc_transmit_meta();
+                    };
+                }
                 // The connection has become fully connected
+                // TODO: Triggered before connection established if reconnect
                 this._webrtc_connected();
-                if (!this.client) this._webrtc_transmit_meta();
-                if (this.client) controller = new WebRTCClient();
+                this._webrtc_transmit_meta();
+                if (this.client && !(controller instanceof WebRTCClient)) controller = new WebRTCClient();
                 Notifier.info(preset.INFO_WEBRTC_CONNECTED);
                 console.info(...Badge.args(badges.MangaNative, badges.WebRTC), 'Connection established.');
                 break;
             case "disconnected":
+                break;
             case "failed":
                 // One or more transports has terminated unexpectedly or in an error
-                break;
             case "closed":
                 // The connection has been closed
+                console.warn(...Badge.args(badges.MangaNative, badges.WebRTC), `Connection ${event.target.connectionState}.`);
+                // Restart WebRTC Peer Connection if closed
+                if (this.webrtc.pc.signalingState == 'closed') {
+                    console.info(...Badge.args(badges.MangaNative, badges.WebRTC), 'Restarting peer connection.');
+                    this.webrtc.pc.close();
+                    this.webrtc.init();
+                    this.webrtc.ctrl.onmessage = this._webrtc_control_onmessage.bind(this);
+                }
                 break;
         }
     }
 
-    _webrtc_dc_callback(event) {
+    /**
+     ** Both Sides
+     * WebRTC signaling state change handler.
+     * Monitors and handles ICE negotiation and connection state.
+     * @param {Event} event - The signaling state change event
+     * @private
+     */
+    _webrtc_onsignalingstatechange(event) {
+        switch (this.webrtc.pc.signalingState) {
+            case "stable":
+                console.info(...Badge.args(badges.MangaNative, badges.WebRTC), 'ICE negotiation complete.');
+                break;
+            case 'closed':
+                console.error(...Badge.args(badges.MangaNative, badges.WebRTC), 'Peer connection closed.');
+                this.webrtc.pc.close();
+                this.webrtc.init();
+                this.webrtc.ctrl.onmessage = this._webrtc_control_onmessage.bind(this);
+                break;
+            default:
+                console.log(...Badge.args(badges.MangaNative, badges.WebRTC), 'Signaling state:', this.webrtc.pc.signalingState);
+        }
+    };
+
+    /**
+     ** Both Sides
+     * WebRTC data channel handler.
+     * Stores file transfer channels in the channel map.
+     * @param {RTCDataChannelEvent} event - The data channel event
+     * @private
+     */
+    _webrtc_ondatachannel(event) {
         const channel = event.channel;
         if (['file'].includes(channel.label)) this.webrtc.channels.set(channel.id, channel);
     }
 
-    async _webrtc_control_callback(event) {
+    /**
+     ** Host Side
+     * WebRTC control channel message handler.
+     * Processes episode and file fetch commands from clients.
+     * @param {MessageEvent} event - The message event containing command data
+     * @private
+     * @async
+     */
+    async _webrtc_control_onmessage(event) {
         let msg = JSON.parse(event.data);
         if (msg.target == this.webrtc.target.client) return;
         switch (msg.cmd) {
@@ -1356,6 +1420,14 @@ class Base {
         }
     }
 
+    /**
+     ** Client Side
+     * Stores metadata received from WebRTC meta channel.
+     * @param {RTCDataChannel} rx - The meta data channel
+     * @returns {Promise<void>} Resolves when metadata is stored
+     * @private
+     * @async
+     */
     async _webrtc_store_meta(rx) {
         return new Promise((resolve) => (
             rx.onmessage = (event) => {
@@ -1366,11 +1438,20 @@ class Base {
         ))
     }
 
+    /**
+     ** Host Side
+     * Replies to episode request from client.
+     * Sends episode name and file count based on current mode.
+     * @param {Object} args - Request arguments containing scope
+     * @private
+     * @async
+     */
     async _webrtc_reply_episode(args) {
         let episode = {
             name: '',
             length: 0,
             scope: args.scope,
+            files: [],
         };
         // Clear host-side cached webrtc file list
         this.webrtc.files = null;
@@ -1380,17 +1461,27 @@ class Base {
                 this.webrtc.files = await this._load_files(this.episodes[args.scope]);
                 episode.name = this.episodes[args.scope].name;
                 episode.length = this.webrtc.files.length;
+                episode.files = this.webrtc.files.map(file => file.name || null);
                 break;
             case type.episode:
             case type.epub:
                 episode.name = this.title['episode'];
                 episode.length = this.files.length;
+                episode.files = this.files.map(file => file.name || null);
                 break;
         }
         this.webrtc.scope = args.scope;
         this.webrtc.cmd('episode', this.webrtc.target.client, episode);
     }
 
+    /**
+     ** Host Side
+     * Replies to file request from client.
+     * Sends file data through WebRTC data channel.
+     * @param {Object} args - Request arguments containing file index and channel ID
+     * @private
+     * @async
+     */
     async _webrtc_reply_file(args) {
         let file = null;
         let data = null;
@@ -1401,13 +1492,19 @@ class Base {
                 break;
             case type.episode:
             case type.epub:
-                file = await this.cache.get(args.index) || await this._fetch(args.index);
+                file = await this._file(args.index);
                 break;
         }
         data = await file.arrayBuffer();
         this.webrtc._transmit_data(data, args.channel);
     }
 
+    /**
+     ** Host Side
+     * Transmits metadata to connected client.
+     * Sends manga/episode titles and type information.
+     * @private
+     */
     _webrtc_transmit_meta() {
         if (this.webrtc.pc.connectionState != 'connected') return;
         let meta = {
@@ -1679,24 +1776,27 @@ class Epub extends Base {
 
 class WebRTC {
     constructor() {
-        const config = { iceServers: [{ url: 'stun:stun.l.google.com' }] };
-        this.pc = new RTCPeerConnection(config);
-        this.ctrl = this.pc.createDataChannel("ctrl", { negotiated: true, id: 0 });
-        this.ctrl.onclose = _ => {
-            this.ctrl.close();
-            this.ctrl = this.pc.createDataChannel('ctrl', { negotiated: true, id: 0 });
-        }
         this.channels = new Map();
+        this.files = null;
         this.scope = 0;
         this.target = Object.freeze({
             host: 0,
             client: 1,
             unspecified: 2,
-        })
+        });
+        this.init();
     }
 
     get connected() {
         return this.pc.connectionState == 'connected' && this.ctrl.readyState == 'open';
+    }
+
+    async file(index) {
+        let args = {
+            scope: this.scope,
+            index: index,
+        };
+        return await this._request_data('file', 'fetch', args);
     }
 
     cmd(cmd, target, args = null) {
@@ -1707,12 +1807,23 @@ class WebRTC {
         this.ctrl.send(JSON.stringify({ cmd: cmd, target: target, args: args }));
     }
 
-    async file(index) {
-        let args = {
-            scope: this.scope,
-            index: index,
-        };
-        return await this._request_data('file', 'fetch', args);
+    init() {
+        const config = { iceServers: [{ url: 'stun:stun.l.google.com' }] };
+        this.pc = new RTCPeerConnection(config);
+        this.pc.onnegotiationneeded = this._omit_offer.bind(this);
+        // Trigger negotiationneeded event to consume the first candidate
+        // TODO: Workaround
+        // this.pc.dispatchEvent(new Event('negotiationneeded'));
+        this.ctrl = this.pc.createDataChannel('ctrl', { negotiated: true, id: 0 });
+    }
+
+    async _omit_offer() {
+        // Candidates have not been gathered in the initial offer.
+        // Create and omit the first offer.
+        // TODO: But why?
+        const offer = await this.pc.createOffer();
+        await this.pc.setLocalDescription(offer);
+        console.info(...Badge.args(badges.MangaNative, badges.WebRTC), 'Dropped local offer:', this.pc.localDescription);
     }
 
     async _request_data(channel, cmd, args) {
@@ -1922,7 +2033,7 @@ class WebRTCClient extends Base {
         }
     }
 
-    async _webrtc_dc_callback(event) {
+    async _webrtc_ondatachannel(event) {
         const channel = event.channel;
         switch (channel.label) {
             case 'file':
@@ -1935,7 +2046,7 @@ class WebRTCClient extends Base {
         }
     }
 
-    async _webrtc_control_callback(event) {
+    async _webrtc_control_onmessage(event) {
         let msg = JSON.parse(event.data);
         if (msg.target == this.webrtc.target.host) return;
         switch (msg.cmd) {
@@ -1970,8 +2081,9 @@ class WebRTCClient extends Base {
     _webrtc_load_files(args) {
         let files = Array(args.length).fill().map((_, i) => ({
             index: i,
+            name: args.files?.[i],
             scope: this.webrtc.scope,
-            getFile: async _ => (new Blob(await this.cache.get(i) || await this.webrtc.file(i))),
+            getFile: async _ => (new Blob(await this.webrtc.file(i))),
         }));
         this.resolve(files);
     }

@@ -43,6 +43,7 @@ const img = [
     '/img/help.png',
     '/img/logo-candidate-1.svg',
     '/img/ltr.png',
+    '/img/ltr-single.png',
     '/img/paste-duotone.svg',
     '/img/rotate-right-duotone.svg',
     '/img/scroll.png',

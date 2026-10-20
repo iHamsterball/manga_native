@@ -613,6 +613,19 @@ class Base {
         this._webrtc_connecting();
     };
 
+    _format_file_size(bytes) {
+        if (!Number.isFinite(bytes) || bytes < 0) return '';
+        if (bytes < 1024) return `${bytes} B`;
+        const units = ['KB', 'MB', 'GB', 'TB', 'PB'];
+        let size = bytes;
+        let unit = -1;
+        do {
+            size /= 1024;
+            unit++;
+        } while (size >= 1024 && unit < units.length - 1);
+        return `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 }).format(size)} ${units[unit]}`;
+    }
+
     async _load_files(handle) {
         let files = (await Array.fromAsync(handle.entries(), ([_, entry], index) => entry))
             .filter(entry => entry.kind === 'file')
@@ -635,11 +648,16 @@ class Base {
         if (blob.type.startsWith('image')) {
             let image = new Image();
             image.src = src;
+            image.dataset.filename = this.files[index]?.name || '';
             image.classList.add('h-100');
             image.dataset.bind = 'image_loaded';
             image.decoding = 'async';
             image.addEventListener('load', _ => {
                 Notifier.loaded();
+                if (image.parentNode) {
+                    image.parentNode.dataset.width = image.naturalWidth;
+                    image.parentNode.dataset.height = image.naturalHeight;
+                }
             });
             image.decode().then().catch(_ => {});
             return image;
@@ -725,6 +743,7 @@ class Base {
         return new Promise(async (resolve, reject) => {
             if (files == null) files = this.files;
             const content = await this._file(index, files);
+            files[index].size = content.size;
             if (content.size == 0) reject();
             resolve(content);
 
@@ -797,12 +816,14 @@ class Base {
         for (const [index, handle] of this.files.entries()) {
             let image = document.createElement('img');
             image.dataset.index = index;
+            image.dataset.filename = handle.name || '';
             this.observer['image'].observe(image);
             this.observer['progress'].observe(image);
             let container = document.createElement('div');
             container.classList.add('img-container', 'w-100', 'h-100');
             let item = document.createElement('div');
             item.dataset.index = index;
+            item.dataset.filename = handle.name || '';
             item.classList.add('image-item', 'p-relative', 'unselectable');
             container.appendChild(image);
             item.appendChild(container);
@@ -860,6 +881,9 @@ class Base {
                         const media = await this._postfetch(index);
                         image.src = media.src;
                         image.parentNode.parentNode.classList.add('image-loaded');
+                        image.parentNode.parentNode.dataset.filesize = this._format_file_size(this.files[index].size);
+                        image.parentNode.parentNode.dataset.width = image.naturalWidth;
+                        image.parentNode.parentNode.dataset.height = image.naturalHeight;
                         observer.unobserve(image);
                     }
                     _load(image, index);
@@ -1036,11 +1060,16 @@ class Base {
                         video.style.height = `${current.height}px`;
 
                         if (video.src != src) video.src = src;
+                        video.dataset.filename = this.files[index]?.name || '';
+                        parent.dataset.filename = this.files[index]?.name || '';
+                        parent.dataset.filesize = this._format_file_size(this.files[index]?.size);
 
                         // Clear temporary width and height after video metadata is loaded
                         video.onloadedmetadata = () => {
                             video.style.width = '';
                             video.style.height = '';
+                            parent.dataset.width = video.videoWidth;
+                            parent.dataset.height = video.videoHeight;
                         };
                     }
                 },
@@ -1052,9 +1081,17 @@ class Base {
 
                         // Clear video src and data-filename
                         video.src = '';
+                        video.dataset.filename = '';
+                        parent.dataset.filename = this.files[index]?.name || '';
+                        parent.dataset.filesize = this._format_file_size(this.files[index]?.size);
 
                         if (image.src != src && typeof(element) == 'undefined' && element != null) {
                             image.src = src;
+                            image.dataset.filename = this.files[index]?.name || '';
+                            image.onload = () => {
+                                parent.dataset.width = image.naturalWidth;
+                                parent.dataset.height = image.naturalHeight;
+                            };
                         }
 
                         // Testing if the prerendered image works
@@ -1070,6 +1107,8 @@ class Base {
 
                             element.id = image.id;
                             parent.replaceChild(element, image);
+                            parent.dataset.width = element.naturalWidth;
+                            parent.dataset.height = element.naturalHeight;
                         }
                     }
                 },
@@ -1078,6 +1117,11 @@ class Base {
                         // Clear image src
                         _clear(image);
                         video.src = '';
+                        video.dataset.filename = '';
+                        parent.dataset.filename = '';
+                        parent.dataset.filesize = '';
+                        parent.dataset.width = 0;
+                        parent.dataset.height = 0;
                     }
                 },
                 'text': {
@@ -1086,6 +1130,11 @@ class Base {
                         // Clear image src
                         _clear(image);
                         video.src = '';
+                        video.dataset.filename = '';
+                        parent.dataset.filename = this.files[index]?.name || '';
+                        parent.dataset.filesize = this._format_file_size(this.files[index]?.size);
+                        parent.dataset.width = 0;
+                        parent.dataset.height = 0;
                     }
                 },
                 'application': {
@@ -1094,6 +1143,11 @@ class Base {
                         // Clear image src
                         _clear(image);
                         video.src = '';
+                        video.dataset.filename = '';
+                        parent.dataset.filename = this.files[index]?.name || '';
+                        parent.dataset.filesize = this._format_file_size(this.files[index]?.size);
+                        parent.dataset.width = 0;
+                        parent.dataset.height = 0;
                     }
                 }
             };
@@ -1149,6 +1203,18 @@ class Base {
         document.getElementById('video-primary').src = '';
         document.getElementById('image-secondary').src = '';
         document.getElementById('video-secondary').src = '';
+        document.getElementById('image-primary').dataset.filename = '';
+        document.getElementById('image-secondary').dataset.filename = '';
+        document.getElementById('video-primary').dataset.filename = '';
+        document.getElementById('video-secondary').dataset.filename = '';
+        document.getElementById('media-primary').dataset.filename = '';
+        document.getElementById('media-secondary').dataset.filename = '';
+        document.getElementById('media-primary').dataset.filesize = '';
+        document.getElementById('media-secondary').dataset.filesize = '';
+        document.getElementById('media-primary').dataset.width = '';
+        document.getElementById('media-secondary').dataset.width = '';
+        document.getElementById('media-primary').dataset.height = '';
+        document.getElementById('media-secondary').dataset.height = '';
         this.cache.forEach((map, index) => map.forEach((value, rotate) => {
             this.URL.revokeObjectURL(value.src);
             value.element.remove();

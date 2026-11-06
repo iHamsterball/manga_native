@@ -1206,10 +1206,6 @@ class Base {
                 child.dataset.filename = '';
             });
         });
-        this.cache.forEach((map, index) => map.forEach((value, rotate) => {
-            this.URL.revokeObjectURL(value.src);
-            value.element.remove();
-        }));
     }
 
     /**
@@ -1267,7 +1263,11 @@ class Base {
      * @private
      */
     _reset(full = false) {
-        this.cache = new Map();
+        this.cache.forEach((value, key) => {
+            this.URL.revokeObjectURL(value.src);
+            value.element?.remove();
+        });
+        this.cache.clear();
         this.files = new Array();
         this.viewport.clear();
         if (full) this.cur = 0;

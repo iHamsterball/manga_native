@@ -611,6 +611,20 @@ class Base {
         this._webrtc_connecting();
     };
 
+    /**
+     * Combine index with current rotate value.
+     * @param {number} index Number that specifies the requested file index.
+     * @returns {number} Number which indicates composite index.
+     */
+    _cache_key(index) {
+        return index * 4 + (this.rotate + 1)
+    }
+
+    /**
+     * Convert filesize to formated size string.
+     * @param {number} bytes Number that specifies the filesize.
+     * @returns {string} String which indicates human friendly size.
+     */
     _format_file_size(bytes) {
         if (!Number.isFinite(bytes) || bytes < 0) return '';
         if (bytes < 1024) return `${bytes} B`;
@@ -675,7 +689,7 @@ class Base {
                 }
 
                 // Create or reuse a canvas
-                let canvas = this.cache.get(this.index)?.get(this.rotate)?.canvas || document.createElement('canvas');
+                let canvas = this.cache.get(this._cache_key(this.index))?.canvas || document.createElement('canvas');
                 canvas.classList.add('h-100');
                 canvas.width = bitmap.width;
                 canvas.height = bitmap.height;
@@ -695,11 +709,18 @@ class Base {
      */
     async _prefetch(limit = this.limit) {
         const length = this.files.length;
+        // TODO: Currently not prefetch rotated images, only cache visited ones.
+        if (this.rotate != this.rotate_flags.default) return;
         for (let index = 0, cur = this.cur; index < limit && cur < length && length > 0; index++, cur++) {
             // Already cached
-            if (this.cache.has(cur)) continue;
+            if (this.cache.has(this._cache_key(cur))) continue;
             // Fetch and cache
-            this._fetch(cur);
+            this._fetch(cur).then(content => {
+                // Cache if not empty
+                const src = this.URL.createObjectURL(content);
+                const value = { src: src, type: content.type, element: this._prerender(src, content, cur) };
+                if (content.size) this.cache.set(this._cache_key(cur), value);
+            });
         }
     }
 
@@ -710,23 +731,16 @@ class Base {
      * @returns {Promise<string>} Object URL which indicates the blob data of the fetched image.
      */
     async _postfetch(index) {
-        if (this.cache.has(index)) {
+        if (this.cache.has(this._cache_key(index))) {
             // If file index with current rotate state exists in cache, return it
-            let map = this.cache.get(index);
-            return map.get(this.rotate);
+            return this.cache.get(this._cache_key(index));
         } else {
             // If cache missed, fallback to normal fetch
             const blob = await this._rotate_wrapper(await this._fetch(index));
-            // Get current cache without regenerate it
-            let map = this.cache.get(index);
-            // Save to cache if current rotate state is not default, regenerate acquired image
-            if (map.has(this.rotate) == false) {
-                const src = this.URL.createObjectURL(blob);
-                const value = { src: src, type: blob.type, element: this._prerender(src, blob, index) };
-                map.set(this.rotate, value);
-                this.cache.set(index, map);
-            }
-            return map.get(this.rotate);
+            const src = this.URL.createObjectURL(blob);
+            const value = { src: src, type: blob.type, element: this._prerender(src, blob, index) };
+            if (blob.size) this.cache.set(this._cache_key(index), value);
+            return value;
         }
     }
 
@@ -744,18 +758,6 @@ class Base {
             files[index].size = content.size;
             if (content.size == 0) reject();
             resolve(content);
-
-            // Cache if not empty
-            const src = this.URL.createObjectURL(content);
-            const value = { src: src, type: content.type, element: this._prerender(src, content, index) };
-            const map = this.cache.has(index) ? this.cache.get(index) : new Map();
-            map.set(this.rotate, value)
-            if (content.size) this.cache.set(index, map);
-
-            // Render canvas and add to cache
-            // value.canvas = await this._precanvas(content);
-            // map.set(this.rotate, value);
-            // if (content.size) this.cache.set(index, map);
         })
     }
 
@@ -989,9 +991,9 @@ class Base {
         const _update = async (symbol, index) => {
             const origin = symbol == this.pos.primary ? presets.primary : presets.secondary;
             let miss = true;
-            if (this.cache.has(index)) {
-                const cache = this.cache.get(index);
-                const target = cache.get(this.rotate).canvas;
+            if (this.cache.has(this._cache_key(index))) {
+                const cache = this.cache.get(this._cache_key(index));
+                const target = cache.canvas;
                 if (typeof (target) != 'undefined') {
                     target.id = origin.id;
                     origin.parentNode.replaceChild(target, origin);
@@ -1097,11 +1099,9 @@ class Base {
                             // Clone image and put clone back to cache
                             // If prerendered image in cache is used directly, it will cause error when toggling offset
                             let clone = element.cloneNode();
-                            let map = this.cache.get(index);
-                            let value = map.get(this.rotate);
+                            let value = this.cache.get(this._cache_key(index));
                             value.element = clone;
-                            map.set(this.rotate, value);
-                            this.cache.set(index, map);
+                            this.cache.set(this._cache_key(index), value);
 
                             element.id = image.id;
                             parent.replaceChild(element, image);

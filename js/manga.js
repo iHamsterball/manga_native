@@ -20,8 +20,8 @@ class Base {
         this.cache = new Map();
         // WebRTC Host
         this.client = false;
-        // Current page & offset
-        this.cur = this._offset = 0;
+        // Current page
+        this.cur = 0;
         // IndexedDB
         this.db = null;
         // File list
@@ -38,6 +38,8 @@ class Base {
         this.module = module;
         // Observer
         this.observer = { 'image': null, 'step': null };
+        // Offset
+        this.offset = 0;
         // Enum image container
         this.pos = Object.freeze({
             primary: Symbol('primary'),
@@ -86,16 +88,8 @@ class Base {
         this._set_version();
     }
 
-    get offset() {
-        if (this.rotate == this.rotate_flags.default) return this._offset
-        else return 0;
-    }
-
-    set offset(value) {
-        this._offset = value;
-    }
-
     get primary() {
+        if (this.step == 1) return this.cur;
         return this.cur - this.offset;
     }
 
@@ -407,8 +401,8 @@ class Base {
         if (value == 2) container.classList.add('double-page');
         this.step = value;
         // These two condition check prevent some edge cases, and should run not just when step changes,
-        // but each time these values are accessed, since the step is occasionall changed without trigger these functions,
-        // and it will conflit with settings saved in indexedDB, causing unintended behavior or dead loop
+        // but each time these values are accessed, since the step is occasionally changed without trigger these functions,
+        // and it will conflict with settings saved in indexedDB, causing unintended behavior or dead loop
         // After the values are set, skip update since there is no visual change
         // When step changes from 1 to 2, whatever this.offset is, this.cur should NOT BE odd
         // Or the first page becomes unreachable
@@ -416,11 +410,9 @@ class Base {
             this.cur += -2 * this.offset + 1;
             this.toggle_offset(undefined, false);
         }
-        // When step changes from 2 to 1, if this.offset is 1, this.cur should NOT BE 0
-        // Or the first page becomes blank
-        if (this.step == 1 && this.offset == 1 && this.cur == 0) {
-            this.cur = 1;
-        }
+        // When step changes from 2 to 1, if this.offset is 1, this.cur should NOT BE this.files.length
+        // Or the last page becomes blank
+        if (this.step == 1 && this.offset == 1 && this.cur == this.files.length) this.cur -= 1;
         if (update) this._write_settings().then(_ => this._update());
     }
 
@@ -468,6 +460,9 @@ class Base {
      */
     toggle_offset(value, update = true) {
         this.offset = typeof value !== 'undefined' ? value : (this.offset + 1) % 2;
+        // If step is 2 and offset is 1,
+        // after toggle offset to 0, this.cur might exceed the length of files.
+        if (this.step == 2 && this.cur >= this.files.length) this.cur -= this.step;
         if (update) this._write_settings().then(_ => this._update());
     }
 
@@ -1241,19 +1236,21 @@ class Base {
      * @private
      */
     _page_check(after) {
-        return after - this.step % 2 * this.offset >= 0 && after < this.files.length + this.offset;
+        const offset = this.step == 1 ? 0 : this.offset;
+        return after - this.step % 2 * offset >= 0 && after < this.files.length + offset;
     }
 
     /**
      * Moves current page by specified offset if valid and shows appropriate errors.
-     * @param {number} offset - Number of pages to move (positive or negative)
+     * @param {number} delta - Number of pages to move (positive or negative)
      * @private
      */
-    _page_move(offset) {
+    _page_move(delta) {
         if (this.vertical) return;
-        const after = this.cur + offset;
-        if (after - this.step % 2 * this.offset < 0) Notifier.error(preset.ERR_ALREADY_FIRST_PAGE)
-        else if (after >= this.files.length + this.offset) Notifier.error(preset.ERR_ALREADY_LAST_PAGE);
+        const after = this.cur + delta;
+        const offset = this.step == 1 ? 0 : this.offset;
+        if (after - this.step % 2 * offset < 0) Notifier.error(preset.ERR_ALREADY_FIRST_PAGE)
+        else if (after >= this.files.length + offset) Notifier.error(preset.ERR_ALREADY_LAST_PAGE);
         if (this._page_check(after)) this.cur = after;
     }
 

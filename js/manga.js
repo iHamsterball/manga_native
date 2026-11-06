@@ -365,6 +365,7 @@ class Base {
         Notifier.loading();
         this._flush();
         let button = event.target;
+        if (button.tagName.toLowerCase() == 'img') button = button.parentNode;
         if (button.tagName.toLowerCase() != 'button') button = button.parentNode;
         if (this.rotate == this.rotate_flags.default) {
             button.classList.remove('default');

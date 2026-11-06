@@ -1196,22 +1196,16 @@ class Base {
      * @private
      */
     _flush() {
-        document.getElementById('image-primary').src = '';
-        document.getElementById('video-primary').src = '';
-        document.getElementById('image-secondary').src = '';
-        document.getElementById('video-secondary').src = '';
-        document.getElementById('image-primary').dataset.filename = '';
-        document.getElementById('image-secondary').dataset.filename = '';
-        document.getElementById('video-primary').dataset.filename = '';
-        document.getElementById('video-secondary').dataset.filename = '';
-        document.getElementById('media-primary').dataset.filename = '';
-        document.getElementById('media-secondary').dataset.filename = '';
-        document.getElementById('media-primary').dataset.filesize = '';
-        document.getElementById('media-secondary').dataset.filesize = '';
-        document.getElementById('media-primary').dataset.width = '';
-        document.getElementById('media-secondary').dataset.width = '';
-        document.getElementById('media-primary').dataset.height = '';
-        document.getElementById('media-secondary').dataset.height = '';
+        const container = document.getElementById('images-container');
+        Array.from(container.children).forEach(media => {
+            for (const key in media.dataset) {
+                delete media.dataset[key];
+            }
+            Array.from(media.children).forEach(child => {
+                child.src = '';
+                child.dataset.filename = '';
+            });
+        });
         this.cache.forEach((map, index) => map.forEach((value, rotate) => {
             this.URL.revokeObjectURL(value.src);
             value.element.remove();

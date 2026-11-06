@@ -2423,7 +2423,6 @@ class Notifier {
 
     static _toast(msg) {
         this._clear(this.toast);
-        console.debug(...Badge.args(badges.MangaNative, badges.Notifier), msg);
         if (this.legacy) {
             // Fallback to legacy toast
             this._toast_legacy(msg);

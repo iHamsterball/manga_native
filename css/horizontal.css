@@ -77,19 +77,24 @@
 }
 
 .horizontal-mode .images-container .view-container>video,
-.horizontal-mode .images-container .view-container.video>img {
+.horizontal-mode .images-container .view-container.video>img,
+.horizontal-mode .images-container .view-container>canvas,
+.horizontal-mode .images-container .view-container.bitmap>img {
     anchor-name: unset;
     display: none
 }
 
-.horizontal-mode .images-container .view-container.video>video {
+.horizontal-mode .images-container .view-container.video>video,
+.horizontal-mode .images-container .view-container.bitmap>canvas {
     display: block
 }
 
 .horizontal-mode .images-container .view-container>img,
-.horizontal-mode .images-container .view-container>video {
+.horizontal-mode .images-container .view-container>video,
+.horizontal-mode .images-container .view-container>canvas {
     anchor-name: var(--anchor-name);
     height: 100%;
+    width: auto;
     max-height: 100%;
     max-width: 100%;
     object-fit: contain
@@ -123,8 +128,9 @@
     justify-content: center
 }
 
-.horizontal-mode .images-container.single-page .view-container.primary-image>img,
-.horizontal-mode .images-container.single-page .view-container.primary-image>video {
+.horizontal-mode .images-container.single-page .view-container.primary-image.image>img,
+.horizontal-mode .images-container.single-page .view-container.primary-image.video>video,
+.horizontal-mode .images-container.single-page .view-container.primary-image.bitmap>canvas {
     --anchor-name: --primary;
     transform-origin: center top
 }
@@ -197,14 +203,6 @@
 
 .horizontal-mode .image-list, .horizontal-mode .load-next-btn-container {
     display: none
-}
-
-.images-container .view-container canvas {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    left: 0;
-    top: 0
 }
 
 @media screen and (max-width: 1080px) {

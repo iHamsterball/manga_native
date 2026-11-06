@@ -14,8 +14,6 @@ class Base {
             // epub_bundle: module.cwrap('epub_bundle', '', []),
             // epub_image: module.cwrap('epub_image', 'number', ['number'])
         };
-        // Bitmap Canvas Web Worker
-        this.bitmap = new Worker('/js/bitmap.js');
         // Preloaded files
         this.cache = new Map();
         // WebRTC Host
@@ -57,6 +55,8 @@ class Base {
             rotate_90_counterclockwise: 2
         });
         this.rotate = this.rotate_flags.default;
+        // Image rotate Web Worker
+        this.rotator = new Worker('/js/rotator.js');
         // Scale ratio history
         this.scale = [1];
         // Page step
@@ -362,7 +362,6 @@ class Base {
      * @param {event} event Event binded to corresponding button.
      */
     toggle_rotate(event) {
-        Notifier.loading();
         this._flush();
         let button = event.target;
         if (button.tagName.toLowerCase() == 'img') button = button.parentNode;
@@ -378,9 +377,8 @@ class Base {
             this.rotate = this.rotate_flags.default;
             this.toggle_single(false, false);
         }
-        this._update_images();
-        this._update_progress();
-        this._update_hinter();
+        if (!this.cache.has(this._cache_key(this.cur))) Notifier.loading();
+        this._update();
     }
 
     /**
@@ -736,10 +734,22 @@ class Base {
             return this.cache.get(this._cache_key(index));
         } else {
             // If cache missed, fallback to normal fetch
-            const blob = await this._rotate_wrapper(await this._fetch(index));
-            const src = this.URL.createObjectURL(blob);
-            const value = { src: src, type: blob.type, element: this._prerender(src, blob, index) };
-            if (blob.size) this.cache.set(this._cache_key(index), value);
+            const content = await this._fetch(index);
+            const rotate = await this._rotate_wrapper(content);
+            let value = null;
+            switch (rotate.constructor) {
+                case Blob:
+                case File:
+                    // Save prerendered element to cache
+                    const src = this.URL.createObjectURL(rotate);
+                    value = { src: src, type: content.type, element: this._prerender(src, content, index) };
+                    break;
+                case ImageBitmap:
+                    // Save bitmap to cache
+                    value = { type: 'bitmap', bitmap: rotate };
+                    break;
+            }
+            if (content.size) this.cache.set(this._cache_key(index), value);
             return value;
         }
     }
@@ -955,21 +965,46 @@ class Base {
     }
 
     /**
-     * Handles image rotation by passing image data through WebAssembly module.
-     * @param {Blob} blob - The image blob to rotate
-     * @returns {Promise<Blob>} The rotated image blob
+     * Handles image rotation by updating EXIF orientation when possible,
+     * otherwise rotating pixels with OffscreenCanvas in a worker.
+     * @param {Blob} blob - The image blob to rotate.
+     * @returns {Promise<Blob|ImageBitmap>} The rotated image blob or bitmap.
      * @private
      * @async
      */
     async _rotate_wrapper(blob) {
-        if (this.rotate >= 0 && blob.type.startsWith('image')) {
-            let buffer = await blob.arrayBuffer();
-            this.module.FS.writeFile('image', new Uint8Array(buffer));
-            blob = new Blob([await this.module.rotate_image('image', this.rotate)], {
-                type: blob.type
-            });
+        if (this.rotate === this.rotate_flags.default || blob.type?.startsWith('image') == false) {
+            return blob;
         }
-        return blob;
+        return new Promise(async (resolve, reject) => {
+            // Receive data from Web Worker
+            this.rotator.onmessage = (event) => {
+                if (event.data.error) {
+                    reject(new Error(event.data.error));
+                } else {
+                    switch (event.data.value.constructor) {
+                        case ArrayBuffer:
+                            resolve(new Blob([event.data.value], { type: event.data.type }));
+                            break;
+                        case ImageBitmap:
+                            resolve(event.data.value);
+                            break;
+                        default:
+                            reject(event.data);
+                    }
+                }
+            };
+            this.rotator.onerror = (error) => {
+                reject(error);
+            };
+            // Transmit data to Web Worker
+            try {
+                const buffer = await blob.arrayBuffer();
+                this.rotator.postMessage({ buffer, type: blob.type, rotate: this.rotate }, [buffer]);
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 
     /**
@@ -1009,7 +1044,7 @@ class Base {
         };
 
         if (this._validate(this.pos.primary)) _update(this.pos.primary, this.primary);
-        if (this._validate(this.pos.primary) && this.step == 2) _update(this.pos.secondary, this.secondary);
+        if (this._validate(this.pos.secondary) && this.step == 2) _update(this.pos.secondary, this.secondary);
         this._prefetch();
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
@@ -1038,18 +1073,19 @@ class Base {
             const parent = document.getElementById(symbol == this.pos.primary ? 'media-primary' : 'media-secondary');
             const image = document.getElementById(symbol == this.pos.primary ? 'image-primary' : 'image-secondary');
             const video = document.getElementById(symbol == this.pos.primary ? 'video-primary' : 'video-secondary');
-            const _clear = (image) => {
-                // Clone image and set src to null
-                // If modify current image directly, it will override cache
-                const clone = image.cloneNode();
+            const canvas = document.getElementById(symbol == this.pos.primary ? 'canvas-primary' : 'canvas-secondary');
+            const _clear = (element) => {
+                // Clone element and set src to null
+                // If modify current element directly, it will override cache
+                const clone = element.cloneNode();
                 clone.src = '';
                 clone.dataset.filename = '';
-                parent.replaceChild(clone, image);
+                parent.replaceChild(clone, element);
             }
             const types = {
                 'video': {
                     update: async (src) => {
-                        // Clear image src
+                        // Clear image src and data-filename
                         _clear(image);
 
                         // Get current width and height of current video to prevent flash while new one is not yet loaded
@@ -1080,8 +1116,7 @@ class Base {
                         if (parent.contains(image) == false) return;
 
                         // Clear video src and data-filename
-                        video.src = '';
-                        video.dataset.filename = '';
+                        _clear(video);
                         parent.dataset.filename = this.files[index]?.name || '';
                         parent.dataset.filesize = this._format_file_size(this.files[index]?.size);
 
@@ -1110,12 +1145,25 @@ class Base {
                         }
                     }
                 },
+                'bitmap': {
+                    update: (src, element, bitmap) => {
+                        parent.dataset.filename = this.files[index]?.name || '';
+                        parent.dataset.filesize = this._format_file_size(this.files[index]?.size);
+                        parent.dataset.width = bitmap.width;
+                        parent.dataset.height = bitmap.height;
+                        canvas.dataset.filename = this.files[index]?.name || '';
+                        canvas.width = bitmap.width;
+                        canvas.height = bitmap.height;
+                        const context = canvas.getContext('2d');
+                        context.drawImage(bitmap, 0, 0);
+                    }
+                },
                 'default': {
                     update: () => {
-                        // Clear image src
+                        // Clear image src and data-filename
                         _clear(image);
-                        video.src = '';
-                        video.dataset.filename = '';
+                        // Clear video src and data-filename
+                        _clear(video);
                         parent.dataset.filename = '';
                         parent.dataset.filesize = '';
                         parent.dataset.width = 0;
@@ -1125,10 +1173,10 @@ class Base {
                 'text': {
                     // TODO: Copyied from default, modify or reuse
                     update: () => {
-                        // Clear image src
+                        // Clear image src and data-filename
                         _clear(image);
-                        video.src = '';
-                        video.dataset.filename = '';
+                        // Clear video src and data-filename
+                        _clear(video);
                         parent.dataset.filename = this.files[index]?.name || '';
                         parent.dataset.filesize = this._format_file_size(this.files[index]?.size);
                         parent.dataset.width = 0;
@@ -1152,22 +1200,23 @@ class Base {
 
             let src = '';
             let type = 'default';
-            let element = null;
+            let element, bitmap = null;
             if (this._validate(symbol)) {
                 if (!(symbol == this.pos.secondary && this.step == 1)) {
-                    ({ src, type, element } = await this._postfetch(index));
+                    ({ src, type, element, bitmap } = await this._postfetch(index));
                     type = type.split('/')?.at(0);
                 }
             }
 
-            await types[type].update(src, element);
-            parent.classList.remove(...['video', 'image', 'default', 'text']);
+            await types[type].update(src, element, bitmap);
+            parent.classList.remove(...['video', 'image', 'bitmap', 'default', 'text']);
             parent.classList.add(type);
         };
 
         await _update(this.pos.primary, this.primary);
         await _update(this.pos.secondary, this.secondary);
         this._prefetch();
+        Notifier.loaded();
         if (this.files.length == 0) Notifier.error(preset.ERR_NO_FILES);
     }
 
@@ -1267,6 +1316,7 @@ class Base {
         this.cache.forEach((value, key) => {
             this.URL.revokeObjectURL(value.src);
             value.element?.remove();
+            value.bitmap?.close();
         });
         this.cache.clear();
         this.files = new Array();

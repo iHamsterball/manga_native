@@ -14,10 +14,10 @@ const css = [
 const js = [
     '/js/mime.js',
     '/js/badge.js',
-    '/js/signaling.js',
     '/js/manga.js',
     '/js/plugin.js',
     '/js/psd.js',
+    '/js/signaling.js',
 ];
 const wasm = [
     '/wasm/plugin.wasm',
@@ -53,20 +53,20 @@ const img = [
     '/img/sun.svg',
     '/img/sync-duotone.svg',
 ];
-const cdn = [
-    '//cdn.staticfile.org/firebase/10.7.2/firebase-app-compat.js',
-    '//cdn.staticfile.org/firebase/10.7.2/firebase-auth-compat.js',
-    '//cdn.staticfile.org/firebase/10.7.2/firebase-database-compat.js',
-];
-const resources = Array.prototype.concat(html, css, js, wasm, img, cdn);
+const core = Array.prototype.concat(html, css, js).filter(entry => ![
+    '/js/psd.js',
+    '/js/rotator.js',
+    '/js/vendor/awesome-qr/awesome-qr.js',
+].includes(entry));
+const resources = Array.prototype.concat(html, css, js, wasm, img);
 
-// Cache all resources on Service-Worker install
+// Cache core resources on Service-Worker install
 async function precache() {
-    return caches.open(version).then(cache => cache.addAll(resources));
+    return caches.open(version).then(cache => cache.addAll(core));
 }
 
 // Cache First
-async function fetch(request) {
+async function postfetch(request) {
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
         return cachedResponse;
@@ -106,7 +106,7 @@ self.addEventListener("fetch", (event) => {
     // console.log(...Badge.args(badges.ServiceWorker), 'Fetch event:', event.request.url);
     const url = new URL(event.request.url);
     if (resources.includes(url.pathname)) {
-        event.respondWith(fetch(event.request));
+        event.respondWith(postfetch(event.request));
     }
 });
 
@@ -126,14 +126,6 @@ self.addEventListener("activate", event => {
                     }
                 })
             ]);
-        }).then(
-            // Send reload command to window
-            clients.matchAll({ includeUncontrolled: true, type: 'window' }).then(clients => {
-                clients.forEach(client => {
-                    // Send message to window
-                    client.postMessage({ command: 'reload' });
-                });
-            })
-        )
+        })
     );
 });

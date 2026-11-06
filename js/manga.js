@@ -2504,8 +2504,10 @@ window.addEventListener('popstate', () => {
 // Register Service Worker
 if ('serviceWorker' in navigator) {
     // Register Service Worker
-    navigator.serviceWorker.register('/sw.js').then(_ => {
+    navigator.serviceWorker.register('/sw.js').then(registration => {
         console.log(...Badge.args(badges.MangaNative, badges.ServiceWorker), 'Service Worker registered.');
+        // Manually trigger Service Worker update
+        registration.update();
     });
     // Listen to the message back
     navigator.serviceWorker.addEventListener('message', event => {
@@ -2514,20 +2516,22 @@ if ('serviceWorker' in navigator) {
                 console.log(...Badge.args(badges.MangaNative, badges.ServiceWorker), 'Service Worker version:', event.data.version);
                 localStorage.setItem('version', event.data.version);
                 break;
-            case 'reload':
-                console.log(...Badge.args(badges.MangaNative, badges.ServiceWorker), 'Reloading...');
-                location.reload();
-                break;
         }
-    });
-    // Manually trigger Service Worker update
-    navigator.serviceWorker.ready.then((registration) => {
-        registration.update();
     });
 }
 
+let sentinel = new Promise((resolve, reject) => {
+    // Reload page after new version take control
+    navigator.serviceWorker.addEventListener('controllerchange', event => {
+        console.log(...Badge.args(badges.MangaNative, badges.ServiceWorker), 'Reloading...');
+        location.reload();
+        resolve(event);
+    });
+});
+
 let init = () => {
     Notifier.loading();
+    const start = performance.now();
     let ui = document.getElementById('reader-ui');
     let body = document.getElementById('reader-body');
     let buttons = document.getElementById('floating-buttons');
@@ -2653,12 +2657,15 @@ let init = () => {
         printErr: Badge.wrap(console.error.bind(console), [badges.MangaNative, badges.WebAssembly]),
         locateFile: (path) => ('wasm/' + path),
     }
-    Promise.all([Module(override), User.init()]).then(ret => {
+    Promise.race([sentinel, Promise.all([Module(override), User.init()])]).then(ret => {
+        if (ret instanceof Event) return;
         [module, user] = ret;
         webrtc = new WebRTC();
         signaling = new Signaling();
         controller = new Base();
         Notifier.show_dir();
         Notifier.loaded();
+        const duration = performance.now() - start;
+        console.info(...Badge.args(badges.MangaNative), `Initialized in ${duration.toFixed(2)}ms`);
     });
 };

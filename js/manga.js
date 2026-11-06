@@ -85,6 +85,7 @@ class Base {
 
         this._init_indexeddb();
         this._init_observer();
+        this._reset_hinter();
         this._set_version();
     }
 

@@ -58,7 +58,7 @@ const core = Array.prototype.concat(html, css, js).filter(entry => ![
     '/js/rotator.js',
     '/js/vendor/awesome-qr/awesome-qr.js',
 ].includes(entry));
-const resources = Array.prototype.concat(html, css, js, wasm, img);
+const resources = Array.prototype.concat(html, css, js, img);
 
 // Cache core resources on Service-Worker install
 async function precache() {

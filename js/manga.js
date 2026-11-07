@@ -1,19 +1,5 @@
 class Base {
     constructor() {
-        // Wasm api
-        this.api = {
-            // Image processing Section
-            analyse: module.cwrap('analyse', 'number', ['string']),
-            rotate: module.cwrap('rotate', 'number', ['array', 'number']),
-            version: module.cwrap('version', '', []),
-
-            // ePub processing Section
-            epub_open: module.cwrap('epub_open', 'number', ['string']),
-            epub_count: module.cwrap('epub_count', '', []),
-            epub_format: module.cwrap('epub_format', 'string', ['number']),
-            // epub_bundle: module.cwrap('epub_bundle', '', []),
-            // epub_image: module.cwrap('epub_image', 'number', ['number'])
-        };
         // Preloaded files
         this.cache = new Map();
         // WebRTC Host
@@ -32,8 +18,6 @@ class Base {
         this.message = null;
         // Meta data
         this.meta = null;
-        // Wasm module
-        this.module = module;
         // Observer
         this.observer = { 'image': null, 'step': null };
         // Offset
@@ -775,7 +759,7 @@ class Base {
      * Fetch specified image.
      * @async
      * @param {number} index Number that specifies the index of image to load.
-     * @param {Array} [files] Defaults to {@link Base.files}, or provided override value such as {@link WebRTC.files}.
+     * @param {Array<Base.files>|Array<WebRTC.files>} [files] Defaults to {@link Base.files}, or provided override value such as {@link WebRTC.files}.
      * @returns {Promise<Blob>} Blob data which indicates the fetched image.
      */
     async _file(index, files = this.files) {
@@ -2069,13 +2053,14 @@ class Epub extends Base {
     async load(update = true) {
         Notifier.loading();
         this._flush();
-        const path = 'tmp.epub';
+        this._reset(true);
         const file = await this.handle.getFile();
-        let buffer = await file.arrayBuffer();
-        this.module.FS.writeFile(path, new Uint8Array(buffer)); // Unicode filename not supported
-        this.api.epub_open(path);
+        const blob = new zip.BlobReader(file);
+        this.reader = new zip.ZipReader(blob);
+        const entries = await this.reader.getEntries();
+        this.entries = new Map(entries.map(entry => [entry.filename, entry]));
         this.title['episode'] = this.handle.name;
-        this.files = this._load_files();
+        this.files = await this._load_files();
         this._prefetch();
         this.toggle_nav();
         this._update_settings();
@@ -2085,12 +2070,79 @@ class Epub extends Base {
         this._webrtc_transmit_meta();
     }
 
-    _load_files() {
-        return Array(this.api.epub_count()).fill().map((_, i) => ({
-            scope: this.index,
-            format: this.api.epub_format(i),
-            getFile: async _ => (new Blob([await this.module.epub_image(i)]))
-        }));
+    async _parse(filename, mime) {
+        const entry = this.entries.get(filename);
+        if (!entry) return null;
+        const text = await entry.getData(new zip.TextWriter());
+        return new DOMParser().parseFromString(text, mime);
+    }
+
+    async _load_files() {
+        // Read container.xml to get the opf path
+        const container = this.entries.get("META-INF/container.xml");
+        if (!container) throw new Error("Invalid ePub: missing container.xml");
+        const text = await container.getData(new zip.TextWriter());
+        const result = text.match(/full-path="([^"]+)"/);
+        if (!result) throw new Error("Invalid ePub: invalid container.xml");
+        const rootfile = result.pop();
+
+        // const rootfile = container.querySelector("[full-path]").getAttribute("full-path");
+        const rootpath = rootfile.includes('/') ? rootfile.substring(0, rootfile.lastIndexOf('/') + 1) : '';
+
+        // Read the .opf file to get manifest and spine
+        const opf = await this._parse(rootfile, "application/xml");
+        if (!opf) throw new Error(`Invalid ePub: missing rootfile ${rootfile}`);
+
+        const manifests = new Map(
+            Array.from(opf.querySelectorAll("manifest > item"), item => [
+                item.getAttribute("id"), {
+                    href: item.getAttribute("href"),
+                    mime: item.getAttribute("media-type")
+                }
+            ])
+        );
+
+        return Array.from(opf.querySelectorAll("spine > itemref"))
+            .map(itemref => {
+                const idref = itemref.getAttribute("idref");
+                const manifest = manifests.get(idref);
+                const xhtmlpath = rootpath + manifest.href;
+                return manifest && manifest.mime === "application/xhtml+xml" ? xhtmlpath : null;
+            })
+            .filter(Boolean);
+    }
+
+    /**
+     * Fetch specified image.
+     * @async
+     * @param {number} index Number that specifies the index of image to load.
+     * @param {Array<Base.files>|Array<WebRTC.files>} [files] Defaults to {@link Base.files}, or provided override value such as {@link WebRTC.files}.
+     * @returns {Promise<Blob>} Blob data which indicates the fetched image.
+     */
+    async _file(index, files = this.files) {
+        const base = location.protocol + '//' + location.host + '/';
+        const xhtmlpath = this.files[index];
+        const xhtml = await this._parse(xhtmlpath, "text/html");
+
+        if (xhtml) {
+            const image = xhtml.querySelector("img");
+
+            if (image) {
+                const src = image.getAttribute("src");
+                const path = new URL(src, base + xhtmlpath).pathname.substring(1);
+                const entry = this.entries.get(path);
+
+                if (entry) {
+                    this.files[index] = {
+                        scope: this.index,
+                        format: entry.filename.split('.').pop(),
+                        name: entry.filename,
+                        getFile: async () => await entry.getData(new zip.BlobWriter())
+                    };
+                }
+            }
+        }
+        return super._file(index);
     }
 }
 

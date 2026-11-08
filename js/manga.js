@@ -362,6 +362,7 @@ class Base {
             this.toggle_single(false, false);
         }
         if (!this.cache.has(this._cache_key(this.cur))) Notifier.loading();
+        this._update_settings();
         this._update();
     }
 

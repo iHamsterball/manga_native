@@ -1937,6 +1937,10 @@ a {
         padding: 0.9rem 0
     }
 
+    .info-hud .hinter-image-container.double .next-page {
+        display: none
+    }
+
     .inner-content {
         padding: 0 1.2rem;
     }

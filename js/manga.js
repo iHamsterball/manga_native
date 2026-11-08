@@ -46,7 +46,7 @@ class Base {
         // Page step
         this.step = 2;
         // Theme
-        this.theme = localStorage.getItem('theme') | (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);;
+        this.theme = localStorage.getItem('theme') | window.matchMedia('(prefers-color-scheme: dark)').matches;
         // Title
         this.title = { 'episode': '', 'manga': '' }
         // Enum type
@@ -69,6 +69,7 @@ class Base {
 
         this._init_indexeddb();
         this._init_observer();
+        this._observe_step();
         this._reset_hinter();
         this._set_version();
     }
@@ -930,23 +931,13 @@ class Base {
     }
 
     /**
-     * Initializes step observer for secondary image container.
-     * The observer tracks visibility of secondary image for auto single/double page mode.
-     * The visibility is controlled by CSS media queries or specified manually.
+     * Initializes step observer with Window.matchMedia.
      * @private
      */
     _observe_step() {
-        const image = document.getElementById('image-secondary');
-        const video = document.getElementById('video-secondary');
-        const parent = document.getElementById('media-secondary');
-        if (parent.classList.contains('image')) {
-            this.observer['step'].observe(image);
-        } else if (parent.classList.contains('video')) {
-            this.observer['step'].observe(video);
-        } else if (parent.classList.contains('default')) {
-            this.observer['step'].observe(image);
-            this.observer['step'].observe(video);
-        }
+        const query = window.matchMedia('(min-width: 1080px)');
+        this.toggle_single(!query.matches, false);
+        query.addEventListener('change', event => this.toggle_single(!event.matches, true));
     }
 
     /**
@@ -2632,7 +2623,7 @@ let init = () => {
     let body = document.getElementById('reader-body');
     let buttons = document.getElementById('floating-buttons');
     let container = document.getElementById('ps-container');
-    const theme = localStorage.getItem('theme') | (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const theme = localStorage.getItem('theme') | window.matchMedia('(prefers-color-scheme: dark)').matches;
     document.documentElement.classList.add(theme ? 'theme-light' : 'theme-dark');
     ui.addEventListener('animationend', event => {
         switch (event.animationName) {

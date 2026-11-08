@@ -217,8 +217,4 @@
     .horizontal-mode .images-container .view-container.secondary-image {
         flex: 0
     }
-
-    .horizontal-mode .images-container .view-container.secondary-image>img {
-        display: none
-    }
 }

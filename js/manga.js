@@ -69,7 +69,6 @@ class Base {
 
         this._init_indexeddb();
         this._init_observer();
-        this._observe_step();
         this._reset_hinter();
         this._set_version();
     }
@@ -928,16 +927,6 @@ class Base {
                 controller._update_progress();
             })
         ), { threshold: Array.apply(null, { length: 11 }).map((_, index) => index / 10) });
-    }
-
-    /**
-     * Initializes step observer with Window.matchMedia.
-     * @private
-     */
-    _observe_step() {
-        const query = window.matchMedia('(min-width: 1080px)');
-        this.toggle_single(!query.matches, false);
-        query.addEventListener('change', event => this.toggle_single(!event.matches, true));
     }
 
     /**
@@ -2635,7 +2624,12 @@ let init = () => {
     let buttons = document.getElementById('floating-buttons');
     let container = document.getElementById('ps-container');
     const theme = localStorage.getItem('theme') | window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const width = window.matchMedia('(min-width: 1080px)');
     document.documentElement.classList.add(theme ? 'theme-light' : 'theme-dark');
+    width.addEventListener('change', event => {
+        controller.toggle_single(!event.matches, false);
+        controller._update();
+    });
     ui.addEventListener('animationend', event => {
         switch (event.animationName) {
             case 'fade-out':
@@ -2756,6 +2750,7 @@ let init = () => {
         webrtc = new WebRTC();
         signaling = new Signaling();
         controller = new Base();
+        controller.toggle_single(!width.matches, false);
         Notifier.show_dir();
         Notifier.loaded();
         const duration = performance.now() - start;

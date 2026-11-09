@@ -1529,7 +1529,8 @@ class Base {
      */
     async _update_settings() {
         // TODO: The Unique ID may change sometimes, consider using path as key instead.
-        const handle = await this.handle.getUniqueId()
+        if (this.handle === undefined) return;
+        const handle = await this.handle.getUniqueId();
         let payload = this.settings;
         payload.name = this.handle.name;
         payload.handle = handle;
@@ -1723,6 +1724,7 @@ class Base {
             rx.onmessage = (event) => {
                 const payload = JSON.parse(event.data);
                 this.meta = payload;
+                this.handle.name = payload.episode || '';
                 resolve();
             }
         ))
@@ -1795,7 +1797,7 @@ class Base {
      * Sends manga/episode titles and type information.
      * @private
      */
-    _webrtc_transmit_meta() {
+    async _webrtc_transmit_meta() {
         if (this.webrtc.pc.connectionState != 'connected') return;
         let meta = {
             manga: this.title.manga,
@@ -1804,6 +1806,7 @@ class Base {
             episodes: this.episodes ? this.episodes.map(episode => ({ name: episode.name })) : null,
         };
         if (!this.client) {
+            meta.handle = await this.handle.getUniqueId();
             this.webrtc._transmit_meta(meta);
             console.info(...Badge.args(badges.MangaNative, badges.WebRTC), 'Meta data transmited:', meta);
         }
@@ -2285,6 +2288,9 @@ class WebRTCClient extends Base {
         super();
         // WebRTC Client
         this.client = true;
+        this.handle = {
+            getUniqueId: () => this.meta?.handle
+        };
         // Episode list
         this.episodes = new Array();
         // Episode index

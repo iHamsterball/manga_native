@@ -16,6 +16,7 @@ const js = [
     '/js/badge.js',
     '/js/manga.js',
     '/js/psd.js',
+    '/js/rotator.js',
     '/js/signaling.js',
 ];
 const wasm = [

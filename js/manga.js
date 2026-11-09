@@ -2290,6 +2290,7 @@ class WebRTCClient extends Base {
         super();
         // WebRTC Client
         this.client = true;
+        this.handle = new Object();
         this.handle.getUniqueId = () => this.meta?.handle || '';
         // Episode list
         this.episodes = new Array();

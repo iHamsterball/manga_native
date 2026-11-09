@@ -2383,6 +2383,7 @@ class WebRTCClient extends Base {
                 this._update_settings();
                 this._update();
                 this._reset_content();
+                this._init_vertical();
                 break;
         }
     }

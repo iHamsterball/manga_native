@@ -1786,7 +1786,7 @@ class Base {
                 break;
         }
         data = await file.arrayBuffer();
-        this.webrtc._transmit_data(data, args.channel);
+        this.webrtc._transmit_data(data, file.type, args.channel);
     }
 
     /**
@@ -2210,22 +2210,22 @@ class WebRTC {
                 return;
             }
             const payload = JSON.parse(data);
-            if (payload.type === 'meta') meta = { size: payload.size };
+            if (payload.type === 'meta') meta = { size: payload.size, type: payload.mime };
         };
         rx.onerror = (event) => (console.error(...Badge.args(badges.MangaNative, badges.WebRTC), 'Data receive failed.'));
         return new Promise((resolve) => (
             rx.onclose = (event) => {
                 this.channels.delete(rx.id);
-                resolve(buffer);
+                resolve([buffer, { type: meta?.type || '' }]);
             }
         ));
     }
 
-    _transmit_data(data, channel) {
+    _transmit_data(data, mime, channel) {
         let offset = 0;
         let tx = this.channels.get(channel);
         if (typeof tx === 'undefined' || tx.readyState != 'open') console.error(...Badge.args(badges.MangaNative, badges.WebRTC), 'Datachannel not ready.');
-        tx.send(JSON.stringify({ type: 'meta', size: data.byteLength }))
+        tx.send(JSON.stringify({ type: 'meta', size: data.byteLength, mime: mime }))
 
         let chunk_size = this.pc.sctp.maxMessageSize;
         let low_watermark = chunk_size; // A single chunk
@@ -2447,7 +2447,7 @@ class WebRTCClient extends Base {
             index: i,
             name: args.files?.[i],
             scope: this.webrtc.scope,
-            getFile: async _ => (new Blob(await this.webrtc.file(i))),
+            getFile: async _ => (new Blob(...await this.webrtc.file(i))),
         }));
         this.resolve(files);
     }

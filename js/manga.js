@@ -2744,17 +2744,19 @@ let init = () => {
         };
         (ops[event.code] || (() => void 0))();
     };
-    Promise.race([sentinel, Promise.all([Module(override), User.init()])]).then(ret => {
-        if (ret instanceof Event) return;
-        [module, user] = ret;
-        rotator = new Worker('/js/rotator.js');
-        webrtc = new WebRTC();
-        signaling = new Signaling();
-        controller = new Base();
-        controller.toggle_single(!width.matches, false);
-        Notifier.show_dir();
-        Notifier.loaded();
-        const duration = performance.now() - start;
-        console.info(...Badge.args(badges.MangaNative), `Initialized in ${duration.toFixed(2)}ms`);
+    window.rotator = new Worker('/js/rotator.js');
+    window.webrtc = new WebRTC();
+    window.controller = new Base();
+    controller.toggle_single(!width.matches, false);
+    Notifier.show_dir();
+    Notifier.loaded();
+    const duration = performance.now() - start;
+    console.info(...Badge.args(badges.MangaNative), `Initialized in ${duration.toFixed(2)}ms`);
+    Promise.race([sentinel, User.init()]).then(ret => {
+        window.user = ret;
+        window.signaling = new Signaling();
+        controller.signaling = signaling;
+        // TODO: DEBUG
+        signaling.join('debug');
     });
 };

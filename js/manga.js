@@ -40,7 +40,7 @@ class Base {
         });
         this.rotate = this.rotate_flags.default;
         // Image rotate Web Worker
-        this.rotator = new Worker('/js/rotator.js');
+        this.rotator = rotator;
         // Scale ratio history
         this.scale = [1];
         // Page step
@@ -2747,6 +2747,7 @@ let init = () => {
     Promise.race([sentinel, Promise.all([Module(override), User.init()])]).then(ret => {
         if (ret instanceof Event) return;
         [module, user] = ret;
+        rotator = new Worker('/js/rotator.js');
         webrtc = new WebRTC();
         signaling = new Signaling();
         controller = new Base();

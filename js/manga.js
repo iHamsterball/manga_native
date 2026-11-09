@@ -1724,7 +1724,6 @@ class Base {
             rx.onmessage = (event) => {
                 const payload = JSON.parse(event.data);
                 this.meta = payload;
-                this.handle.name = payload.episode || '';
                 resolve();
             }
         ))
@@ -1806,7 +1805,7 @@ class Base {
             episodes: this.episodes ? this.episodes.map(episode => ({ name: episode.name })) : null,
         };
         if (!this.client) {
-            meta.handle = await this.handle.getUniqueId();
+            meta.handle = await this.handle?.getUniqueId();
             this.webrtc._transmit_meta(meta);
             console.info(...Badge.args(badges.MangaNative, badges.WebRTC), 'Meta data transmited:', meta);
         }
@@ -1846,6 +1845,7 @@ class Episode extends Base {
         if (update) this._update();
         this._reset_content();
         this._init_vertical();
+        this._update_info();
         this._webrtc_transmit_meta();
     }
 }
@@ -1887,6 +1887,7 @@ class Manga extends Base {
         this._init_contents();
         this._update_settings();
         if (update) this._update();
+        this._update_info();
         this._webrtc_transmit_meta();
     }
 
@@ -2054,7 +2055,7 @@ class Epub extends Base {
         this.reader = new zip.ZipReader(blob);
         const entries = await this.reader.getEntries();
         this.entries = new Map(entries.map(entry => [entry.filename, entry]));
-        this.title['episode'] = this.handle.name;
+        this.title.episode = this.handle.name;
         this.files = await this._load_files();
         this._prefetch();
         this.toggle_nav();
@@ -2062,6 +2063,7 @@ class Epub extends Base {
         if (update) this._update();
         this._reset_content();
         this._init_vertical();
+        this._update_info();
         this._webrtc_transmit_meta();
     }
 
@@ -2288,9 +2290,7 @@ class WebRTCClient extends Base {
         super();
         // WebRTC Client
         this.client = true;
-        this.handle = {
-            getUniqueId: () => this.meta?.handle
-        };
+        this.handle.getUniqueId = () => this.meta?.handle || '';
         // Episode list
         this.episodes = new Array();
         // Episode index
@@ -2371,14 +2371,15 @@ class WebRTCClient extends Base {
             case type.manga:
                 await this._episode_move(0);
                 this._init_contents();
+                this._update_info();
                 this._update_settings();
                 this._update();
                 break;
             case type.episode:
             case type.epub:
                 this.files = await this._load_files(this.index);
-                this.title['episode'] = this.meta.episode;
                 this._prefetch();
+                this._update_info();
                 this._update_settings();
                 this._update();
                 this._reset_content();
@@ -2466,13 +2467,15 @@ class WebRTCClient extends Base {
         if (this.meta == null) return;
         switch (this.type) {
             case type.manga:
-                this.title['manga'] = this.meta.manga || '';
-                this.title['episode'] = this.episodes[this.index]?.name || '';
+                this.title.manga = this.meta.manga || '';
+                this.title.episode = this.episodes[this.index]?.name || '';
+                this.handle.name = this.title.manga;
                 break;
             case type.episode:
             case type.epub:
-                this.title['manga'] = this.meta.manga || '';
-                this.title['episode'] = this.meta.episode || '';
+                this.title.manga = this.meta.manga || '';
+                this.title.episode = this.meta.episode || '';
+                this.handle.name = this.title.episode;
                 break;
         }
         super._update_info();

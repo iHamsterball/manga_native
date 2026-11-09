@@ -15,7 +15,6 @@ const js = [
     '/js/mime.js',
     '/js/badge.js',
     '/js/manga.js',
-    '/js/plugin.js',
     '/js/psd.js',
     '/js/signaling.js',
 ];

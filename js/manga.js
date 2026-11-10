@@ -7,7 +7,7 @@ class Base {
         // Current page
         this.cur = 0;
         // IndexedDB
-        this.db = null;
+        this.db = db;
         // File list
         this.files = new Array();
         // Prefetch limit
@@ -834,14 +834,16 @@ class Base {
      * @private
      */
     _init_indexeddb() {
+        if (this.db !== null) return;
         const name = 'manga-native-database';
         const version = 1; // NOT float number
         const request = indexedDB.open(name, version);
         request.onsuccess = event => {
             this.db = event.target.result;
-            this.db.onversionchange = _ => {
+            window.db = this.db;
+            window.db.onversionchange = _ => {
                 Notifier.loading();
-                this.db.close();
+                window.db.close();
                 console.warn(...Badge.args(badges.MangaNative, badges.IndexedDB), 'Reloading...');
                 location.reload();
             }
@@ -850,6 +852,7 @@ class Base {
         request.onerror = event => console.error(...Badge.args(badges.MangaNative, badges.IndexedDB), 'Open failed:', event.target.errorCode);
         request.onupgradeneeded = event => {
             this.db = event.target.result;
+            window.db = this.db;
             const name = 'settings';
             this.db.createObjectStore(name, { keyPath: 'handle', autoIncrement: false });
             console.info(...Badge.args(badges.MangaNative, badges.IndexedDB), 'Upgrade needed.');
@@ -2744,6 +2747,7 @@ let init = () => {
         };
         (ops[event.code] || (() => void 0))();
     };
+    window.db = null;
     window.rotator = new Worker('/js/rotator.js');
     window.webrtc = new WebRTC();
     window.controller = new Base();

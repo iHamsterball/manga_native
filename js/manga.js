@@ -2714,20 +2714,11 @@ let init = () => {
                 break;
         }
     });
-    container.addEventListener('mouseup', event => {
-        if (event.button != 0) return;
-        if (controller.vertical) return;
-        if (window.innerWidth < window.innerHeight) return;
-        if ((event.pageX < (window.innerWidth / 2)) == (controller.rtl == 1)) {
-            controller.page_down();
-        } else {
-            controller.page_up();
-        }
-    });
     container.addEventListener('click', event => {
-        document.elementsFromPoint(event.clientX, event.clientY).forEach(element => {
-            if (element.classList.contains('touch-button')) element.click();
-        });
+        if (controller.vertical) return;
+        document.elementsFromPoint(event.clientX, event.clientY)
+            .find(element => element.classList.contains('touch-button'))
+            .click();
     })
     document.querySelectorAll("button").forEach(button => (
         button.addEventListener('keydown', event => (event.preventDefault()))

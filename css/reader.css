@@ -1612,7 +1612,7 @@ a {
 }
 
 .touch-control {
-    display: none;
+    display: block;
     pointer-events: none;
     z-index: -1
 }
@@ -1624,9 +1624,14 @@ a {
 
 .touch-control .go-next, .touch-control .go-prev {
     pointer-events: auto;
-    width: 15%;
-    height: 70%;
-    top: 15%
+    width: 50%;
+    height: 100%;
+    top: 0;
+    z-index: -2;
+}
+
+.touch-control .go-prev {
+    left: 0
 }
 
 .touch-control .go-next {
@@ -1634,6 +1639,7 @@ a {
 }
 
 .touch-control .menu-opener {
+    display: none;
     width: 15rem;
     height: 15rem;
     position: absolute;
@@ -1954,6 +1960,10 @@ a {
     }
 
     .touch-control {
+        display: block
+    }
+
+    .touch-control .menu-opener {
         display: block
     }
 

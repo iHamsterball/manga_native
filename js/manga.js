@@ -2661,12 +2661,21 @@ let init = () => {
         }
     });
     document.addEventListener('mousemove', event => {
-        if (event.pageX < (window.innerWidth / 2)) {
-            body.classList.add('arrow-left');
-            body.classList.remove('arrow-right');
-        } else {
-            body.classList.remove('arrow-left');
-            body.classList.add('arrow-right');
+        const element = document.elementsFromPoint(event.clientX, event.clientY)
+            .find(element => element.classList.contains('touch-button'));
+        switch (element?.dataset.bind) {
+            case 'page_arrowleft':
+                body.classList.remove('arrow-right');
+                body.classList.add('arrow-left');
+                break;
+            case 'page_arrowright':
+                body.classList.remove('arrow-left');
+                body.classList.add('arrow-right');
+                break;
+            case 'toggle_ui':
+            default:
+                body.classList.remove('arrow-left', 'arrow-right');
+                break;
         }
     }, false);
     Array.from(document.querySelectorAll('button[data-setting]')).forEach(element => (

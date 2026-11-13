@@ -18,9 +18,7 @@ const js = [
     '/js/psd.js',
     '/js/rotator.js',
     '/js/signaling.js',
-];
-const wasm = [
-    '/wasm/plugin.wasm',
+    '/js/vendor/zip.js/zip.min.js',
 ];
 const img = [
     '/cursor/arrow_left.cur',
@@ -55,7 +53,6 @@ const img = [
 ];
 const core = Array.prototype.concat(html, css, js).filter(entry => ![
     '/js/psd.js',
-    '/js/rotator.js',
     '/js/vendor/awesome-qr/awesome-qr.js',
 ].includes(entry));
 const resources = Array.prototype.concat(html, css, js, img);

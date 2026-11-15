@@ -12,6 +12,8 @@ class Base {
         this.files = new Array();
         // Prefetch limit
         this.limit = 4;
+        // Listener
+        this.listener = { 'contents': null };
         // Right-to-Left Order (Left-to-Right -1)
         this.ltr = -1;
         // Messagebox timer
@@ -1985,6 +1987,11 @@ class Manga extends Base {
         for (const [index, episode] of this.episodes.entries()) {
             contents.appendChild(this._content(episode.name, index));
         }
+        const options = { behavior: 'smooth', block: 'center' };
+        if (this.listener.contents == null) {
+            this.listener.contents = _ => document.getElementById('data-contents').querySelector('.selected').scrollIntoView(options);
+        }
+        old.parentNode.addEventListener('animationstart', this.listener.contents);
         old.parentNode.replaceChild(contents, old);
     }
 

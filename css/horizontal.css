@@ -31,7 +31,6 @@
     height: 100vh;
     overflow: auto;
     scrollbar-color: #aaa transparent;
-    scrollbar-gutter: stable;
     scrollbar-width: thin;
     scroll-behavior: smooth;
     transform: translateZ(0);
